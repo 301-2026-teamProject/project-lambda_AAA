@@ -1,6 +1,6 @@
 # Product Backlog
 
-This backlog preserves the official user-story wording. Story points are relative estimates, risk describes implementation uncertainty, and **Halfway** indicates the recommended scope for the Part 3 prototype.
+This backlog preserves the official user-story wording. Story points are relative estimates, risk describes implementation uncertainty, and **Halfway** indicates the recommended scope for the Part 3 prototype. Checkpoints are written as **UI acceptance criteria**: something the actor can see, select, enter, confirm, or receive in the application.
 
 ## Rating guide
 
@@ -8,7 +8,8 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Low risk:** Mostly static UI or simple reads.
 - **Medium risk:** Validation, navigation, or ordinary Firebase reads/writes.
 - **High risk:** Security, transactions, concurrency, automation, device services, or unclear requirements.
-- A story is **Done** only when every checkpoint passes and the relevant tests are included.
+- A story is **Done** only when every checkpoint can be demonstrated through the UI and the relevant UI/intent tests pass.
+- Firebase transactions, rules, and storage remain part of the implementation risk, but the checkpoints describe their user-visible results.
 
 ## Entrant
 
@@ -22,11 +23,11 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — requires a clearly defined Firestore search strategy.
 - **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Entrant can submit a campsite name or search term.
 - [ ] Only published matching campsites are returned.
-- [ ] Loading, no-results, and Firestore-error states are handled.
+- [ ] The screen shows loading feedback, a clear no-results message, and a retryable error message.
 
 ### US 01.01.02 — Filter campsites
 
@@ -36,7 +37,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** High — combined date and availability filtering is difficult without SQL joins.
 - **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Entrant can enter location, a valid date range, and a positive guest count.
 - [ ] Every displayed campsite satisfies all active filters.
@@ -50,7 +51,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — depends on the filtering query and result-state handling.
 - **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Results update when filters change.
 - [ ] Only matching campsites are listed and an empty state is provided.
@@ -64,11 +65,11 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Low — primarily presentation of existing data.
 - **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Every result shows name, location, maximum occupancy, and rating.
 - [ ] A campsite without ratings displays an appropriate placeholder.
-- [ ] Summary values match the stored campsite document.
+- [ ] Summary values match the information shown on the campsite-details screen.
 
 ### US 01.01.05 — View campsite details
 
@@ -78,7 +79,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — combines campsite, image, rating, location, and lottery data.
 - **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Details include the required campsite fields, rules, policy, and availability.
 - [ ] Optional image and map location are shown when present.
@@ -92,7 +93,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — must reflect live lottery eligibility.
 - **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Active lotteries are visible on the campsite-details screen.
 - [ ] Join is enabled only while the lottery accepts entrants.
@@ -108,11 +109,11 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** High — duplicate prevention and capped lists require an atomic transaction.
 - **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
-- [ ] Eligible entrant can join once while registration is open.
-- [ ] Capacity and duplicate-entry rules are enforced atomically.
-- [ ] Firestore entry/count and the UI remain consistent on success or failure.
+- [ ] Eligible entrant sees an enabled **Join Waiting List** button while registration is open.
+- [ ] After joining, the button changes to **Leave Waiting List** and a success message appears.
+- [ ] Already-joined, full, or closed lotteries disable joining and explain why.
 
 ### US 01.02.02 — Leave a waiting list
 
@@ -122,41 +123,39 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — entry status and lottery count must remain consistent.
 - **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
-- [ ] A waiting entrant can request and confirm leaving.
-- [ ] Entry becomes withdrawn and the lottery count is updated safely.
-- [ ] Withdrawn entrants cannot be selected as winners.
+- [ ] A joined entrant can select **Leave Waiting List** and sees a confirmation dialog.
+- [ ] After confirmation, the screen returns to the joinable state and shows success feedback.
+- [ ] The lottery no longer appears in the entrant's joined-waitlists view.
 
-### US 01.03.01-A — Winner notification
+### US 01.03.01 — Winner notification
 
 > As an entrant, I want to receive a notification when I win the campsite lottery.
 
 - **Points:** 5
 - **Risk:** High — notification delivery and idempotency must be coordinated with the draw.
-- **Halfway:** No
+- **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
-- [ ] Every selected entrant receives exactly one winner notification.
-- [ ] Notification identifies the lottery and opens the booking opportunity.
-- [ ] Notification is recorded in history and respects preferences.
+- [ ] Selected entrant sees exactly one winner notification with campsite and lottery information.
+- [ ] Selecting the notification opens the available-dates booking screen.
+- [ ] The notification appears in history and its read/unread state is visible.
 
-### US 01.03.01-B — Non-winner notification
+### US 01.03.02 — Non-winner notification
 
 > As an entrant, I want to receive a notification when I lose the campsite lottery.
 
 - **Points:** 5
 - **Risk:** High — all remaining entrants must be updated without duplicates.
-- **Halfway:** No
+- **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
-- [ ] Every eligible non-winner receives exactly one result notification.
-- [ ] Their waitlist status becomes `NOT_SELECTED`.
-- [ ] Notification is recorded in history and respects preferences.
-
-> The `A` and `B` suffixes distinguish the duplicate ID in the official specification.
+- [ ] Non-selected entrant sees exactly one result notification identifying the lottery.
+- [ ] The lottery displays a visible **Not selected** result instead of booking controls.
+- [ ] The notification appears in history and its read/unread state is visible.
 
 ### Booking opportunities and reservations
 
@@ -166,9 +165,9 @@ This backlog preserves the official user-story wording. Story points are relativ
 
 - **Points:** 5
 - **Risk:** High — availability can change concurrently while winners book.
-- **Halfway:** No
+- **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Only selected winners can access remaining dates.
 - [ ] Booked or out-of-period dates cannot be selected.
@@ -182,7 +181,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** High — combines multi-campsite selection with concurrent availability.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Winner can choose among the lottery's eligible campsites.
 - [ ] Available dates update for the selected campsite.
@@ -196,7 +195,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — declining must update lottery state without booking dates.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Winner can explicitly confirm a decline.
 - [ ] Entry becomes `DECLINED` and no reservation is created.
@@ -208,13 +207,13 @@ This backlog preserves the official user-story wording. Story points are relativ
 
 - **Points:** 5
 - **Risk:** High — reservation, availability, and winner state require an atomic update.
-- **Halfway:** No
+- **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
-- [ ] Confirmation appears only after a successful atomic reservation.
+- [ ] The confirmation screen appears only after the app reports a successful reservation.
 - [ ] It shows campsite, dates, guest count, and reservation status.
-- [ ] Confirmed dates cannot be double booked.
+- [ ] If selected dates were taken by someone else, the entrant sees an explanation and must choose again.
 
 ### US 01.05.02 — Receive or export reservation
 
@@ -224,11 +223,11 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — requires reliable notification and Android file sharing/export.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
-- [ ] Confirmed reservation creates a notification.
+- [ ] Entrant sees a reservation-confirmation notification in the application.
 - [ ] Entrant can download or share a correctly formatted CSV.
-- [ ] Exported values match the stored reservation.
+- [ ] Exported values match the values displayed on the reservation-details screen.
 
 ### US 01.06.01 — View active reservations
 
@@ -238,7 +237,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — requires user-scoped status/date queries and indexes.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Only the current entrant's active reservations are listed.
 - [ ] Each item shows campsite, dates, and status and opens details.
@@ -252,7 +251,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — requires consistent past/completed classification.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Only the current entrant's past/completed reservations are listed.
 - [ ] Entries are ordered consistently and open their details.
@@ -266,10 +265,10 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** High — cancellation affects availability, status, owner notification, and refund policy.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Eligible reservation displays its policy and requires confirmation.
-- [ ] Status becomes `CANCELLED_BY_ENTRANT` and dates are released as appropriate.
+- [ ] After confirmation, the reservation visibly moves to the cancelled list and displays **Cancelled by entrant**.
 - [ ] Owner is notified and cancellation cannot be applied twice.
 
 ### US 01.07.02 — Receive cancellation confirmation
@@ -280,7 +279,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — confirmation must reflect the committed cancellation.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Successful cancellation creates a confirmation notification.
 - [ ] Entrant can download/share a CSV with reservation ID, dates, and status.
@@ -296,11 +295,11 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — personal data requires validation and owner-only security rules.
 - **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Entrant can edit name, email, and phone with validation.
-- [ ] Valid changes persist in the current user's Firestore profile.
-- [ ] Another user cannot read or update unauthorized personal data.
+- [ ] Saving valid changes returns to the profile screen and displays the updated information.
+- [ ] Reopening the profile shows the saved values; save failure leaves the previous values visible.
 
 ### US 01.08.01 — Delete profile
 
@@ -310,7 +309,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** High — deletion, historical records, images, and identity require a retention policy.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Consequences are explained and deletion requires explicit confirmation.
 - [ ] Profile is removed or anonymized according to the agreed policy.
@@ -324,11 +323,11 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** High — anonymous identity persistence and reinstall behavior need clarification.
 - **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
-- [ ] First launch creates an anonymous Firebase identity without credentials.
-- [ ] The same profile loads after normal app restarts.
-- [ ] Authentication failure is recoverable and protected data requires a valid UID.
+- [ ] First launch enters the app without asking for a username or password.
+- [ ] The same profile and user data appear after closing and reopening the app.
+- [ ] Identification failure shows a retry screen instead of exposing an empty or incorrect profile.
 
 ### US 01.10.01 — Opt out of notifications
 
@@ -338,7 +337,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — push delivery and in-app history need distinct behavior.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Entrant can enable or disable notifications.
 - [ ] Preference persists in their profile.
@@ -352,7 +351,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Low — primarily static, read-only content.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Policy is accessible from an obvious location.
 - [ ] Content is readable, scrollable, and available without a live query.
@@ -366,7 +365,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** High — requires camera permission, scanning, and safe deep-link validation.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Camera permission and denial are handled safely.
 - [ ] Valid code opens the exact campsite details.
@@ -380,11 +379,11 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** High — eligibility, duplicate prevention, and aggregate updates must agree.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Only an eligible entrant can submit a rating in the allowed range.
 - [ ] Duplicate rating behavior is prevented or explicitly treated as an update.
-- [ ] Campsite average and rating count update correctly.
+- [ ] After submission, the campsite screen visibly updates its average rating and rating count.
 
 ## Campsite owner
 
@@ -398,11 +397,11 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — requires validation, ownership, and Firestore creation.
 - **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Owner can submit all required campsite information.
-- [ ] Valid submission creates a campsite linked to the current owner.
-- [ ] New campsite appears in the owner's list; failures show no false success.
+- [ ] Successful submission opens the newly created campsite-details screen.
+- [ ] The campsite appears under **My Campsites**; a failed save keeps the form and shows an error.
 
 ### US 02.01.02 — Provide campsite details
 
@@ -412,7 +411,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — combines form validation, GeoPoint data, tags, and optional storage upload.
 - **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Form captures every required field and validates occupancy/location.
 - [ ] Optional image upload is handled without blocking image-free listings.
@@ -426,7 +425,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — updates must be owner-authorized and validated.
 - **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Existing details are pre-filled and valid changes can be saved.
 - [ ] Updated values appear to entrants.
@@ -440,7 +439,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Low — primarily an owner-scoped read.
 - **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Owner can open complete details from My Campsites.
 - [ ] Availability and lottery information are accessible.
@@ -454,7 +453,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** High — encoding, sharing, and scanner/deep-link compatibility must agree.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Each campsite produces a stable, unique QR payload.
 - [ ] Owner can view and share/save the code.
@@ -468,7 +467,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — requires owner-scoped querying and security.
 - **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Only current owner's campsites are listed.
 - [ ] Every item shows useful summary information and opens details.
@@ -484,7 +483,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** High — dates, ownership, lifecycle state, and visibility must be consistent.
 - **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Owner can select an owned campsite and configure required lottery fields.
 - [ ] Valid submission creates a lottery linked to that campsite and owner.
@@ -498,10 +497,10 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** High — downstream winner booking must support multiple availability sets.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Owner can select multiple campsites they own.
-- [ ] At least one campsite is required and IDs are stored with the lottery.
+- [ ] At least one campsite is required and every selection is visible on the review screen.
 - [ ] Winner flow can identify every eligible campsite.
 
 ### US 02.04.03 — Set registration period
@@ -512,9 +511,9 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — timestamp and timezone boundaries affect eligibility.
 - **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
-- [ ] Start precedes end and both are stored as timestamps.
+- [ ] The date/time controls require the registration start to precede the end and show the chosen timezone.
 - [ ] Entrants cannot join before the start or after the end.
 - [ ] Times display consistently in the intended timezone.
 
@@ -526,7 +525,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** High — booking dates must agree with availability and timezone logic.
 - **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Booking start precedes booking end.
 - [ ] Period is compatible with campsite availability.
@@ -540,11 +539,11 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — value must remain valid relative to capacity and entrants.
 - **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Owner can enter a positive whole number.
 - [ ] Value does not exceed an optional waitlist capacity.
-- [ ] Draw logic uses the stored winner count.
+- [ ] The lottery review and result screens display the configured winner count.
 
 ### US 02.04.06 — Update lottery listing
 
@@ -554,7 +553,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** High — edits after entrants join or drawing begins can invalidate state.
 - **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Owner can edit and validate a lottery they own.
 - [ ] Changes appear to entrants.
@@ -568,7 +567,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** High — concurrent joins must never exceed capacity.
 - **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Blank capacity means unlimited; entered capacity is a positive whole number.
 - [ ] Capacity cannot be below winner count or current entry count.
@@ -580,13 +579,13 @@ This backlog preserves the official user-story wording. Story points are relativ
 
 - **Points:** 8
 - **Risk:** High — trusted scheduling, randomness, atomicity, and repeat prevention are unresolved.
-- **Halfway:** No
+- **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
-- [ ] Draw cannot occur before registration closes and uses only eligible entries.
-- [ ] Configured number of unique winners is selected and all statuses update consistently.
-- [ ] Draw is idempotent: retries cannot create a second result or duplicate notifications.
+- [ ] Before registration closes, the owner sees that drawing is unavailable and why.
+- [ ] After the draw, the owner sees the configured number of unique winners or all entrants if fewer joined.
+- [ ] Refreshing or reopening the result screen shows the same winners and does not send duplicate results.
 - [ ] Team confirms with the TA whether scheduled backend execution is required.
 
 ### Reservations and communication
@@ -599,7 +598,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** High — calendar must reflect live reservation/cancellation state.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Confirmed dates appear as booked for an owned campsite.
 - [ ] Cancelled/rejected dates are represented according to availability policy.
@@ -613,7 +612,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — requires owner/status/date indexes and scoped access.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Only active reservations for owned campsites are listed.
 - [ ] Each item shows campsite, entrant, dates, and status and opens details.
@@ -627,7 +626,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — requires consistent past/completed classification.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Only past/completed reservations for owned campsites are listed.
 - [ ] Entries are ordered consistently and open details.
@@ -641,7 +640,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — multiple cancellation/rejection statuses must be classified.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Cancelled and rejected reservations for owned campsites are listed.
 - [ ] Cancellation type/date are visible and details can be opened.
@@ -655,11 +654,11 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** High — rejection affects availability, entrant notification, and refund state.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
-- [ ] Owner can confirm rejection only for an eligible owned reservation.
-- [ ] Status and availability update consistently and cannot be rejected twice.
-- [ ] Entrant receives a reason/notification and refund state is recorded if required.
+- [ ] Eligible reservation shows a **Reject Reservation** action and confirmation dialog.
+- [ ] After rejection, it moves to the cancelled/rejected list and cannot be rejected again.
+- [ ] Entrant sees the rejection reason, notification, and refund information when applicable.
 
 ### US 02.09.01 — View waitlist entrants
 
@@ -669,7 +668,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — personally identifying data requires owner-scoped rules.
 - **Halfway:** Yes
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Owner can view entrants and statuses for an owned lottery.
 - [ ] Entrants from other lotteries are excluded.
@@ -683,11 +682,11 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** High — recipient authorization, fan-out, preferences, and duplicates must be handled.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
-- [ ] Owner can compose/confirm a notification for an owned lottery.
-- [ ] It is recorded and delivered only to that lottery's entrants.
-- [ ] Failures and retries do not create unintended duplicates.
+- [ ] Owner can compose, preview, and confirm a notification from an owned lottery screen.
+- [ ] The UI shows the intended recipient group before sending and then shows success feedback.
+- [ ] Failure shows a retry option without adding duplicate entries to sent-notification history.
 
 ### US 02.10.02 — View sent notifications
 
@@ -697,7 +696,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — requires sender-scoped logging and indexes.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Only notifications sent by the current owner are listed.
 - [ ] Each item shows lottery, message, recipients, and time.
@@ -711,11 +710,11 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — acknowledgement must be enforced, not merely displayed.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Rules/policies are shown before final confirmation.
 - [ ] Reservation cannot be confirmed until entrant explicitly acknowledges them.
-- [ ] Acknowledgement and timestamp are stored with the reservation.
+- [ ] Reservation details display that the rules were accepted and when acceptance occurred.
 
 ### US 02.12.01 — Message a reserving entrant
 
@@ -725,11 +724,11 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** High — participant authorization, delivery, content, and admin logging are required.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Owner can message only entrants with a reservation for their campsite.
 - [ ] Non-empty message records sender, recipient, reservation, and timestamp.
-- [ ] Entrant can view it and admin can audit the stored message.
+- [ ] Entrant sees the message in their reservation conversation and admin can open it from message logs.
 
 ## Administrator
 
@@ -743,7 +742,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** High — removal affects listings, lotteries, reservations, and audit history.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Authorized admin can confirm removal of a selected campsite.
 - [ ] Removed campsite no longer appears publicly and related state is handled.
@@ -757,7 +756,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** High — identity removal must preserve or anonymize required history.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Authorized admin can confirm removal of a selected profile.
 - [ ] Profile is removed/anonymized according to retention policy.
@@ -771,11 +770,11 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** High — Cloud Storage file and Firestore reference must remain consistent.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Authorized admin can confirm removal of an uploaded image.
-- [ ] Storage object and database reference are cleared consistently.
-- [ ] A placeholder is shown and the action is logged.
+- [ ] After removal, the image disappears from the moderation gallery and its related screen.
+- [ ] The related profile/campsite displays a placeholder and the admin sees removal confirmation.
 
 ### US 03.04.01 — Browse campsites
 
@@ -785,7 +784,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — admin scope and potentially large result sets require care.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Admin can list and identify registered campsites.
 - [ ] Selecting one opens complete moderation details.
@@ -799,7 +798,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — exposes personal data and therefore needs strict rules.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Admin can list profiles with appropriate identity and roles.
 - [ ] Selecting one opens the moderation details needed by the requirement.
@@ -813,7 +812,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** High — cross-record Storage inventory and ownership metadata are required.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Admin can browse campsite/profile images with their associated records.
 - [ ] Image can be previewed and sent to the removal flow.
@@ -827,7 +826,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** High — role removal affects campsites, lotteries, reservations, and possibly entrant access.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Admin confirms the owner and records a reason.
 - [ ] Owner privileges/listings are disabled according to the agreed policy.
@@ -841,7 +840,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — global logs require privileged access and retention rules.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Admin can list notifications with sender, recipient, type, and time.
 - [ ] Logs can be ordered/filtered and opened for details.
@@ -855,7 +854,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** High — multi-role navigation must not weaken admin security.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] One profile can hold admin, owner, and/or entrant roles.
 - [ ] User can access assigned role features without a second account.
@@ -869,7 +868,7 @@ This backlog preserves the official user-story wording. Story points are relativ
 - **Risk:** Medium — global message content is privacy-sensitive.
 - **Halfway:** No
 
-#### Checkpoints
+#### UI acceptance checkpoints
 
 - [ ] Admin can list messages with sender, recipient, reservation, and time.
 - [ ] Logs can be ordered/filtered and opened for complete details.
