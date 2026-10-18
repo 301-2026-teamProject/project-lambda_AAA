@@ -28,4 +28,6 @@ Command-line verification:
 
 Firebase is connected to the shared `campsitereservation-6b24c` project. The Android app uses the
 Google Services Gradle plugin and the Firebase BoM-managed Cloud Firestore SDK.
-The cloud database must be provisioned in the team's chosen permanent region before data is stored.
+The Standard-edition Firestore database is hosted in Toronto (`northamerica-northeast2`). Initial
+prototype security rules deny every read and write until story-specific schemas and access rules are
+reviewed and implemented.
