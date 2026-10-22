@@ -26,4 +26,8 @@ Command-line verification:
 - Material 3 theme with light and dark palettes
 - Launch-screen instrumented test
 
-Firebase is intentionally not configured in this baseline; it is owned by a separate team task.
+Firebase is connected to the shared `campsitereservation-6b24c` project. The Android app uses the
+Google Services Gradle plugin and the Firebase BoM-managed Cloud Firestore SDK.
+The Standard-edition Firestore database is hosted in Toronto (`northamerica-northeast2`). Initial
+prototype security rules deny every read and write until story-specific schemas and access rules are
+reviewed and implemented.

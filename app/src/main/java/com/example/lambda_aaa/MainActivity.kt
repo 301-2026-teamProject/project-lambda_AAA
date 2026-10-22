@@ -21,11 +21,14 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.lambda_aaa.ui.theme.CampsiteReservationTheme
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 
 /** Hosts the Compose user interface. */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Firebase.firestore
         enableEdgeToEdge()
         setContent {
             CampsiteReservationTheme {
