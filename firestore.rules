@@ -1,0 +1,52 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // No Firestore collections or document schemas are implemented yet.
+    // Access remains closed until a story defines its schema, ownership,
+    // validation constraints, and required queries.
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated(auth) {
+      return auth != null;
+    }
+
+    function isOwner(auth, userId) {
+      return isAuthenticated(auth) && auth.uid == userId;
+    }
+
+    function uidUnchanged(data, auth) {
+      return isAuthenticated(auth) &&
+        (!('uid' in data) || data.uid == auth.uid);
+    }
+
+    function uidNotModified(newData, currentData) {
+      return !('uid' in newData) || newData.uid == currentData.uid;
+    }
+
+    // Future collection rules must replace this validator with a strict,
+    // collection-specific schema validator for both creates and updates.
+    function isValidDocument(data, auth) {
+      return isAuthenticated(auth) &&
+        isOwner(auth, 'disabled') &&
+        uidUnchanged(data, auth) &&
+        uidNotModified(data, data) &&
+        data.keys().size() >= 0 &&
+        false;
+    }
+
+    match /{document=**} {
+      allow read: if false;
+      allow create, update: if isValidDocument(
+        request.resource.data,
+        request.auth
+      );
+      allow delete: if false;
+    }
+  }
+}

@@ -1,0 +1,13 @@
+*.iml
+.gradle/
+.idea/
+local.properties
+build/
+**/build/
+.DS_Store
+*.apk
+*.aab
+/gradle/gradle-daemon-jvm.properties
+firebase-debug*.log
+firestore-debug.log
+ui-debug.log
