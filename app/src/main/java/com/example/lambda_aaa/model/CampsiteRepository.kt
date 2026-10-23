@@ -67,4 +67,26 @@ class CampsiteRepository {
     }
 
     fun newCampsiteId(): String = campsitesRef.document().id
+
+    fun getOwnerCampsites(ownerId: String, onResult: (Boolean, List<Campsite>) -> Unit) {
+        campsitesRef
+            .whereEqualTo("ownerId", ownerId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                onResult(true, snapshot.toObjects(Campsite::class.java))
+            }
+            .addOnFailureListener {
+                onResult(false, emptyList())
+            }
+    }
+
+    fun getAllCampsites(onResult: (Boolean, List<Campsite>) -> Unit) {
+        campsitesRef.get()
+            .addOnSuccessListener { snapshot ->
+                onResult(true, snapshot.toObjects(Campsite::class.java))
+            }
+            .addOnFailureListener {
+                onResult(false, emptyList())
+            }
+    }
 }

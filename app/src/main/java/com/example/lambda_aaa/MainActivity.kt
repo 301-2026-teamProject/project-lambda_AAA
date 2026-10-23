@@ -33,16 +33,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             CampsiteReservationTheme {
-                CampsiteReservationApp()
+                val uid = "123" // get actual uid from auth repository upon login
+                CampsiteReservationApp(uid)
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun CampsiteReservationAppPreview() {
-    CampsiteReservationTheme {
-        CampsiteReservationApp()
     }
 }

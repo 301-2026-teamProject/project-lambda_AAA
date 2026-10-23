@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.runtime.saveable.rememberSaveable
 
 /**
  * View: only displays state from the controller and forwards the Save click.
@@ -46,7 +47,7 @@ fun TagSelector(
 @Composable
 fun CampsiteEditorView(
     isNew: Boolean,
-    onDone: (String) -> Unit,
+    onDone: (Boolean, String) -> Unit,
     onBack: () -> Unit,
     controller: CampsiteManagementController
 ) {
@@ -79,8 +80,8 @@ fun CampsiteEditorContent(
     campsite: Campsite?,
     isLoading: Boolean,
     errorMessage: String?,
-    save: (String, String, String, String, String, List<String>, String, (String) -> Unit) -> Unit,
-    onSave: (String) -> Unit,
+    save: (String, String, String, String, String, List<String>, String, (Boolean, String) -> Unit) -> Unit,
+    onSave: (Boolean, String) -> Unit,
     onBack: () -> Unit
 ) {
     when {
@@ -94,13 +95,13 @@ fun CampsiteEditorContent(
 
         else -> {
             // Text fields start with the campsite's existing values.
-            var name by remember(campsite) { mutableStateOf(campsite.name) }
-            var address by remember(campsite) { mutableStateOf(campsite.address) }
-            var description by remember(campsite) { mutableStateOf(campsite.description) }
-            var rules by remember(campsite) { mutableStateOf(campsite.rulesAndPolicy) }
-            var cancellation by remember(campsite) { mutableStateOf(campsite.cancellationPolicy) }
-            var tags by remember(campsite) { mutableStateOf(campsite.tags.toList()) }
-            var maxOccupancy by remember(campsite) { mutableStateOf(campsite.maxOccupancy.toString()) }
+            var name by rememberSaveable(campsite) { mutableStateOf(campsite.name) }
+            var address by rememberSaveable(campsite) { mutableStateOf(campsite.address) }
+            var description by rememberSaveable(campsite) { mutableStateOf(campsite.description) }
+            var rules by rememberSaveable(campsite) { mutableStateOf(campsite.rulesAndPolicy) }
+            var cancellation by rememberSaveable(campsite) { mutableStateOf(campsite.cancellationPolicy) }
+            var tags by rememberSaveable(campsite) { mutableStateOf(campsite.tags.toList()) }
+            var maxOccupancy by rememberSaveable(campsite) { mutableStateOf(campsite.maxOccupancy.toString()) }
 
             TopAppBar(
                 title = {
@@ -210,6 +211,6 @@ fun CampsiteEditorViewPreview() {
         errorMessage = "Something happened?",
         save = { _,_,_,_,_,_,_,_ ->},
         onBack = {},
-        onSave = {}
+        onSave = { _,_ ->}
     )
 }

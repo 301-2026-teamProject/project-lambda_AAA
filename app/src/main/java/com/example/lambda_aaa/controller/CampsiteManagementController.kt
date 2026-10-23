@@ -3,6 +3,7 @@ package com.example.lambda_aaa.controller
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
 import com.example.lambda_aaa.model.Campsite
 import com.example.lambda_aaa.model.CampsiteRepository
 
@@ -29,13 +30,17 @@ class CampsiteManagementController(
                 cid = cid,
                 ownerId = uid
             )
+            isLoading = false
         } else {
             repository.getCampsite(
                 cid = cid
             ) { exist, campsite ->
-                if (exist) {
+                if (exist && campsite != null) {
                     this.campsite = campsite
+                } else {
+                    errorMessage = "Failed to load campsite."
                 }
+                isLoading = false
             }
         }
     }
@@ -49,7 +54,7 @@ class CampsiteManagementController(
         cancellationPolicy: String,
         tags: List<String>,
         maxOccupancy: String,
-        onSave: (String) -> Unit,
+        onSave: (Boolean, String) -> Unit,
     ) {
         val c = campsite ?: return
 
@@ -79,9 +84,9 @@ class CampsiteManagementController(
                 campsite = c
             ) { success, msg ->
                 if (success) {
-                    onSave("Campsite registered!")
+                    onSave(true, "Campsite registered!")
                 } else {
-                    onSave("Failed to register campsite: $msg")
+                    onSave(false, "Failed to register campsite: $msg")
                 }
             }
         } else {
@@ -89,9 +94,9 @@ class CampsiteManagementController(
                 campsite = c
             ) { success, msg ->
                 if (success) {
-                    onSave("Changes applied!")
+                    onSave(true, "Changes applied!")
                 } else {
-                    onSave("Failed to apply changes: $msg")
+                    onSave(false, "Failed to apply changes: $msg")
                 }
             }
         }
