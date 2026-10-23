@@ -10,7 +10,7 @@ import com.example.lambda_aaa.model.CampsiteRepository
  * Controller: loads the campsite by cid, and pushes the edited values
  * back through CampsiteRepository. The view never touches the repository.
  */
-class CampsiteEditController(
+class CampsiteManagementController(
     private val cid: String,
     private val isNew: Boolean,
     private val repository: CampsiteRepository = CampsiteRepository(),
@@ -48,7 +48,7 @@ class CampsiteEditController(
         cancellationPolicy: String,
         tags: List<String>,
         maxOccupancy: String,
-        onSaved: (String) -> Unit,
+        onSave: (String) -> Unit,
     ) {
         val c = campsite ?: return
 
@@ -78,9 +78,9 @@ class CampsiteEditController(
                 campsite = c
             ) { success, msg ->
                 if (success) {
-                    onSaved("Campsite registered!")
+                    onSave("Campsite registered!")
                 } else {
-                    onSaved("Failed to register campsite: $msg")
+                    onSave("Failed to register campsite: $msg")
                 }
             }
         } else {
@@ -88,9 +88,9 @@ class CampsiteEditController(
                 campsite = c
             ) { success, msg ->
                 if (success) {
-                    onSaved("Changes applied!")
+                    onSave("Changes applied!")
                 } else {
-                    onSaved("Failed to apply changes: $msg")
+                    onSave("Failed to apply changes: $msg")
                 }
             }
         }

@@ -11,8 +11,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.lambda_aaa.controller.CampsiteEditController
+import com.example.lambda_aaa.controller.CampsiteManagementController
+import com.example.lambda_aaa.model.Campsite
 import com.example.lambda_aaa.model.CampsiteTags
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBackIosNew
 
 /**
  * View: only displays state from the controller and forwards the Save click.
@@ -44,16 +49,38 @@ fun CampsiteEditorView(
     isNew: Boolean,
     onDone: (String) -> Unit
 ) {
-    val controller = remember(cid) { CampsiteEditController(cid, isNew) }
-    val campsite = controller.campsite
+    val controller = remember(cid, isNew) { CampsiteManagementController(cid, isNew) }
 
+    CampsiteEditorContent(
+        isNew = isNew,
+        campsite = controller.campsite,
+        isLoading = controller.isLoading,
+        errorMessage = controller.errorMessage,
+        save = { name, address, desc, rule, cancel, tags, maxOcc, onSave ->
+            controller.save(name, address, desc, rule, cancel, tags, maxOcc, onSave)
+               },
+        onSave = onDone,
+        onBack = { }  // back button logic
+    )
+}
+
+@Composable
+fun CampsiteEditorContent(
+    isNew: Boolean,
+    campsite: Campsite?,
+    isLoading: Boolean,
+    errorMessage: String?,
+    save: (String, String, String, String, String, List<String>, String, (String) -> Unit) -> Unit,
+    onSave: (String) -> Unit,
+    onBack: () -> Unit
+) {
     when {
-        controller.isLoading -> Box(Modifier.fillMaxSize(), Alignment.Center) {
+        isLoading -> Box(Modifier.fillMaxSize(), Alignment.Center) {
             CircularProgressIndicator()
         }
 
         campsite == null -> Box(Modifier.fillMaxSize(), Alignment.Center) {
-            Text(controller.errorMessage ?: "Campsite does not exist.", color = MaterialTheme.colorScheme.error)
+            Text(errorMessage ?: "Campsite does not exist.", color = MaterialTheme.colorScheme.error)
         }
 
         else -> {
@@ -73,11 +100,22 @@ fun CampsiteEditorView(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Text(if (isNew) "Register Campsite" else "Edit campsite", style = MaterialTheme.typography.headlineSmall)
+                Box {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.align(Alignment.TopStart)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBackIosNew,
+                            contentDescription = "History"
+                        )
+                    }
+                }
+                Text(if (isNew) "Register Campsite" else "Edit Campsite Information", style = MaterialTheme.typography.headlineSmall)
 
                 OutlinedTextField(
                     value = name, onValueChange = { name = it },
-                    label = { Text("Name") }, modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Name of your campsite") }, modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
                     value = address, onValueChange = { address = it },
@@ -113,12 +151,12 @@ fun CampsiteEditorView(
                     modifier = Modifier.fillMaxWidth(),
                 )
 
-                controller.errorMessage?.let {
+                errorMessage?.let {
                     Text(it, color = MaterialTheme.colorScheme.error)
                 }
 
                 Button(
-                    onClick = { controller.save(name, address, description, rules, cancellation, tags, maxOccupancy, onDone) },
+                    onClick = { save(name, address, description, rules, cancellation, tags, maxOccupancy, onSave) },
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text("Save") }
             }
@@ -126,12 +164,16 @@ fun CampsiteEditorView(
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun CampsiteEditorViewPreview() {
-    CampsiteEditorView(
-        cid = "",
-        isNew = true,
-        onDone = {}
+    CampsiteEditorContent(
+        isNew = false,
+        campsite = Campsite(name = "University of Alberta"),
+        isLoading = false,
+        errorMessage = "Something happened?",
+        save = { _,_,_,_,_,_,_,_ ->},
+        onBack = {},
+        onSave = {}
     )
 }
