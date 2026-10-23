@@ -1,5 +1,6 @@
 *.iml
 .gradle/
+.kotlin/
 .idea/
 local.properties
 build/
@@ -11,3 +12,21 @@ build/
 firebase-debug*.log
 firestore-debug.log
 ui-debug.log
+
+# Local Python caches and generated exports
+__pycache__/
+*.py[cod]
+/output/
+/GUI interface PNGs/
+/GUI interface.html
+/GUI interface.png
+/crc.png
+/image.png
+/doc/mockups/png/
+/doc/mockups/wiki-exports/
+/doc/mockups/storyboard-*.png
+
+# Working diagram copies; keep GUI interface-final.drawio tracked
+/doc/mockups/GUI interface.drawio
+/doc/mockups/GUI interface-original.drawio
+/doc/mockups/GUI interface-complete.drawio
