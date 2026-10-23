@@ -45,25 +45,34 @@ fun TagSelector(
 
 @Composable
 fun CampsiteEditorView(
-    cid: String,
     isNew: Boolean,
-    onDone: (String) -> Unit
+    onDone: (String) -> Unit,
+    onBack: () -> Unit,
+    controller: CampsiteManagementController
 ) {
-    val controller = remember(cid, isNew) { CampsiteManagementController(cid, isNew) }
-
     CampsiteEditorContent(
         isNew = isNew,
         campsite = controller.campsite,
         isLoading = controller.isLoading,
         errorMessage = controller.errorMessage,
         save = { name, address, desc, rule, cancel, tags, maxOcc, onSave ->
-            controller.save(name, address, desc, rule, cancel, tags, maxOcc, onSave)
-               },
+            controller.save(
+                name = name,
+                address = address,
+                description = desc,
+                rulesAndPolicy = rule,
+                cancellationPolicy = cancel,
+                tags = tags,
+                maxOccupancy = maxOcc,
+                onSave = onSave
+            )
+        },
         onSave = onDone,
-        onBack = { }  // back button logic
+        onBack = onBack  // back button logic
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CampsiteEditorContent(
     isNew: Boolean,
@@ -93,6 +102,22 @@ fun CampsiteEditorContent(
             var tags by remember(campsite) { mutableStateOf(campsite.tags.toList()) }
             var maxOccupancy by remember(campsite) { mutableStateOf(campsite.maxOccupancy.toString()) }
 
+            TopAppBar(
+                title = {
+                    Text(
+                        if (isNew) "Register Campsite" else "Edit Campsite Information",
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBackIosNew,
+                            contentDescription = "Back"
+                        )
+                    }
+                }
+            )
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -100,36 +125,30 @@ fun CampsiteEditorContent(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Box {
-                    IconButton(
-                        onClick = onBack,
-                        modifier = Modifier.align(Alignment.TopStart)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBackIosNew,
-                            contentDescription = "History"
-                        )
-                    }
-                }
-                Text(if (isNew) "Register Campsite" else "Edit Campsite Information", style = MaterialTheme.typography.headlineSmall)
-
+                Spacer(Modifier.padding(top = 50.dp))
                 OutlinedTextField(
-                    value = name, onValueChange = { name = it },
-                    label = { Text("Name of your campsite") }, modifier = Modifier.fillMaxWidth(),
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name of your campsite") },
+                    modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
                     value = address, onValueChange = { address = it },
                     label = { Text("Address") }, modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
-                    value = description, onValueChange = { description = it },
-                    label = { Text("Description") }, minLines = 3, modifier = Modifier.fillMaxWidth(),
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Description") },
+                    minLines = 3,
+                    modifier = Modifier.fillMaxWidth(),
                 )
                 TagSelector(selected = tags, onChange = { tags = it })
                 OutlinedTextField(
                     value = maxOccupancy,
                     onValueChange = { input ->
-                        if (input.all { it.isDigit() }) maxOccupancy = input   // ignores letters, '-', '.', pasted junk
+                        if (input.all { it.isDigit() }) maxOccupancy =
+                            input   // ignores letters, '-', '.', pasted junk
                     },
                     label = { Text("Maximum occupancy") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -137,12 +156,18 @@ fun CampsiteEditorContent(
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
-                    value = rules, onValueChange = { rules = it },
-                    label = { Text("Rules and policy") }, minLines = 3, modifier = Modifier.fillMaxWidth(),
+                    value = rules,
+                    onValueChange = { rules = it },
+                    label = { Text("Rules and policy") },
+                    minLines = 3,
+                    modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
-                    value = cancellation, onValueChange = { cancellation = it },
-                    label = { Text("Cancellation policy") }, minLines = 2, modifier = Modifier.fillMaxWidth(),
+                    value = cancellation,
+                    onValueChange = { cancellation = it },
+                    label = { Text("Cancellation policy") },
+                    minLines = 2,
+                    modifier = Modifier.fillMaxWidth(),
                 )
                 // Shown but not editable: the average comes from entrant ratings.
                 OutlinedTextField(
@@ -156,7 +181,18 @@ fun CampsiteEditorContent(
                 }
 
                 Button(
-                    onClick = { save(name, address, description, rules, cancellation, tags, maxOccupancy, onSave) },
+                    onClick = {
+                        save(
+                            name,
+                            address,
+                            description,
+                            rules,
+                            cancellation,
+                            tags,
+                            maxOccupancy,
+                            onSave
+                        )
+                    },
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text("Save") }
             }

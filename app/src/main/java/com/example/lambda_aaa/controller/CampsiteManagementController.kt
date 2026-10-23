@@ -13,7 +13,7 @@ import com.example.lambda_aaa.model.CampsiteRepository
 class CampsiteManagementController(
     private val cid: String,
     private val isNew: Boolean,
-    private val repository: CampsiteRepository = CampsiteRepository(),
+    private val repository: CampsiteRepository,
 ) {
     var campsite by mutableStateOf<Campsite?>(null)
         private set
