@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.example.lambda_aaa.ui.theme.CampsiteReservationTheme
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
+import com.example.lambda_aaa.view.CampsiteReservationApp
 
 /** Hosts the Compose user interface. */
 class MainActivity : ComponentActivity() {
@@ -34,33 +35,6 @@ class MainActivity : ComponentActivity() {
             CampsiteReservationTheme {
                 CampsiteReservationApp()
             }
-        }
-    }
-}
-
-/** Displays the baseline screen until feature navigation is introduced. */
-@Composable
-fun CampsiteReservationApp(modifier: Modifier = Modifier) {
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background,
-    ) {
-        Column(
-            modifier = Modifier.padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Text(
-                text = stringResource(R.string.app_name),
-                modifier = Modifier.semantics { heading() },
-                style = MaterialTheme.typography.headlineMedium,
-            )
-            Text(
-                text = stringResource(R.string.app_tagline),
-                modifier = Modifier.padding(top = 8.dp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyLarge,
-            )
         }
     }
 }

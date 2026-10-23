@@ -12,6 +12,7 @@ import com.example.lambda_aaa.model.CampsiteRepository
  */
 class CampsiteManagementController(
     private val cid: String,
+    private val uid: String,
     private val isNew: Boolean,
     private val repository: CampsiteRepository,
 ) {
@@ -26,7 +27,7 @@ class CampsiteManagementController(
         if (isNew) {
             this.campsite = Campsite(
                 cid = cid,
-                ownerId = "" // retrieve owner id from Auth database here
+                ownerId = uid
             )
         } else {
             repository.getCampsite(
