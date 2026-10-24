@@ -5,24 +5,18 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
+
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.example.lambda_aaa.ui.theme.CampsiteReservationTheme
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.lambda_aaa.model.CampsiteRepository
+import com.example.lambda_aaa.model.Campsite
+import com.example.lambda_aaa.view.EntrantDashboardView
 
 /** Hosts the Compose user interface. */
 class MainActivity : ComponentActivity() {
@@ -30,9 +24,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Firebase.firestore
         enableEdgeToEdge()
+        val campsiteRepository = CampsiteRepository()
         setContent {
             CampsiteReservationTheme {
-                CampsiteReservationApp()
+                CampsiteReservationApp(
+                    campsiteList = campsiteRepository.campsiteList
+                )
             }
         }
     }
@@ -40,28 +37,29 @@ class MainActivity : ComponentActivity() {
 
 /** Displays the baseline screen until feature navigation is introduced. */
 @Composable
-fun CampsiteReservationApp(modifier: Modifier = Modifier) {
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background,
-    ) {
-        Column(
-            modifier = Modifier.padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Text(
-                text = stringResource(R.string.app_name),
-                modifier = Modifier.semantics { heading() },
-                style = MaterialTheme.typography.headlineMedium,
-            )
-            Text(
-                text = stringResource(R.string.app_tagline),
-                modifier = Modifier.padding(top = 8.dp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyLarge,
-            )
-        }
+fun CampsiteReservationApp(
+    campsiteList: List<Campsite>,
+) {
+    val navController = rememberNavController()
+
+    val userRole = "user" // IMPLEMENT THE DEVICE/PROFILE VERIFICATION SO WE KNOW WHERE TO START A USER
+
+    NavHost(navController = navController, startDestination = userRole) {
+        composable("user") { EntrantDashboardView(
+            navController,
+            campsiteList = campsiteList,
+            onNotificationsClick = {
+            // Open notifications
+            },
+            onFiltersClick = {
+                // Open campsite filters
+            },
+            onTabSelected = {
+                // Handle bottom navigation
+            }
+        ) }
+        //composable("owner") { OwnerDashboardView(navController) }
+        //composable("admin") { AdminDashboardView(navController) }
     }
 }
 
@@ -69,6 +67,6 @@ fun CampsiteReservationApp(modifier: Modifier = Modifier) {
 @Composable
 private fun CampsiteReservationAppPreview() {
     CampsiteReservationTheme {
-        CampsiteReservationApp()
+        //CampsiteReservationApp()
     }
 }
