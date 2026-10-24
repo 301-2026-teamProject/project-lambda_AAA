@@ -25,6 +25,8 @@ class CampsiteRepository {
         }
     }
 
+    val campsiteList: List<Campsite> = _campsites
+
     fun addCampsite(campsite: Campsite, onResult: (Boolean, String?) -> Unit) {
         campsite.creationDate = null
         campsite.lastUpdatedDate = null
