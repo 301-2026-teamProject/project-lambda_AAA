@@ -2,16 +2,14 @@ package com.example.lambda_aaa.model
 
 import com.google.firebase.firestore.DocumentId
 
-class UserProfile(
+data class UserProfile(
     @DocumentId val uid: String,
-    private var name: String,
-    private var email: String,
-    private var phone: String,
-    private var profilePhotoUrl: String,
-    private var roles: ArrayList<Role>,
-    private var notificationsEnabled: Boolean = true,
-    private var isOwner: Boolean = false,
-    private val creationDate: String
-) {
-
-}
+    var name: String,
+    var email: String,
+    var phone: String,
+    var profilePhotoUrl: String,
+    var roles: ArrayList<Role>,
+    var notificationsEnabled: Boolean = true,
+    var isOwner: Boolean = false,
+    val creationDate: String
+)
