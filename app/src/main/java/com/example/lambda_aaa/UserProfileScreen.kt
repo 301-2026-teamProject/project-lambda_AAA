@@ -1,19 +1,36 @@
 package com.example.lambda_aaa
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.R
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.lambda_aaa.ui.theme.ForestGreen
 
 @Composable
-fun UserProfileScreen() {
+fun UserProfileScreen(user: UserProfile) {
+
+    var name by remember { mutableStateOf(user.name) }
+    var email by remember { mutableStateOf(user.email) }
+    var phoneNumber by remember { mutableStateOf(user.phoneNumber) }
+    var notify by remember { mutableStateOf(true) }
+
     Column (modifier = Modifier.fillMaxSize().padding(16.dp),) {
 
         Text(
@@ -25,7 +42,67 @@ fun UserProfileScreen() {
             thickness = 4.dp,
             color = Color.Green)
 
-        Text(text = "Name", fontSize = 12.sp)
+        Text(text = "Name", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        TextField(
+            value = name,
+            onValueChange = { name = it }
+        )
+        Text(text = "Email", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        TextField(
+            value = email,
+            onValueChange = { email = it}
+        )
+        Text(text = "Phone", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        TextField(
+            value = phoneNumber,
+            onValueChange = { phoneNumber = it}
+        )
+
+        Row () {
+            Text("Notifications", fontSize = 12.sp)
+
+            if (notify) {
+                Button(
+                    onClick = {
+                        user.toggleNotifications()
+                        notify = !notify
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Green, contentColor = Color.White)
+                ) { Text("ON") }
+            }
+            else {
+                Button(
+                    onClick = {
+                        user.toggleNotifications()
+                        notify = !notify
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red, contentColor = Color.White)
+                ) { Text("OFF") }
+            }
+        }
+
+        Text("Policy and Guidelines >", fontSize = 12.sp)
+
+        Row() {
+
+            Button(
+                onClick = {
+                    // do something
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Green, contentColor = Color.White)
+            ) { Text("SAVE PROFILE") }
+
+            Button(
+                onClick = {
+                    // do something
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White, contentColor = Color.Red)
+            ) { Text("DELETE PROFILE") }
+        }
 
     }
 }
