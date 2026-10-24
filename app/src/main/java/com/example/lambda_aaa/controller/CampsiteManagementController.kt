@@ -3,7 +3,6 @@ package com.example.lambda_aaa.controller
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
 import com.example.lambda_aaa.model.Campsite
 import com.example.lambda_aaa.model.CampsiteRepository
 
@@ -34,11 +33,11 @@ class CampsiteManagementController(
         } else {
             repository.getCampsite(
                 cid = cid
-            ) { exist, campsite ->
+            ) { exist, campsite, msg ->
                 if (exist && campsite != null) {
                     this.campsite = campsite
                 } else {
-                    errorMessage = "Failed to load campsite."
+                    errorMessage = "Failed to load campsite: $msg"
                 }
                 isLoading = false
             }

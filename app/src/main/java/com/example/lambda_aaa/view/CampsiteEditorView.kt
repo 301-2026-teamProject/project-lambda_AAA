@@ -84,118 +84,99 @@ fun CampsiteEditorContent(
     onSave: (Boolean, String) -> Unit,
     onBack: () -> Unit
 ) {
-    when {
-        isLoading -> Box(Modifier.fillMaxSize(), Alignment.Center) {
-            CircularProgressIndicator()
-        }
-
-        campsite == null -> Box(Modifier.fillMaxSize(), Alignment.Center) {
-            Text(errorMessage ?: "Campsite does not exist.", color = MaterialTheme.colorScheme.error)
-        }
-
-        else -> {
-            // Text fields start with the campsite's existing values.
-            var name by rememberSaveable(campsite) { mutableStateOf(campsite.name) }
-            var address by rememberSaveable(campsite) { mutableStateOf(campsite.address) }
-            var description by rememberSaveable(campsite) { mutableStateOf(campsite.description) }
-            var rules by rememberSaveable(campsite) { mutableStateOf(campsite.rulesAndPolicy) }
-            var cancellation by rememberSaveable(campsite) { mutableStateOf(campsite.cancellationPolicy) }
-            var tags by rememberSaveable(campsite) { mutableStateOf(campsite.tags.toList()) }
-            var maxOccupancy by rememberSaveable(campsite) { mutableStateOf(campsite.maxOccupancy.toString()) }
-
+    Scaffold(
+        topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        if (isNew) "Register Campsite" else "Edit Campsite Information",
-                        style = MaterialTheme.typography.headlineSmall
-                    )
+                    Text(if (isNew) "Register Campsite" else "Edit Campsite Information")
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBackIosNew,
-                            contentDescription = "Back"
-                        )
+                        Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Back")
                     }
                 }
             )
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Spacer(Modifier.padding(top = 50.dp))
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Name of your campsite") },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = address, onValueChange = { address = it },
-                    label = { Text("Address") }, modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text("Description") },
-                    minLines = 3,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                TagSelector(selected = tags, onChange = { tags = it })
-                OutlinedTextField(
-                    value = maxOccupancy,
-                    onValueChange = { input ->
-                        if (input.all { it.isDigit() }) maxOccupancy =
-                            input   // ignores letters, '-', '.', pasted junk
-                    },
-                    label = { Text("Maximum occupancy") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = rules,
-                    onValueChange = { rules = it },
-                    label = { Text("Rules and policy") },
-                    minLines = 3,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = cancellation,
-                    onValueChange = { cancellation = it },
-                    label = { Text("Cancellation policy") },
-                    minLines = 2,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                // Shown but not editable: the average comes from entrant ratings.
-                OutlinedTextField(
-                    value = campsite.ratingAverage.toString(), onValueChange = {},
-                    label = { Text("Rating average") }, readOnly = true, enabled = false,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+        }
+    ) { padding ->
+        when {
+            isLoading -> Box(Modifier.fillMaxSize().padding(padding), Alignment.Center) {
+                CircularProgressIndicator()
+            }
 
-                errorMessage?.let {
-                    Text(it, color = MaterialTheme.colorScheme.error)
+            campsite == null -> Box(Modifier.fillMaxSize().padding(padding), Alignment.Center) {
+                Text(errorMessage ?: "Campsite does not exist.", color = MaterialTheme.colorScheme.error)
+            }
+
+            else -> {
+                var name by rememberSaveable(campsite) { mutableStateOf(campsite.name) }
+                var address by rememberSaveable(campsite) { mutableStateOf(campsite.address) }
+                var description by rememberSaveable(campsite) { mutableStateOf(campsite.description) }
+                var rules by rememberSaveable(campsite) { mutableStateOf(campsite.rulesAndPolicy) }
+                var cancellation by rememberSaveable(campsite) { mutableStateOf(campsite.cancellationPolicy) }
+                var tags by rememberSaveable(campsite) { mutableStateOf(campsite.tags.toList()) }
+                var maxOccupancy by rememberSaveable(campsite) { mutableStateOf(campsite.maxOccupancy.toString()) }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    // no Spacer hack needed anymore
+                    OutlinedTextField(
+                        value = name, onValueChange = { name = it },
+                        label = { Text("Name of your campsite") },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    OutlinedTextField(
+                        value = address, onValueChange = { address = it },
+                        label = { Text("Address") }, modifier = Modifier.fillMaxWidth(),
+                    )
+                    OutlinedTextField(
+                        value = description, onValueChange = { description = it },
+                        label = { Text("Description") }, minLines = 3,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    TagSelector(selected = tags, onChange = { tags = it })
+                    OutlinedTextField(
+                        value = maxOccupancy,
+                        onValueChange = { input ->
+                            if (input.all { it.isDigit() }) maxOccupancy = input
+                        },
+                        label = { Text("Maximum occupancy") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    OutlinedTextField(
+                        value = rules, onValueChange = { rules = it },
+                        label = { Text("Rules and policy") }, minLines = 3,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    OutlinedTextField(
+                        value = cancellation, onValueChange = { cancellation = it },
+                        label = { Text("Cancellation policy") }, minLines = 2,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    OutlinedTextField(
+                        value = campsite.ratingAverage.toString(), onValueChange = {},
+                        label = { Text("Rating average") }, readOnly = true, enabled = false,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    errorMessage?.let {
+                        Text(it, color = MaterialTheme.colorScheme.error)
+                    }
+
+                    Button(
+                        onClick = {
+                            save(name, address, description, rules, cancellation, tags, maxOccupancy, onSave)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text("Save") }
                 }
-
-                Button(
-                    onClick = {
-                        save(
-                            name,
-                            address,
-                            description,
-                            rules,
-                            cancellation,
-                            tags,
-                            maxOccupancy,
-                            onSave
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text("Save") }
             }
         }
     }

@@ -8,13 +8,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.lambda_aaa.controller.CampsiteDetailController
+import com.example.lambda_aaa.controller.CampsiteOwnerController
 import com.example.lambda_aaa.controller.CampsiteManagementController
 import com.example.lambda_aaa.model.CampsiteRepository
 import androidx.navigation.NavType
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import com.example.lambda_aaa.controller.CampsiteDetailController
 
 /**
  * Main app logic */
@@ -23,74 +23,65 @@ fun CampsiteReservationApp(
     uid: String,
 ) {
     val navController = rememberNavController()
-    val campsiteRepository = remember { CampsiteRepository() }
-    val msg = ""
+    val repo = remember { CampsiteRepository() }
+    val ownerController = remember {
+        CampsiteOwnerController(
+            uid = uid,
+            repository = repo
+        )
+    }
 
-    NavHost(navController = navController, startDestination = "ownerHome/$msg") {
-        composable(
-            route = "ownerHome/{success}/{msg}",
-            arguments = listOf(
-                navArgument("success") { type = NavType.StringType },
-                navArgument("msg") { type = NavType.BoolType }
-            )
-        ) { backStackEntry ->
+    var editMessage by remember { mutableStateOf<Pair<Boolean, String>?>(null) }
+
+    fun goHome(success: Boolean, msg: String) {
+        editMessage = success to msg
+        navController.popBackStack("ownerHome", inclusive = false)
+    }
+
+    NavHost(navController, startDestination = "ownerHome") {
+        composable("ownerHome") {
             CampsiteOwnerView(
                 uid = uid,
-                controller = CampsiteDetailController(
-                    uid = uid,
-                    ownerSearch = true,
-                    repository = campsiteRepository
-                ),
-                onClickRegister = { navController.navigate(("registerScreen")) },
+                controller = ownerController,
+                onClickRegister = { navController.navigate("registerScreen") },
                 onClickCampsite = { cid -> navController.navigate("detailScreen/$cid") },
-                success = backStackEntry.arguments?.getBoolean("success") ?: false,
-                message = backStackEntry.arguments?.getString("msg") ?: return@composable
+                editMessage = editMessage,
+                onEditMessageShown = { editMessage = null }
             )
         }
         composable("registerScreen") {
+            val controller = remember {
+                CampsiteManagementController(repo.newCampsiteId(), uid, true, repo)
+            }
             CampsiteEditorView(
                 isNew = true,
-                onDone = { success, msg -> navController.navigate("ownerHome/$success/$msg") },
+                onDone = { ok, msg -> goHome(ok, msg) },
                 onBack = { navController.popBackStack() },
-                controller = CampsiteManagementController(
-                    cid = campsiteRepository.newCampsiteId(),
-                    uid = uid,
-                    isNew = true,
-                    repository = campsiteRepository
-                )
+                controller = controller
             )
         }
         composable(
-            route = "detailScreen/{cid}",
-            arguments = listOf(navArgument("cid") { type = NavType.StringType } )
-        ) { backStackEntry ->
-            val cid = backStackEntry.arguments?.getString("cid") ?: return@composable
-
-            CampsiteDetailView(
-                cid = cid,
-                onClickEdit = { navController.navigate("editScreen/$cid") },
-                onBack = { navController.popBackStack() },
-                controller = CampsiteDetailController(
-                    uid = uid,
-                    ownerSearch = true,
-                    repository = campsiteRepository
-                )
-            )
-        }
-        composable(
-            route = "editScreen/{cid}",
+            "detailScreen/{cid}",
             arguments = listOf(navArgument("cid") { type = NavType.StringType })
-        ) { backStackEntry ->
+        ) { entry ->
+            val cid = entry.arguments?.getString("cid") ?: return@composable
+            CampsiteDetailView(
+                campsiteDetailController = CampsiteDetailController(cid = cid, repository = repo),
+                onBack = { navController.popBackStack() },
+                onEdit = { navController.navigate("editScreen/$cid") }
+            )
+        }
+        composable(
+            "editScreen/{cid}",
+            arguments = listOf(navArgument("cid") { type = NavType.StringType })
+        ) { entry ->
+            val cid = entry.arguments?.getString("cid") ?: return@composable
+            val controller = remember(cid) { CampsiteManagementController(cid, uid, false, repo) }
             CampsiteEditorView(
                 isNew = false,
-                onDone = { success, msg -> navController.navigate("ownerHome/$success/$msg") },
+                onDone = { ok, msg -> goHome(ok, msg) },
                 onBack = { navController.popBackStack() },
-                controller = CampsiteManagementController(
-                    cid = backStackEntry.arguments?.getString("cid") ?: return@composable,
-                    uid = uid,
-                    isNew = false,
-                    repository = campsiteRepository
-                )
+                controller = controller
             )
         }
     }
