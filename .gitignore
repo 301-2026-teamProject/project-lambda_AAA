@@ -30,7 +30,3 @@ __pycache__/
 /doc/mockups/GUI interface.drawio
 /doc/mockups/GUI interface-original.drawio
 /doc/mockups/GUI interface-complete.drawio
-
-app/build.gradle.kts
-build.gradle.kts
-gradle/libs.versions.toml
