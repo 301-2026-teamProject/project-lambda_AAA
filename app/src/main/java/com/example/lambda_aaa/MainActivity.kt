@@ -48,15 +48,6 @@ fun CampsiteReservationApp(
         composable("user") { EntrantDashboardView(
             navController,
             campsiteList = campsiteList,
-            onNotificationsClick = {
-            // Open notifications
-            },
-            onFiltersClick = {
-                // Open campsite filters
-            },
-            onTabSelected = {
-                // Handle bottom navigation
-            }
         ) }
         composable("owner") {
             // shortcut: placeholder user ID, replace when profile verification is connected.
