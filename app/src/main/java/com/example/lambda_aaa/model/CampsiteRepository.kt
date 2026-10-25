@@ -25,6 +25,7 @@ class CampsiteRepository {
         }
     }
 
+    fun newCampsiteId(): String = campsitesRef.document().id
     val campsiteList: List<Campsite> = _campsites
 
     fun addCampsite(campsite: Campsite, onResult: (Boolean, String?) -> Unit) {
@@ -58,15 +59,35 @@ class CampsiteRepository {
     }
 
     /* get campsite details and also used in campsite information editing */
-    fun getCampsite(cid: String, onResult: (Boolean, Campsite?) -> Unit) {
+    fun getCampsite(cid: String, onResult: (Boolean, Campsite?, String?) -> Unit) {
         campsitesRef.document(cid).get()
             .addOnSuccessListener { snapshot ->
-                onResult(true, snapshot.toObject(Campsite::class.java))
+                onResult(true, snapshot.toObject(Campsite::class.java), null)
             }
-            .addOnFailureListener {
-                onResult(false, null)
+            .addOnFailureListener { e ->
+                onResult(false, null, e.message)
             }
     }
 
-    fun newCampsiteId(): String = campsitesRef.document().id
+    fun getOwnerCampsites(ownerId: String, onResult: (Boolean, List<Campsite>, String?) -> Unit) {
+        campsitesRef
+            .whereEqualTo("ownerId", ownerId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                onResult(true, snapshot.toObjects(Campsite::class.java), null)
+            }
+            .addOnFailureListener { e ->
+                onResult(false, emptyList(), e.message)
+            }
+    }
+
+    fun getAllCampsites(onResult: (Boolean, List<Campsite>, String?) -> Unit) {
+        campsitesRef.get()
+            .addOnSuccessListener { snapshot ->
+                onResult(true, snapshot.toObjects(Campsite::class.java), null)
+            }
+            .addOnFailureListener { e ->
+                onResult(false, emptyList(), e.message)
+            }
+    }
 }
