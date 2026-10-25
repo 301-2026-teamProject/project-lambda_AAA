@@ -87,7 +87,6 @@ private enum class ScreenTabs(val label: String) {
 }
 
 private val locations = mutableStateListOf<String>()
-//val locations: List<String> = listOf("Jasper", "Hinton", "Banff", "Canmore", "Kananaskis")
 @Composable
 fun EntrantDashboardView(
     navController: NavController,
@@ -117,10 +116,11 @@ fun EntrantDashboardView(
     var selectedGuestCount by remember { mutableStateOf<Int?>(null) }
 
     val filteredCampsites = campsiteList.filter { campsite ->
-        val matchesLocation = (selectedLocation == null || campsite.address == selectedLocation)
-        val matchesGuests = (selectedGuestCount == null || selectedGuestCount!! <= campsite.maxOccupancy)
+        val matchSearch = (searchQuery == "" || campsite.name.contains(searchQuery)) // Checks if the searchbar is empty, or if a campsite has part of its text
+        val matchesLocation = (selectedLocation == null || campsite.address == selectedLocation) // Checks if a campsite location matches the searched one
+        val matchesGuests = (selectedGuestCount == null || selectedGuestCount!! <= campsite.maxOccupancy) // Checks if an inputted occupancy count is less than the campsite one
         //val matchesDates = startDate == null || endDate == null ||  campsite.availableStartDate <= startDate && campsite.availableEndDate >= endDate
-        matchesLocation && matchesGuests //&& matchesDates
+        matchSearch && matchesLocation && matchesGuests //&& matchesDates
     }
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -251,15 +251,10 @@ fun EntrantDashboardView(
                     // Not LazyColumn because the screen is already scrollable
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         filteredCampsites.forEach { campsite ->
-                            // Checks for two conditions, either the search bar is empty (displays everything)...
-                            // or the user DID type something, in which it only displays the campsites that contains the query
-                            if ((searchQuery != "" && campsite.name.contains(searchQuery)) || searchQuery == "") {
-                                CampsiteCard(
-                                    campsite = campsite, // just sends the entire object which might not be efficient, but it works
-                                    onClick = { }, // PUT CLICK ACTION HERE
-                                )
-
-                            }
+                            CampsiteCard(
+                                campsite = campsite, // just sends the entire object which might not be efficient, but it works
+                                onClick = { }, // PUT CLICK ACTION HERE
+                            )
                         }
                     }
 
@@ -336,6 +331,16 @@ private fun TrailDrawTopBar() {
     }
 }
 
+/**
+ * Creates a searchbar that lets users type in the name of a Campsite.
+ *
+ * Uses a MutableStateOf string so that it updates in real time.
+ *
+ * @param value the current text within the textbox, which updates as the user types
+ * @param onValueChange updates the menu on value change, dynamically updating the search bar
+ * @param modifier used to adjust the dimensions of the bar on screen
+ * @return nothing
+ */
 @Composable
 private fun TrailDrawSearchBar(
     value: String,
