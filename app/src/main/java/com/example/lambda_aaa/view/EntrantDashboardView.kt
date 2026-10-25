@@ -65,16 +65,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.res.stringResource
+import com.example.lambda_aaa.R
 import com.example.lambda_aaa.model.Campsite
 
-private val TrailCanvas = Color(0xFFF3F0E9)
-private val TrailInk = Color(0xFF242823)
-private val TrailMuted = Color(0xFF6E716C)
-private val TrailBorder = Color(0xFFDEDCD4)
-private val TrailSage = Color(0xFFE1EADF)
-private val TrailSageDark = Color(0xFF526B5A)
-private val TrailThumb = Color(0xFFE7ECE4)
 private enum class TrailTab(val label: String) {
     Explore("Explore"),
     Lotteries("Lotteries"),
@@ -87,6 +83,10 @@ fun EntrantDashboardView(
     navController: NavController,
     modifier: Modifier = Modifier,
     campsiteList: List<Campsite>,
+    onCampsiteClick: (String) -> Unit = {},
+    isLoading: Boolean = false,
+    errorMessage: String? = null,
+    onRetry: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
     onFiltersClick: () -> Unit = {},
     onTabSelected: (String) -> Unit = {},
@@ -203,13 +203,25 @@ fun EntrantDashboardView(
                         )
                     }
 
-                    LazyColumn(modifier = modifier.fillMaxSize()) {
-                        itemsIndexed(campsiteList) { _ , campsite ->
+                    LazyColumn(
+                        modifier = modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        item {
+                            when {
+                                isLoading -> CircularProgressIndicator()
+                                errorMessage != null -> Column {
+                                    Text(errorMessage, color = MaterialTheme.colorScheme.error)
+                                    Button(onClick = onRetry) { Text(stringResource(R.string.retry)) }
+                                }
+                                campsiteList.isEmpty() -> Text(stringResource(R.string.no_campsites))
+                            }
+                        }
+                        items(campsiteList, key = { it.cid }) { campsite ->
                             CampsiteCard(
                                 campsite = campsite,
-                                onClick = { }, // PUT CLICK ACTION HERE
+                                onClick = { onCampsiteClick(campsite.cid) },
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
                         }
                     }
 
@@ -373,113 +385,6 @@ private fun FilterPill(
                     maxLines = 1,
                     softWrap = false,
                 )
-            }
-        }
-    }
-}
-
-@Composable
-private fun CampsiteCard(
-    campsite: Campsite,
-    onClick: () -> Unit,
-) {
-    Surface(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 100.dp),
-        shape = RoundedCornerShape(17.dp),
-        color = Color.White,
-        border = BorderStroke(1.dp, TrailBorder),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(13.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(5.dp),
-            ) {
-                Text(
-                    text = campsite.name,
-                    color = TrailInk,
-                    fontSize = 14.sp,
-                    lineHeight = 17.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text = "${campsite.mapLocation} · ${campsite.maxOccupancy} guests",
-                    color = TrailMuted,
-                    fontSize = 11.sp,
-                    lineHeight = 14.sp,
-                    maxLines = 1,
-                )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    if (campsite.ratingCount != 0) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Filled.Star,
-                                contentDescription = "Rating",
-                                tint = TrailMuted,
-                                modifier = Modifier.size(12.dp),
-                            )
-                            Spacer(modifier = Modifier.width(2.dp))
-                            Text(
-                                text = campsite.ratingAverage.toString(),
-                                color = TrailMuted,
-                                fontSize = 10.5.sp,
-                                maxLines = 1,
-                            )
-                        }
-                    } else {
-                        Text(
-                            text = "No ratings",
-                            color = TrailMuted,
-                            fontSize = 10.5.sp,
-                            maxLines = 1,
-                        )
-                    }
-                    Text(
-                        text = $$"$HellaBread&17Cent", //campsite.pricePerNight.toString(),
-                        color = TrailMuted,
-                        fontSize = 10.5.sp,
-                        maxLines = 1,
-                    )
-
-                    if (campsite.cancellationPolicy != "") {
-                        Text(
-                            text = campsite.cancellationPolicy,
-                            color = TrailMuted,
-                            fontSize = 10.5.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false),
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.width(10.dp))
-            Surface(
-                shape = RoundedCornerShape(13.dp),
-                color = TrailThumb,
-                modifier = Modifier.size(width = 68.dp, height = 56.dp),
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Filled.Star,
-                        contentDescription = null,
-                        tint = TrailSageDark,
-                        modifier = Modifier.size(20.dp),
-                    )
-                }
             }
         }
     }

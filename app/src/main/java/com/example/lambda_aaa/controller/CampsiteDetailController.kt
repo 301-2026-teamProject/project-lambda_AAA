@@ -16,17 +16,17 @@ class CampsiteDetailController(
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
-    init {
-        fetchCampsiteAndLottery()
-    }
-
     fun fetchCampsiteAndLottery() {
-        /* also get lottery of this campsite */
-        repository.getCampsite(cid = cid) { success, campsite, msg ->
-            if (success) {
+        //fetch this campsites lottery and booking dates when the shared lottery model is finished
+        isLoading = true
+        errorMessage = null
+        campsite = null
+        repository.getCampsite(cid = cid) { success, campsite, _ ->
+            if (success && campsite != null) {
                 this.campsite = campsite
             } else {
-                errorMessage = "Failed to load campsites: $msg"
+                errorMessage = if (success) "Campsite does not exist."
+                    else "Could not load campsite. Check your connection and try again."
             }
             isLoading = false
         }

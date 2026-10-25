@@ -2,6 +2,13 @@
 package com.example.lambda_aaa
 
 import android.os.Bundle
+import android.net.Uri
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.example.lambda_aaa.controller.CampsiteDetailController
+import com.example.lambda_aaa.view.CampsiteDetailView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -24,12 +31,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Firebase.firestore
         enableEdgeToEdge()
-        val campsiteRepository = CampsiteRepository()
         setContent {
             CampsiteReservationTheme {
-                CampsiteReservationApp(
-                    campsiteList = campsiteRepository.campsiteList
-                )
+                val repository = remember { CampsiteRepository() }
+                DisposableEffect(repository) { onDispose { repository.close() } }
+                CampsiteReservationApp(repository)
             }
         }
     }
@@ -38,7 +44,7 @@ class MainActivity : ComponentActivity() {
 /** Displays the baseline screen until feature navigation is introduced. */
 @Composable
 fun CampsiteReservationApp(
-    campsiteList: List<Campsite>,
+    repository: CampsiteRepository,
 ) {
     val navController = rememberNavController()
 
@@ -47,7 +53,11 @@ fun CampsiteReservationApp(
     NavHost(navController = navController, startDestination = userRole) {
         composable("user") { EntrantDashboardView(
             navController,
-            campsiteList = campsiteList,
+            campsiteList = repository.campsiteList,
+            isLoading = repository.isLoading,
+            errorMessage = repository.errorMessage,
+            onRetry = repository::refresh,
+            onCampsiteClick = { cid -> navController.navigate("campsite/${Uri.encode(cid)}") },
             onNotificationsClick = {
             // Open notifications
             },
@@ -58,6 +68,11 @@ fun CampsiteReservationApp(
                 // Handle bottom navigation
             }
         ) }
+        composable("campsite/{cid}", arguments = listOf(navArgument("cid") { type = NavType.StringType })) { entry ->
+            val cid = entry.arguments?.getString("cid") ?: return@composable
+            val controller = remember(cid, repository) { CampsiteDetailController(cid, repository) }
+            CampsiteDetailView(controller, onBack = { navController.popBackStack() })
+        }
         composable("owner") {
             // shortcut: placeholder user ID, replace when profile verification is connected.
             com.example.lambda_aaa.view.CampsiteReservationApp(uid = "123")
