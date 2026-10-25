@@ -1,4 +1,4 @@
-// Verifies that the baseline application launches and presents its purpose.
+// Verifies that the application launches into the entrant dashboard.
 package com.example.lambda_aaa
 
 import androidx.compose.ui.test.assertIsDisplayed
@@ -15,8 +15,8 @@ class MainActivityTest {
     val composeRule = createAndroidComposeRule<MainActivity>()
 
     @Test
-    fun launchShowsApplicationIdentity() {
-        composeRule.onNodeWithText("Campsite Reservation").assertIsDisplayed()
-        composeRule.onNodeWithText("Find your next campsite.").assertIsDisplayed()
+    fun launchShowsEntrantDashboard() {
+        composeRule.onNodeWithText("ENTRANT · DISCOVER").assertIsDisplayed()
+        composeRule.onNodeWithText("Find your next campsite").assertIsDisplayed()
     }
 }

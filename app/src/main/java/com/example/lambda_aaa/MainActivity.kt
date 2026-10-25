@@ -58,7 +58,10 @@ fun CampsiteReservationApp(
                 // Handle bottom navigation
             }
         ) }
-        //composable("owner") { OwnerDashboardView(navController) }
+        composable("owner") {
+            // shortcut: placeholder user ID, replace when profile verification is connected.
+            com.example.lambda_aaa.view.CampsiteReservationApp(uid = "123")
+        }
         //composable("admin") { AdminDashboardView(navController) }
     }
 }

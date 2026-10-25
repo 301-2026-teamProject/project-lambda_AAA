@@ -10,10 +10,11 @@ import com.example.lambda_aaa.model.CampsiteRepository
  * Controller: loads the campsite by cid, and pushes the edited values
  * back through CampsiteRepository. The view never touches the repository.
  */
-class CampsiteEditController(
+class CampsiteManagementController(
     private val cid: String,
+    private val uid: String,
     private val isNew: Boolean,
-    private val repository: CampsiteRepository = CampsiteRepository(),
+    private val repository: CampsiteRepository,
 ) {
     var campsite by mutableStateOf<Campsite?>(null)
         private set
@@ -26,15 +27,19 @@ class CampsiteEditController(
         if (isNew) {
             this.campsite = Campsite(
                 cid = cid,
-                ownerId = "" // retrieve owner id from Auth database here
+                ownerId = uid
             )
+            isLoading = false
         } else {
             repository.getCampsite(
                 cid = cid
-            ) { exist, campsite ->
-                if (exist) {
+            ) { exist, campsite, msg ->
+                if (exist && campsite != null) {
                     this.campsite = campsite
+                } else {
+                    errorMessage = "Failed to load campsite: $msg"
                 }
+                isLoading = false
             }
         }
     }
@@ -48,7 +53,7 @@ class CampsiteEditController(
         cancellationPolicy: String,
         tags: List<String>,
         maxOccupancy: String,
-        onSaved: (String) -> Unit,
+        onSave: (Boolean, String) -> Unit,
     ) {
         val c = campsite ?: return
 
@@ -78,9 +83,9 @@ class CampsiteEditController(
                 campsite = c
             ) { success, msg ->
                 if (success) {
-                    onSaved("Campsite registered!")
+                    onSave(true, "Campsite registered!")
                 } else {
-                    onSaved("Failed to register campsite: $msg")
+                    onSave(false, "Failed to register campsite: $msg")
                 }
             }
         } else {
@@ -88,9 +93,9 @@ class CampsiteEditController(
                 campsite = c
             ) { success, msg ->
                 if (success) {
-                    onSaved("Changes applied!")
+                    onSave(true, "Changes applied!")
                 } else {
-                    onSaved("Failed to apply changes: $msg")
+                    onSave(false, "Failed to apply changes: $msg")
                 }
             }
         }
