@@ -87,11 +87,21 @@ private enum class ScreenTabs(val label: String) {
 }
 
 private val locations = mutableStateListOf<String>()
+
+/**
+ * Prints the Dashboard view for Campsite Entrants.
+ *
+ * Contains a notification tab, multiple pages, searchable campsites, campsite filters,
+ * selectable campsites that can be selected (and whose lotteries you can join), etc.
+ *
+ * @param navController the controller that lets the user move to different pages
+ * @param campsiteList the list of campsites within the FireStore Database
+ * @return nothing
+ */
 @Composable
 fun EntrantDashboardView(
     navController: NavController,
     campsiteList: List<Campsite>,
-
     ) {
     // This is a Database query that pulls all the unique Locations of each Campsite
     // This is so that the "Filter by Location" dropdown has every location already inside
@@ -104,7 +114,7 @@ fun EntrantDashboardView(
 
             locations.clear()
             locations.addAll(
-                listings.map { it.address }.distinct()
+                listings.map { it.address }.distinct() // Also EVENTUALLY, change address to 'General Location' instead, i.e. it shows something like Jasper or Banff
             )
         }
 
@@ -168,6 +178,7 @@ fun EntrantDashboardView(
                         modifier = Modifier.padding(top = 3.dp),
                     )
 
+                    // Uses our custom function since it fits better that way
                     TrailDrawSearchBar(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
@@ -264,6 +275,7 @@ fun EntrantDashboardView(
         }
     }
     if (showFiltersDialog) {
+        // Toggles the popup for selecting filters
         CampsiteFiltersDialog(
             locations = locations.distinct(),
             initialLocation = selectedLocation,
@@ -283,6 +295,13 @@ fun EntrantDashboardView(
 
 }
 
+/**
+ * Container that shows the user's role, and provides a notification button.
+ *
+ * Pressing the button will open the notification tab.
+ *
+ * @return nothing
+ */
 @Composable
 private fun TrailDrawTopBar() {
     Row(
@@ -787,7 +806,7 @@ private fun parseStrictIsoDate(value: String): Date? {
     // Retrieved 2026-10-25
     // Changes: Adapted to fit my string parameters
     if (!Regex(pattern = "\\d{4}-\\d{2}-\\d{2}").matches(value)) { // the \\d is necessary because of word boundaries
-        // Basically if our string doesn't match the "[4 numbers]-[2 numbers]-[2 numbers]" pattern, then it fails
+        // Basically if our string doesn't match the "[4 integers]-[2 integers]-[2 integers]" pattern, then it fails
         return null
     }
 
@@ -795,7 +814,7 @@ private fun parseStrictIsoDate(value: String): Date? {
         // Adapted from Oracle Developers, "SimpleDateFormat" & "DateFormat" API reference.
         // https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html & https://docs.oracle.com/javase/8/docs/api/java/text/DateFormat.html
         // Retrieved 2026-10-25
-        // Changes: None, used to figure out how to validify a date (i.e. so we don't accidentally pass feb. 29th)
+        // Changes: None, used to figure out how to validify a date (i.e. so we don't accidentally pass feb. 30th)
 
         // Adapted from Android Developers, "SimpleDateFormat" API reference.
         // https://developer.android.com/reference/kotlin/java/text/SimpleDateFormat
@@ -808,8 +827,8 @@ private fun parseStrictIsoDate(value: String): Date? {
         val position = ParsePosition(0)
         val parsed = formatter.parse(value, position) // Used to parse the date, only becomes null if it failed, otherwise it worked
         if (parsed != null && position.index == value.length && formatter.format(parsed) == value) {
-            // I.e. if the parsing worked, and we parsed the entire thing, and reverse-parsing it gives us the same result, then it works!
-            parsed // If this all works, then the try returns this value of type Date!
+            // I.e. if the parsing worked, and we parsed the entire thing, and reverse-parsing it gives us the same result, then it works
+            parsed // If this all works, then the try returns this value of type Date
         } else {
             null // Otherwise it sends back nothing
         }
@@ -830,16 +849,15 @@ private fun parseStrictIsoDate(value: String): Date? {
 private fun formatDateRangeLabel(start: String, end: String): String {
     val startDate = parseStrictIsoDate(start) ?: return "$start – $end"
     val endDate = parseStrictIsoDate(end) ?: return "$start – $end"
-    // Both of these function try to parse their respective dates, otherwise they just
-    // ...return the YYYY-MM-DD of both together
+    // Both of these function try to parse their respective dates, otherwise they just return the YYYY-MM-DD of both together
 
-    fun utcFormatter(pattern: String) = SimpleDateFormat(pattern, Locale.US) // Helper function that formats each day patteran according to US time standards
-    val monthDayFormat = utcFormatter("MMM d") // Formats dates such as 'Mar 7th'
-    val yearFormat = utcFormatter("yyyy") // Format for a four digit year
-    val startMonth = utcFormatter("MMM").format(startDate) // Abbreviated form of a start month
-    val endMonth = utcFormatter("MMM").format(endDate) // Same but for the end day
-    val startDay = utcFormatter("d").format(startDate) // Start day
-    val endDay = utcFormatter("d").format(endDate) // End day
+    fun dateFormatter(pattern: String) = SimpleDateFormat(pattern, Locale.US) // Helper function that formats each day patteran according to US time standards
+    val monthDayFormat = dateFormatter("MMM d") // Formats dates such as 'Mar 7th'
+    val yearFormat = dateFormatter("yyyy") // Format for a four digit year
+    val startMonth = dateFormatter("MMM").format(startDate) // Abbreviated form of a start month
+    val endMonth = dateFormatter("MMM").format(endDate) // Same but for the end day
+    val startDay = dateFormatter("d").format(startDate) // Start day
+    val endDay = dateFormatter("d").format(endDate) // End day
     val startYear = yearFormat.format(startDate) // start sate year
     val endYear = yearFormat.format(endDate) // end date year
 
