@@ -17,6 +17,7 @@ data class Campsite(
     var imageUrl: String? = null,
     var rulesAndPolicy: String = "",
     var cancellationPolicy: String = "",
+    //var pricePerNight: Double = 0.0,
     var ratingAverage: Double = 0.0,
     var ratingCount: Int = 0,
     @ServerTimestamp var creationDate: Timestamp? = null,
