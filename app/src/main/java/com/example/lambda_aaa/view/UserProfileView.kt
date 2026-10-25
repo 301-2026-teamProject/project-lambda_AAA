@@ -1,11 +1,10 @@
-package com.example.lambda_aaa
+package com.example.lambda_aaa.view
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
@@ -16,19 +15,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.R
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.lambda_aaa.ui.theme.ForestGreen
+import androidx.navigation.NavController
+import com.example.lambda_aaa.model.UserProfile
 
 @Composable
-fun UserProfileScreen(user: UserProfile) {
+fun UserProfileScreen(navController: NavController, user: UserProfile) {
 
-    var name by remember { mutableStateOf(user.name) }
-    var email by remember { mutableStateOf(user.email) }
-    var phoneNumber by remember { mutableStateOf(user.phoneNumber) }
+    var name by remember { mutableStateOf(user.userName) }
+    var email by remember { mutableStateOf(user.userEmail) }
+    var phoneNumber by remember { mutableStateOf(user.userPhone) }
     var notify by remember { mutableStateOf(true) }
 
     Column (modifier = Modifier.fillMaxSize().padding(16.dp),) {
@@ -89,7 +88,9 @@ fun UserProfileScreen(user: UserProfile) {
 
             Button(
                 onClick = {
-                    // do something
+                    user.updateName(name)
+                    user.updateEmail(email)
+                    user.updatePhone(phoneNumber)
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Green, contentColor = Color.White)
