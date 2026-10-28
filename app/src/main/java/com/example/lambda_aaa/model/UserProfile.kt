@@ -2,7 +2,7 @@ package com.example.lambda_aaa.model
 
 import com.google.firebase.firestore.DocumentId
 
-class UserProfile(
+data class UserProfile(
     @DocumentId val uid: String,
     private var name: String,
     private var email: String,
