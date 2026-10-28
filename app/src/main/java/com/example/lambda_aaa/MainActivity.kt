@@ -16,7 +16,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.lambda_aaa.model.CampsiteRepository
 import com.example.lambda_aaa.model.Campsite
+import com.example.lambda_aaa.model.Role
+import com.example.lambda_aaa.model.UserProfile
 import com.example.lambda_aaa.view.EntrantDashboardView
+import com.example.lambda_aaa.view.UserProfileScreen
 
 /** Hosts the Compose user interface. */
 class MainActivity : ComponentActivity() {
@@ -42,9 +45,18 @@ fun CampsiteReservationApp(
 ) {
     val navController = rememberNavController()
 
-    val userRole = "user" // IMPLEMENT THE DEVICE/PROFILE VERIFICATION SO WE KNOW WHERE TO START A USER
+    // Test User for now to see UserProfileView
+    val testUser = UserProfile(
+        name = "Alex Camper",
+        email = "alex@example.ca",
+        phone = "780-555-0123",
+        profilePhotoUrl = "https://placehold.co/400",
+        roles = arrayListOf(Role.ENTRANT),
+        creationDate = "2026-10-28")
 
-    NavHost(navController = navController, startDestination = userRole) {
+   // val userRole = "user" // IMPLEMENT THE DEVICE/PROFILE VERIFICATION SO WE KNOW WHERE TO START A USER
+
+    NavHost(navController = navController, startDestination = testUser.userRole) {
         composable("user") { EntrantDashboardView(
             navController,
             campsiteList = campsiteList,
@@ -54,6 +66,8 @@ fun CampsiteReservationApp(
             com.example.lambda_aaa.view.CampsiteReservationApp(uid = "123")
         }
         //composable("admin") { AdminDashboardView(navController) }
+
+        composable("userProfile") { UserProfileScreen(navController, testUser) }
     }
 }
 

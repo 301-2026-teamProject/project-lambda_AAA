@@ -3,7 +3,7 @@ package com.example.lambda_aaa.model
 import com.google.firebase.firestore.DocumentId
 
 data class UserProfile(
-    @DocumentId val uid: String,
+    @DocumentId val uid: String = "",
     private var name: String,
     private var email: String,
     private var phone: String,
@@ -15,12 +15,14 @@ data class UserProfile(
 ) {
     val userName : String
         get() = name
-
     val userEmail : String
         get() = email
-
     val userPhone : String
         get() = phone
+    val userPhoto : String
+        get() = profilePhotoUrl
+    val userRole : Role
+        get() = roles[0]
 
     fun toggleNotifications() : Unit {
         notificationsEnabled = !notificationsEnabled

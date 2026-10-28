@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "114267538233",
+    "project_id": "campsitereservation-6b24c",
+    "storage_bucket": "campsitereservation-6b24c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:114267538233:android:2601ca5c4c350f70209ee8",
+        "android_client_info": {
+          "package_name": "com.example.lambda_aaa"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": ""
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
