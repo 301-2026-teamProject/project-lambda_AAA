@@ -48,17 +48,11 @@ fun CampsiteReservationApp(
         composable("user") { EntrantDashboardView(
             navController,
             campsiteList = campsiteList,
-            onNotificationsClick = {
-            // Open notifications
-            },
-            onFiltersClick = {
-                // Open campsite filters
-            },
-            onTabSelected = {
-                // Handle bottom navigation
-            }
         ) }
-        //composable("owner") { OwnerDashboardView(navController) }
+        composable("owner") {
+            // shortcut: placeholder user ID, replace when profile verification is connected.
+            com.example.lambda_aaa.view.CampsiteReservationApp(uid = "123")
+        }
         //composable("admin") { AdminDashboardView(navController) }
     }
 }
