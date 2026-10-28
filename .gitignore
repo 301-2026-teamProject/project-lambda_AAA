@@ -12,6 +12,7 @@ build/
 firebase-debug*.log
 firestore-debug.log
 ui-debug.log
+google-services.json
 
 # Local Python caches and generated exports
 __pycache__/
