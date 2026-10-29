@@ -84,7 +84,7 @@ private enum class ScreenTabs(val label: String) {
     Lotteries("Lotteries"),
     Trips("Trips"),
     Profile("Profile"),
-}
+} // This is set up in this weird way so that we can dynamically change the number of tabs if we wanted
 
 private val locations = mutableStateListOf<String>()
 
@@ -124,6 +124,7 @@ fun EntrantDashboardView(
     var selectedStartDate by remember { mutableStateOf<String?>(null) }
     var selectedEndDate by remember { mutableStateOf<String?>(null) }
     var selectedGuestCount by remember { mutableStateOf<Int?>(null) }
+    var selectedTab by remember { mutableStateOf(ScreenTabs.Explore) }
 
     val filteredCampsites = campsiteList.filter { campsite ->
         val matchSearch = (searchQuery == "" || campsite.name.contains(searchQuery)) // Checks if the searchbar is empty, or if a campsite has part of its text
@@ -136,7 +137,12 @@ fun EntrantDashboardView(
         modifier = Modifier.fillMaxSize(),
         containerColor = Background,
         bottomBar = {
-            DrawBottomBar()
+            DrawBottomBar(
+                selectedTab = selectedTab,
+                onTabSelected = { tab ->
+                    navController.navigate(tab.label)
+                },
+            )
         },
     ) { innerPadding ->
         Column(
@@ -995,15 +1001,18 @@ private fun CampsiteCard(
 }
 
 /**
- * Creates a selectable card for an inputted Campsite
+ * Creates specific buttons for each selectable tab in EntrantView.
  *
- * For a given Campsite, this highlights its name, location, occupancy, rating,
- * price, Lottery status, and image.
+ * The user can move between the Explore, Lotteries, Trips, and Profiles screens
+ * by pressing their respective buttons.
  *
  * @return nothing
  */
 @Composable
-private fun DrawBottomBar() {
+private fun DrawBottomBar(
+    selectedTab: ScreenTabs,
+    onTabSelected: (ScreenTabs) -> Unit,
+) {
     Surface(color = Color.White, shadowElevation = 0.dp) {
         Column(modifier = Modifier.fillMaxWidth()) {
             HorizontalDivider(color = BorderColor, thickness = 1.dp)
@@ -1016,6 +1025,7 @@ private fun DrawBottomBar() {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 ScreenTabs.entries.forEach { tab ->
+                    val selected = tab == selectedTab
                     val icon = when (tab) {
                         ScreenTabs.Explore -> Icons.Filled.Explore
                         ScreenTabs.Lotteries -> Icons.Filled.ConfirmationNumber
@@ -1026,9 +1036,7 @@ private fun DrawBottomBar() {
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxSize()
-                            .clickable {
-                                // Insert function here that moves you to different screen
-                            }
+                            .clickable { onTabSelected(tab) }
                             .padding(top = 7.dp, bottom = 4.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(3.dp),
@@ -1036,12 +1044,12 @@ private fun DrawBottomBar() {
                         Icon(
                             imageVector = icon,
                             contentDescription = tab.label,
-                            tint = SubText,
+                            tint = if (selected) SubText else HeaderColor,
                             modifier = Modifier.size(18.dp),
                         )
                         Text(
                             text = tab.label,
-                            color = SubText,
+                            color = if (selected) SubText else HeaderColor,
                             fontSize = 10.sp,
                             lineHeight = 12.sp,
                             fontWeight = FontWeight.Normal,
