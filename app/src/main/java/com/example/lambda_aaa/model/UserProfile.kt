@@ -31,12 +31,13 @@ data class UserProfile(
     fun updateName(newName: String) : Unit {
         name = newName
     }
-
     fun updateEmail(newEmail: String) : Unit {
         email = newEmail
     }
-
     fun updatePhone(newPhone: String) : Unit {
         phone = newPhone
+    }
+    fun updatePhoto(newPhoto: String) : Unit {
+        profilePhotoUrl = newPhoto
     }
 }

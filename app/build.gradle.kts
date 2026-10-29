@@ -58,6 +58,8 @@ dependencies {
     implementation("androidx.compose.material:material-icons-core")
     implementation("androidx.navigation:navigation-compose:2.9.8")
     implementation("androidx.compose.material:material-icons-extended")
+    implementation("io.coil-kt.coil3:coil-compose:3.6.3")
+    implementation("io.coil-kt.coil3:coil-network-okhttp:3.6.3")
     constraints {
         implementation("androidx.concurrent:concurrent-futures:1.2.0") {
             because("Match the app runtime to the version required by AndroidX Test.")
