@@ -46,12 +46,7 @@ fun CampsiteReservationApp(
 ) {
     val navController = rememberNavController()
 
-    // To see UserProfileView
-    // Uncomment testUser
-    // Replace userRole in NavHost with "userProfile"
-    // Uncomment the composable in NavHost with route userProfile
 
-    /*
     val testUser = UserProfile(
         name = "Alex Camper",
         email = "alex@example.ca",
@@ -59,8 +54,6 @@ fun CampsiteReservationApp(
         profilePhotoUrl = "https://picsum.photos/200",
         roles = arrayListOf(Role.ENTRANT),
         creationDate = "2026-10-28")
-
-     */
 
 
     val userRole = "user" // IMPLEMENT THE DEVICE/PROFILE VERIFICATION SO WE KNOW WHERE TO START A USER
@@ -75,9 +68,9 @@ fun CampsiteReservationApp(
             navController,
             campsiteList = campsiteList,
         ) }
-        composable("Lotteries") { EntrantProfileView(navController) }
-        composable("Trips") { EntrantProfileView(navController) }
-        composable("Profile") { EntrantProfileView(navController) }
+        composable("Lotteries") { EntrantProfileView(navController, testUser) }
+        composable("Trips") { EntrantProfileView(navController, testUser) }
+        composable("Profile") { EntrantProfileView(navController, testUser) }
 
         composable("owner") {
             // shortcut: placeholder user ID, replace when profile verification is connected.
