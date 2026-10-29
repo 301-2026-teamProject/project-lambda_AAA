@@ -17,6 +17,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.lambda_aaa.model.CampsiteRepository
 import com.example.lambda_aaa.model.Campsite
 import com.example.lambda_aaa.view.EntrantDashboardView
+import com.example.lambda_aaa.view.EntrantProfileView
 
 /** Hosts the Compose user interface. */
 class MainActivity : ComponentActivity() {
@@ -49,6 +50,14 @@ fun CampsiteReservationApp(
             navController,
             campsiteList = campsiteList,
         ) }
+        composable("Explore") { EntrantDashboardView(
+            navController,
+            campsiteList = campsiteList,
+        ) }
+        composable("Lotteries") { EntrantProfileView(navController) }
+        composable("Trips") { EntrantProfileView(navController) }
+        composable("Profile") { EntrantProfileView(navController) }
+
         composable("owner") {
             // shortcut: placeholder user ID, replace when profile verification is connected.
             com.example.lambda_aaa.view.CampsiteReservationApp(uid = "123")
