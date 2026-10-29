@@ -46,7 +46,7 @@ fun UserProfileView(navController: NavController, user: UserProfile) {
     var phoneNumber by remember { mutableStateOf(user.userPhone) }
     var notify by remember { mutableStateOf(true) }
     var changeImage by remember { mutableStateOf(false) }
-    var currentImage by remember { mutableStateOf(user.userPhoto) }
+    var currentImageUrl by remember { mutableStateOf(user.userPhoto) }
 
     Column (modifier = Modifier.fillMaxSize().padding(16.dp)) {
 
@@ -63,14 +63,6 @@ fun UserProfileView(navController: NavController, user: UserProfile) {
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
-            Button(
-                onClick = {
-                    navController.popBackStack()
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF06402B), contentColor = Color.White)
-            ) {Text("Dashboard")}
-
             Spacer(modifier = Modifier.height(16.dp))
 
             AsyncImage(model = user.userPhoto,
@@ -84,15 +76,16 @@ fun UserProfileView(navController: NavController, user: UserProfile) {
             if (changeImage) {
 
                 TextField(
-                    value = currentImage,
-                    onValueChange = { currentImage = it }
+                    value = currentImageUrl,
+                    onValueChange = { currentImageUrl = it },
+                    label = { Text("Input new image url")}
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Button(
                     onClick = {
-                        user.updatePhoto(currentImage)
+                        user.updatePhoto(currentImageUrl)
                         changeImage = !changeImage },
                     colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF06402B), contentColor = Color.White)
@@ -166,12 +159,22 @@ fun UserProfileView(navController: NavController, user: UserProfile) {
 
             Button(
                 onClick = {
-                    // do something
+                    // After halfway point
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent, contentColor = Color.Red)
             ) { Text("DELETE PROFILE") }
         }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Button(
+            onClick = {
+                navController.popBackStack()
+            },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF06402B), contentColor = Color.White)
+        ) {Text("Back to Dashboard")}
 
     }
 }

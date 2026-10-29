@@ -45,7 +45,11 @@ fun CampsiteReservationApp(
 ) {
     val navController = rememberNavController()
 
-    // Test User for now to see UserProfileView
+    // To see UserProfileView
+    // Uncomment testUser
+    // Replace userRole in NavHost with "userProfile"
+    // Uncomment the composable in NavHost with route userProfile
+
     /*
     val testUser = UserProfile(
         name = "Alex Camper",
@@ -57,12 +61,11 @@ fun CampsiteReservationApp(
 
      */
 
+
     val userRole = "user" // IMPLEMENT THE DEVICE/PROFILE VERIFICATION SO WE KNOW WHERE TO START A USER
 
-    // Replace userRole with testUser.role to see UserProfileView
     NavHost(navController = navController, startDestination = userRole) {
 
-        // Replace user with ENTRANT to see UserProfileView
         composable("user") { EntrantDashboardView(
             navController,
             campsiteList = campsiteList,
@@ -73,7 +76,6 @@ fun CampsiteReservationApp(
         }
         //composable("admin") { AdminDashboardView(navController) }
 
-        // Just uncomment to see UserProfileView
         //composable("userProfile") { UserProfileView(navController, testUser) }
     }
 }
