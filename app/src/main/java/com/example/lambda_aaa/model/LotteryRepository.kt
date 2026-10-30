@@ -30,7 +30,7 @@ class LotteryRepository(db: FirebaseFirestore = Firebase.firestore) {
     }
 
     fun updateRegistrationPeriod(lottery: Lottery, period: DateRange) {
-        lottery.bookingPeriod = period
+        lottery.registrationPeriod = period
         lotteries.document(lottery.id).update(
             mapOf(
                 "registrationPeriodStart" to period.start.toString(),
