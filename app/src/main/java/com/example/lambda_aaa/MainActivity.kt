@@ -20,7 +20,6 @@ import com.example.lambda_aaa.model.Role
 import com.example.lambda_aaa.model.UserProfile
 import com.example.lambda_aaa.view.EntrantDashboardView
 import com.example.lambda_aaa.view.EntrantProfileView
-import com.example.lambda_aaa.view.UserProfileView
 
 /** Hosts the Compose user interface. */
 class MainActivity : ComponentActivity() {
@@ -78,7 +77,6 @@ fun CampsiteReservationApp(
         }
         //composable("admin") { AdminDashboardView(navController) }
 
-        //composable("userProfile") { UserProfileView(navController, testUser) }
     }
 }
 
