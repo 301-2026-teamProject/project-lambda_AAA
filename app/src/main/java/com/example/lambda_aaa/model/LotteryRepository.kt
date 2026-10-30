@@ -19,12 +19,22 @@ class LotteryRepository(db: FirebaseFirestore = Firebase.firestore) {
             .addOnFailureListener { Log.e("LotteryRepo", "Update failed", it) }
     }
 
-    fun updatePeriod(lottery: Lottery, period: DateRange) {
-        lottery.period = period
+    fun updateBookingPeriod(lottery: Lottery, period: DateRange) {
+        lottery.bookingPeriod = period
         lotteries.document(lottery.id).update(
             mapOf(
-                "periodStart" to period.start.toString(),
-                "periodEnd" to period.end.toString()
+                "bookingPeriodStart" to period.start.toString(),
+                "bookingPeriodEnd" to period.end.toString()
+            )
+        ).addOnFailureListener { Log.e("LotteryRepo", "Update failed", it) }
+    }
+
+    fun updateRegistrationPeriod(lottery: Lottery, period: DateRange) {
+        lottery.bookingPeriod = period
+        lotteries.document(lottery.id).update(
+            mapOf(
+                "registrationPeriodStart" to period.start.toString(),
+                "registrationPeriodEnd" to period.end.toString()
             )
         ).addOnFailureListener { Log.e("LotteryRepo", "Update failed", it) }
     }
