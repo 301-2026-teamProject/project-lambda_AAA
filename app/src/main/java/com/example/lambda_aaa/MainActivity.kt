@@ -16,6 +16,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.lambda_aaa.model.CampsiteRepository
 import com.example.lambda_aaa.model.Campsite
+import com.example.lambda_aaa.model.Role
+import com.example.lambda_aaa.model.UserProfile
 import com.example.lambda_aaa.view.EntrantDashboardView
 import com.example.lambda_aaa.view.EntrantProfileView
 
@@ -43,9 +45,20 @@ fun CampsiteReservationApp(
 ) {
     val navController = rememberNavController()
 
+
+    val testUser = UserProfile(
+        name = "Alex Camper",
+        email = "alex@example.ca",
+        phone = "780-555-0123",
+        profilePhotoUrl = "https://picsum.photos/200",
+        roles = arrayListOf(Role.ENTRANT),
+        creationDate = "2026-10-28")
+
+
     val userRole = "user" // IMPLEMENT THE DEVICE/PROFILE VERIFICATION SO WE KNOW WHERE TO START A USER
 
     NavHost(navController = navController, startDestination = userRole) {
+
         composable("user") { EntrantDashboardView(
             navController,
             campsiteList = campsiteList,
@@ -54,15 +67,16 @@ fun CampsiteReservationApp(
             navController,
             campsiteList = campsiteList,
         ) }
-        composable("Lotteries") { EntrantProfileView(navController) }
-        composable("Trips") { EntrantProfileView(navController) }
-        composable("Profile") { EntrantProfileView(navController) }
+        composable("Lotteries") { EntrantProfileView(navController, testUser) }
+        composable("Trips") { EntrantProfileView(navController, testUser) }
+        composable("Profile") { EntrantProfileView(navController, testUser) }
 
         composable("owner") {
             // shortcut: placeholder user ID, replace when profile verification is connected.
             com.example.lambda_aaa.view.CampsiteReservationApp(uid = "123")
         }
         //composable("admin") { AdminDashboardView(navController) }
+
     }
 }
 
