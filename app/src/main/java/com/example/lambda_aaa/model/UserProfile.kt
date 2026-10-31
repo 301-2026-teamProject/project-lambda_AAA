@@ -46,4 +46,7 @@ data class UserProfile(
     fun updatePhoto(newPhoto: String) : Unit {
         profilePhotoUrl = newPhoto
     }
+    fun updateDeviceID(newDeviceID: String) : Unit {
+        deviceID = newDeviceID
+    }
 }

@@ -52,6 +52,7 @@ import com.example.lambda_aaa.ui.theme.CampsiteReservationTheme
 import com.example.lambda_aaa.view.EntrantDashboardView
 import com.example.lambda_aaa.view.EntrantProfileView
 import com.google.firebase.installations.FirebaseInstallations
+import kotlinx.coroutines.tasks.await
 
 
 private enum class ScreenTabs(val label: String) {
@@ -113,21 +114,24 @@ fun CampsiteReservationApp(
             } else {
                 Log.e("Installations", "Unable to get Installation ID")
             }
-        }
+        }.await()
 
-        Firebase.firestore.collection("Users")
-            .whereEqualTo("deviceID", installationID)
+        // Search for user in database
+        Firebase.firestore.collection("users")
+            .whereEqualTo("userDeviceID", installationID)
             .get()
             .addOnSuccessListener { result ->
 
-                if (!result.documents[0].exists()) {
-                    Firebase.firestore.collection("Users")
+                // If user does not exist, put placeholder user information into database
+                if (result.isEmpty) {
+                    currentUser.updateDeviceID(installationID)
+                    Firebase.firestore.collection("users")
                         .add(currentUser)
-
                 }
+
+                // Otherwise get user information from database
                 else {
                     currentUser = result.documents[0].toObject(UserProfile::class.java)!!
-
                 }
 
                 identifiedUser = !identifiedUser
@@ -143,8 +147,7 @@ fun CampsiteReservationApp(
         var selectedTab by remember { mutableStateOf(ScreenTabs.Explore) }
         val userRole = "user" // IMPLEMENT THE DEVICE/PROFILE VERIFICATION SO WE KNOW WHERE TO START A USER
 
-        // Uncomment this once queries are allowed on Firestore
-        // val currentUserRole = currentUser.userRole
+        val currentUserRole = currentUser.userRole // holds the user's role retrieved from database
 
         Scaffold(
             containerColor = Background,
