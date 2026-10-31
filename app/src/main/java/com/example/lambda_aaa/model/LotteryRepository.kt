@@ -1,41 +1,68 @@
 package com.example.lambda_aaa.model
 
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
-import android.util.Log
+import androidx.compose.runtime.mutableStateListOf
 
-class LotteryRepository(db: FirebaseFirestore = Firebase.firestore) {
-    private val lotteries = db.collection("lotteries")
+class LotteryRepository {
 
-    fun create(lottery: Lottery) {
-        lotteries.document(lottery.id).set(lottery.toMap())
-            .addOnFailureListener { Log.e("LotteryRepo", "Create failed", it) }
+    private val _lotteries = mutableStateListOf<Lottery>()
+    private val campsiteDb = Firebase.firestore
+    private val lotteryRef = campsiteDb.collection("lotteries")
+
+    init {
+        lotteryRef.addSnapshotListener { snapshots, exception ->
+            if (exception != null) {
+                return@addSnapshotListener
+            }
+
+            _lotteries.clear()
+
+            snapshots?.toObjects(Lottery::class.java)?.let {
+                _lotteries.clear()
+                _lotteries.addAll(it)
+            }
+        }
     }
 
-    fun updateNumWinners(lottery: Lottery, num: Int) {
-        lottery.numWinners = num
-        lotteries.document(lottery.id).update("numWinners", num)
-            .addOnFailureListener { Log.e("LotteryRepo", "Update failed", it) }
+    fun create(lottery: Lottery, onResult: (Boolean, String?) -> Unit) {
+        lotteryRef.document(lottery.id).set(lottery.toMap())
+            .addOnSuccessListener { onResult(true, null) }
+            .addOnFailureListener { e -> onResult(false, e.message) }
     }
 
-    fun updateBookingPeriod(lottery: Lottery, period: DateRange) {
-        lottery.bookingPeriod = period
-        lotteries.document(lottery.id).update(
-            mapOf(
-                "bookingPeriodStart" to period.start.toString(),
-                "bookingPeriodEnd" to period.end.toString()
-            )
-        ).addOnFailureListener { Log.e("LotteryRepo", "Update failed", it) }
+    fun updateLottery(lottery: Lottery, onResult: (Boolean, String?) -> Unit) {
+        val docRef = lotteryRef.document(lottery.id)
+        docRef.get()
+            .addOnSuccessListener { snapshot ->
+                if (!snapshot.exists()) {
+                    onResult(false, "Lottery does not exist.")
+                    return@addOnSuccessListener
+                }
+                docRef.set(lottery)
+                    .addOnSuccessListener { onResult(true, null) }
+                    .addOnFailureListener { e -> onResult(false, e.message) }
+            }
+            .addOnFailureListener { e -> onResult(false, e.message) }
     }
 
-    fun updateRegistrationPeriod(lottery: Lottery, period: DateRange) {
-        lottery.registrationPeriod = period
-        lotteries.document(lottery.id).update(
-            mapOf(
-                "registrationPeriodStart" to period.start.toString(),
-                "registrationPeriodEnd" to period.end.toString()
-            )
-        ).addOnFailureListener { Log.e("LotteryRepo", "Update failed", it) }
+    fun getLottery(id: String, onResult: (Boolean, Lottery?, String?) -> Unit) {
+        lotteryRef.document(id).get()
+            .addOnSuccessListener { snapshot ->
+                onResult(true, snapshot.toObject(Lottery::class.java), null)
+            }
+            .addOnFailureListener { e ->
+                onResult(false, null, e.message)
+            }
+    }
+
+    fun getAllLotteries(onResult: (Boolean, List<Lottery>, String?) -> Unit) {
+        lotteryRef.get()
+            .addOnSuccessListener { snapshot ->
+                onResult(true, snapshot.toObjects(Lottery::class.java), null)
+            }
+            .addOnFailureListener { e ->
+                onResult(false, emptyList(), e.message)
+            }
     }
 }

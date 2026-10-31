@@ -15,24 +15,18 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ConfirmationNumber
-import androidx.compose.material.icons.filled.EventAvailable
-import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.Park
-import androidx.compose.material.icons.filled.PersonOutline
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Terrain
@@ -61,14 +55,15 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.text.input.KeyboardType
 import java.text.ParsePosition
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import com.example.lambda_aaa.model.Campsite
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.lambda_aaa.controller.SearchController
+import com.example.lambda_aaa.model.CampsiteRepository
+//import com.example.lambda_aaa.model.LotteryRepository
 
 
 private val Background = Color(0xFFF3F0E9) // Used for the background and Campsite icon. Bone-White color.
@@ -79,14 +74,6 @@ private val FilterSelectColor = Color(0xFFE1EADF) // Color chosen for filter box
 private val SelectColor = Color(0xFF526B5A) // Color chosen for other selected elements. A nice Green.
 
 
-private enum class ScreenTabs(val label: String) {
-    Explore("Explore"),
-    Lotteries("Lotteries"),
-    Trips("Trips"),
-    Profile("Profile"),
-} // This is set up in this weird way so that we can dynamically change the number of tabs if we wanted
-
-private val locations = mutableStateListOf<String>()
 
 /**
  * Prints the Dashboard view for Campsite Entrants.
@@ -95,55 +82,28 @@ private val locations = mutableStateListOf<String>()
  * selectable campsites that can be selected (and whose lotteries you can join), etc.
  *
  * @param navController the controller that lets the user move to different pages
- * @param campsiteList the list of campsites within the FireStore Database
  * @return nothing
  */
 @Composable
 fun EntrantDashboardView(
     navController: NavController,
-    campsiteList: List<Campsite>,
     ) {
-    // This is a Database query that pulls all the unique Locations of each Campsite
-    // This is so that the "Filter by Location" dropdown has every location already inside
-    // Although it does mean that it only refreshes on app restart
-    FirebaseFirestore.getInstance()
-        .collection("campsites")
-        .get()
-        .addOnSuccessListener { result ->
-            val listings = result.toObjects(Campsite::class.java)
 
-            locations.clear()
-            locations.addAll(
-                listings.map { it.address }.distinct() // Also EVENTUALLY, change address to 'General Location' instead, i.e. it shows something like Jasper or Banff
-            )
-        }
-
+    val repo = remember { SearchController( CampsiteRepository() ) } // Database
+    val campsiteList = repo.campsites
+    val filteredCampsites = repo.filteredCampsites
+    val locations = campsiteList.map{ it.address }.distinct() // Gets SPECIFICALLY the general location of a campsite, like Jasper or Banff
     var searchQuery by remember { mutableStateOf("") }
-    var showFiltersDialog by remember { mutableStateOf(false) }
     var selectedLocation by remember {mutableStateOf<String?>(null)}
     var selectedStartDate by remember { mutableStateOf<String?>(null) }
     var selectedEndDate by remember { mutableStateOf<String?>(null) }
     var selectedGuestCount by remember { mutableStateOf<Int?>(null) }
-    var selectedTab by remember { mutableStateOf(ScreenTabs.Explore) }
+    var showFiltersDialog by remember { mutableStateOf(false) }
+    repo.filterCampsite(searchQuery, selectedLocation, selectedGuestCount, selectedStartDate, selectedEndDate) // Runs every time the values change, letting us dynamically filter things
 
-    val filteredCampsites = campsiteList.filter { campsite ->
-        val matchSearch = (searchQuery == "" || campsite.name.contains(searchQuery)) // Checks if the searchbar is empty, or if a campsite has part of its text
-        val matchesLocation = (selectedLocation == null || campsite.address == selectedLocation) // Checks if a campsite location matches the searched one
-        val matchesGuests = (selectedGuestCount == null || selectedGuestCount!! <= campsite.maxOccupancy) // Checks if an inputted occupancy count is less than the campsite one
-        //val matchesDates = startDate == null || endDate == null ||  campsite.availableStartDate <= startDate && campsite.availableEndDate >= endDate
-        matchSearch && matchesLocation && matchesGuests //&& matchesDates
-    }
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = Background,
-        bottomBar = {
-            DrawBottomBar(
-                selectedTab = selectedTab,
-                onTabSelected = { tab ->
-                    navController.navigate(tab.label)
-                },
-            )
-        },
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -151,7 +111,7 @@ fun EntrantDashboardView(
                 .background(Background)
                 .padding(innerPadding),
         ) {
-            TrailDrawTopBar()
+            TopBar()
             HorizontalDivider(color = BorderColor, thickness = 1.dp)
 
             // This Column encapsulates the rest of the Screen
@@ -283,7 +243,7 @@ fun EntrantDashboardView(
     if (showFiltersDialog) {
         // Toggles the popup for selecting filters
         CampsiteFiltersDialog(
-            locations = locations.distinct(),
+            locations = locations,
             initialLocation = selectedLocation,
             initialStartDate = selectedStartDate,
             initialEndDate = selectedEndDate,
@@ -309,7 +269,7 @@ fun EntrantDashboardView(
  * @return nothing
  */
 @Composable
-private fun TrailDrawTopBar() {
+private fun TopBar() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -994,68 +954,6 @@ private fun CampsiteCard(
                         tint = SelectColor,
                         modifier = Modifier.size(20.dp),
                     )
-                }
-            }
-        }
-    }
-}
-
-/**
- * Creates specific buttons for each selectable tab in EntrantView.
- *
- * The user can move between the Explore, Lotteries, Trips, and Profiles screens
- * by pressing their respective buttons.
- *
- * @return nothing
- */
-@Composable
-private fun DrawBottomBar(
-    selectedTab: ScreenTabs,
-    onTabSelected: (ScreenTabs) -> Unit,
-) {
-    Surface(color = Color.White, shadowElevation = 0.dp) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            HorizontalDivider(color = BorderColor, thickness = 1.dp)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .height(62.dp)
-                    .padding(horizontal = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                ScreenTabs.entries.forEach { tab ->
-                    val selected = tab == selectedTab
-                    val icon = when (tab) {
-                        ScreenTabs.Explore -> Icons.Filled.Explore
-                        ScreenTabs.Lotteries -> Icons.Filled.ConfirmationNumber
-                        ScreenTabs.Trips -> Icons.Filled.EventAvailable
-                        ScreenTabs.Profile -> Icons.Filled.PersonOutline
-                    }
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxSize()
-                            .clickable { onTabSelected(tab) }
-                            .padding(top = 7.dp, bottom = 4.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(3.dp),
-                    ) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = tab.label,
-                            tint = if (selected) SubText else HeaderColor,
-                            modifier = Modifier.size(18.dp),
-                        )
-                        Text(
-                            text = tab.label,
-                            color = if (selected) SubText else HeaderColor,
-                            fontSize = 10.sp,
-                            lineHeight = 12.sp,
-                            fontWeight = FontWeight.Normal,
-                            maxLines = 1,
-                        )
-                    }
                 }
             }
         }
