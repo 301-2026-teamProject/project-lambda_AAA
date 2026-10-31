@@ -11,14 +11,17 @@ data class DateRange(val start: LocalDate, val end: LocalDate) {
 
 class Lottery(
     val campsite: Campsite,
-    var period: DateRange? = null,
+    var bookingPeriod: DateRange? = null,
+    var registrationPeriod: DateRange? = null,
     var numWinners: Int = 0,
     val id: String = UUID.randomUUID().toString()
 ) {
     fun toMap(): Map<String, Any?> = mapOf(
         "campsiteID" to campsite.cid,
-        "periodStart" to period?.start?.toString(),
-        "periodEnd" to period?.end?.toString(),
+        "bookingPeriodStart" to bookingPeriod?.start?.toString(),
+        "bookingPeriodEnd" to bookingPeriod?.end?.toString(),
+        "registrationPeriodStart" to registrationPeriod?.start?.toString(),
+        "registrationPeriodEnd" to registrationPeriod?.end?.toString(),
         "numWinners" to numWinners
     )
 }
