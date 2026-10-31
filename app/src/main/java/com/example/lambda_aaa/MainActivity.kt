@@ -143,6 +143,9 @@ fun CampsiteReservationApp(
         var selectedTab by remember { mutableStateOf(ScreenTabs.Explore) }
         val userRole = "user" // IMPLEMENT THE DEVICE/PROFILE VERIFICATION SO WE KNOW WHERE TO START A USER
 
+        // Uncomment this once queries are allowed on Firestore
+        // val currentUserRole = currentUser.userRole
+
         Scaffold(
             containerColor = Background,
 
