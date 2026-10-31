@@ -89,9 +89,8 @@ fun CampsiteReservationApp(
 
     var installationID by remember {mutableStateOf("")}
     var identifiedUser by remember { mutableStateOf(false) }
-    var currentUser = remember {
+    var currentUser: UserProfile = remember {
         UserProfile(
-            deviceID = installationID,
             name = "Alex Camper",
             email = "alex@example.ca",
             phone = "780-555-0123",
@@ -120,25 +119,29 @@ fun CampsiteReservationApp(
             .whereEqualTo("deviceID", installationID)
             .get()
             .addOnSuccessListener { result ->
-                if (result.isEmpty) {
 
+                if (!result.documents[0].exists()) {
                     Firebase.firestore.collection("Users")
-                        .document(currentUser.userName)
-                        .set(currentUser)
+                        .add(currentUser)
+
+                }
+                else {
+                    currentUser = result.documents[0].toObject(UserProfile::class.java)!!
+
                 }
 
-                currentUser = result.toObject(UserProfile::class.java)
                 identifiedUser = !identifiedUser
+            }
+            .addOnFailureListener { error ->
+                Log.w("Listener", "Error is", error)
             }
     }
 
     if (identifiedUser) {
 
-        val startTab =
-            "owner" // IMPLEMENT THE DEVICE/PROFILE VERIFICATION SO WE KNOW WHERE TO START A USER
+        val startTab = "owner" // IMPLEMENT THE DEVICE/PROFILE VERIFICATION SO WE KNOW WHERE TO START A USER
         var selectedTab by remember { mutableStateOf(ScreenTabs.Explore) }
-        val userRole =
-            "user" // IMPLEMENT THE DEVICE/PROFILE VERIFICATION SO WE KNOW WHERE TO START A USER
+        val userRole = "user" // IMPLEMENT THE DEVICE/PROFILE VERIFICATION SO WE KNOW WHERE TO START A USER
 
         Scaffold(
             containerColor = Background,
