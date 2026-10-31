@@ -161,7 +161,7 @@ fun CampsiteReservationApp(
                     .padding(innerPadding),
             ) {
 
-                //composable("Explore") { EntrantDashboardView(navController) }
+                composable("Explore") { EntrantDashboardView(navController) }
                 composable("Lotteries") { EntrantProfileView(navController, currentUser) }
                 composable("Trips") { EntrantProfileView(navController, currentUser) }
                 composable("Profile") { EntrantProfileView(navController, currentUser) }
