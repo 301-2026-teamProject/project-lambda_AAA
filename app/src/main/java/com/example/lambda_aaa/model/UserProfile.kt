@@ -4,15 +4,18 @@ import com.google.firebase.firestore.DocumentId
 
 data class UserProfile(
     @DocumentId val uid: String = "",
-    private var name: String,
-    private var email: String,
-    private var phone: String,
-    private var profilePhotoUrl: String,
-    private var roles: ArrayList<Role>,
+    private var deviceID: String = "",
+    private var name: String = "",
+    private var email: String = "",
+    private var phone: String = "",
+    private var profilePhotoUrl: String = "",
+    private var roles: ArrayList<Role> = arrayListOf(),
     private var notificationsEnabled: Boolean = true,
     private var isOwner: Boolean = false,
-    private val creationDate: String
+    private val creationDate: String = ""
 ) {
+
+    // Custom getters for private attributes
     val userName : String
         get() = name
     val userEmail : String
@@ -23,11 +26,14 @@ data class UserProfile(
         get() = profilePhotoUrl
     val userRole : Role
         get() = roles[0]
+    val userDeviceID : String
+        get() = deviceID
 
     fun toggleNotifications() : Unit {
         notificationsEnabled = !notificationsEnabled
     }
 
+    // Functions to update UserProfile attributes used in profile view
     fun updateName(newName: String) : Unit {
         name = newName
     }
@@ -39,5 +45,8 @@ data class UserProfile(
     }
     fun updatePhoto(newPhoto: String) : Unit {
         profilePhotoUrl = newPhoto
+    }
+    fun updateDeviceID(newDeviceID: String) : Unit {
+        deviceID = newDeviceID
     }
 }

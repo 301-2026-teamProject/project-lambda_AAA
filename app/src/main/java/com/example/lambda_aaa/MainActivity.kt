@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,12 +22,14 @@ import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.material.icons.filled.EventAvailable
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.PersonOutline
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,6 +51,8 @@ import com.example.lambda_aaa.model.UserProfile
 import com.example.lambda_aaa.ui.theme.CampsiteReservationTheme
 import com.example.lambda_aaa.view.EntrantDashboardView
 import com.example.lambda_aaa.view.EntrantProfileView
+import com.google.firebase.installations.FirebaseInstallations
+import kotlinx.coroutines.tasks.await
 
 
 private enum class ScreenTabs(val label: String) {
@@ -56,6 +61,7 @@ private enum class ScreenTabs(val label: String) {
     Trips("Trips"),
     Profile("Profile"),
 } // This is set up in this weird way so that we can dynamically change the number of tabs if we wanted
+
 
 private val Background = Color(0xFFF3F0E9) // Used for the background and Campsite icon. Bone-White color.
 private val HeaderColor = Color(0xFF242823) // Used for Headers. Muted Black.
@@ -82,51 +88,116 @@ fun CampsiteReservationApp(
 ) {
     val navController = rememberNavController()
 
-    val testUser = UserProfile(
-        name = "Alex Camper",
-        email = "alex@example.ca",
-        phone = "780-555-0123",
-        profilePhotoUrl = "https://picsum.photos/200",
-        roles = arrayListOf(Role.ENTRANT),
-        creationDate = "2026-10-28")
+    var installationID by remember {mutableStateOf("")}
+    var identifiedUser by remember { mutableStateOf(false) }
+    var currentUser: UserProfile = remember {
+        UserProfile(
+            name = "Alex Camper",
+            email = "alex@example.ca",
+            phone = "780-555-0123",
+            profilePhotoUrl = "https://picsum.photos/200",
+            roles = arrayListOf(Role.ENTRANT),
+            creationDate = "2026-10-28"
+        )
+    }
 
-    val startTab = "owner" // IMPLEMENT THE DEVICE/PROFILE VERIFICATION SO WE KNOW WHERE TO START A USER
-    var selectedTab by remember { mutableStateOf(ScreenTabs.Explore) }
-
-    Scaffold(
-        containerColor = Background,
-
-        bottomBar = {
-            DrawBottomBar(
-                selectedTab = selectedTab,
-                onTabSelected = { tab ->
-                    selectedTab = tab
-                    navController.navigate(tab.label)
-                },
-            )
-        }
-    ) { innerPadding ->
-        NavHost(navController = navController,
-            startDestination = startTab,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-        ) {
-
-            composable("Explore") { EntrantDashboardView(navController ) }
-            composable("Lotteries") { EntrantProfileView(navController, testUser) }
-            composable("Trips") { EntrantProfileView(navController, testUser) }
-            composable("Profile") { EntrantProfileView(navController, testUser) }
-
-            composable("owner") {
-                // shortcut: placeholder user ID, replace when profile verification is connected.
-                com.example.lambda_aaa.view.CampsiteReservationApp(uid = "123")
+    LaunchedEffect(Unit) {
+        // Adapted from Google for Developers Firebase Documentation, Fundamentals: "Manage Firebase
+        // installations and IDs"
+        // https://firebase.google.com/docs/projects/manage-installations#kotlin_1
+        // Retrieved 2026-10-30
+        // Changes: Changed one line and added two to do device based identification for users
+        FirebaseInstallations.getInstance().id.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                installationID = task.result
+                Log.d("Installations", "Installation ID is: $installationID")
+            } else {
+                Log.e("Installations", "Unable to get Installation ID")
             }
-            //composable("admin") { AdminDashboardView(navController) }
+        }.await()
 
+        // Search for user in database
+        Firebase.firestore.collection("users")
+            .whereEqualTo("userDeviceID", installationID)
+            .get()
+            .addOnSuccessListener { result ->
+
+                // If user does not exist, put placeholder user information into database
+                if (result.isEmpty) {
+                    currentUser.updateDeviceID(installationID)
+                    Firebase.firestore.collection("users")
+                        .add(currentUser)
+                }
+
+                // Otherwise get user information from database
+                else {
+                    currentUser = result.documents[0].toObject(UserProfile::class.java)!!
+                }
+
+                identifiedUser = !identifiedUser
+            }
+            .addOnFailureListener { error ->
+                Log.w("Listener", "Error is", error)
+            }
+    }
+
+    if (identifiedUser) {
+
+        val startTab = "owner" // IMPLEMENT THE DEVICE/PROFILE VERIFICATION SO WE KNOW WHERE TO START A USER
+        var selectedTab by remember { mutableStateOf(ScreenTabs.Explore) }
+        val userRole = "user" // IMPLEMENT THE DEVICE/PROFILE VERIFICATION SO WE KNOW WHERE TO START A USER
+
+        val currentUserRole = currentUser.userRole // holds the user's role retrieved from database
+
+        Scaffold(
+            containerColor = Background,
+
+            bottomBar = {
+                DrawBottomBar(
+                    selectedTab = selectedTab,
+                    onTabSelected = { tab ->
+                        selectedTab = tab
+                        navController.navigate(tab.label)
+                    },
+                )
+            }
+        ) { innerPadding ->
+            NavHost(
+                navController = navController,
+                startDestination = startTab,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+            ) {
+
+                composable("Explore") { EntrantDashboardView(navController) }
+                composable("Lotteries") { EntrantProfileView(navController, currentUser) }
+                composable("Trips") { EntrantProfileView(navController, currentUser) }
+                composable("Profile") { EntrantProfileView(navController, currentUser) }
+
+                composable("owner") {
+                    // shortcut: placeholder user ID, replace when profile verification is connected.
+                    com.example.lambda_aaa.view.CampsiteReservationApp(uid = "123")
+                }
+                //composable("admin") { AdminDashboardView(navController) }
+
+            }
         }
     }
 
+    else {
+
+        Column (
+            modifier = Modifier.fillMaxSize().padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text("Identifying user...", fontSize = 24.sp)
+            Spacer(modifier = Modifier.height(8.dp))
+            CircularProgressIndicator()
+        }
+
+    }
 }
 
 /**
@@ -192,7 +263,6 @@ private fun DrawBottomBar(
         }
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable
