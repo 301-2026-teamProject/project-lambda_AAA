@@ -60,6 +60,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation("io.coil-kt.coil3:coil-compose:3.6.3")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.6.3")
+    implementation("com.google.firebase:firebase-installations:20.0.0")
     constraints {
         implementation("androidx.concurrent:concurrent-futures:1.2.0") {
             because("Match the app runtime to the version required by AndroidX Test.")
