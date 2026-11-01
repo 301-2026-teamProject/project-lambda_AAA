@@ -3,6 +3,13 @@ package com.example.lambda_aaa
 
 import android.os.Bundle
 import android.util.Log
+import android.net.Uri
+import androidx.compose.runtime.DisposableEffect
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.example.lambda_aaa.model.CampsiteRepository
+import com.example.lambda_aaa.controller.CampsiteDetailController
+import com.example.lambda_aaa.view.CampsiteDetailView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -87,6 +94,8 @@ class MainActivity : ComponentActivity() {
 fun CampsiteReservationApp(
 ) {
     val navController = rememberNavController()
+    val repository = remember { CampsiteRepository() }
+    DisposableEffect(repository) { onDispose { repository.close() } }
 
     var installationID by remember {mutableStateOf("")}
     var identifiedUser by remember { mutableStateOf(false) }
@@ -170,7 +179,15 @@ fun CampsiteReservationApp(
                     .padding(innerPadding),
             ) {
 
-                composable("Explore") { EntrantDashboardView(navController) }
+                composable("Explore") {
+                    EntrantDashboardView(navController,
+                        onCampsiteClick = { navController.navigate("campsite/${Uri.encode(it)}") })
+                }
+                composable("campsite/{cid}", arguments = listOf(navArgument("cid") { type = NavType.StringType })) { entry ->
+                    val cid = entry.arguments?.getString("cid") ?: return@composable
+                    val controller = remember(cid, repository) { CampsiteDetailController(cid, repository) }
+                    CampsiteDetailView(controller, onBack = { navController.popBackStack() })
+                }
                 composable("Lotteries") { EntrantProfileView(navController, currentUser) }
                 composable("Trips") { EntrantProfileView(navController, currentUser) }
                 composable("Profile") { EntrantProfileView(navController, currentUser) }

@@ -87,6 +87,7 @@ private val SelectColor = Color(0xFF526B5A) // Color chosen for other selected e
 @Composable
 fun EntrantDashboardView(
     navController: NavController,
+    onCampsiteClick: (String) -> Unit = {},
     ) {
 
     val repo = remember { SearchController( CampsiteRepository() ) } // Database
@@ -230,7 +231,7 @@ fun EntrantDashboardView(
                         filteredCampsites.forEach { campsite ->
                             CampsiteCard(
                                 campsite = campsite, // just sends the entire object which might not be efficient, but it works
-                                onClick = { }, // PUT CLICK ACTION HERE
+                                onClick = { onCampsiteClick(campsite.cid) },
                             )
                         }
                     }
@@ -835,127 +836,5 @@ private fun formatDateRangeLabel(start: String, end: String): String {
         startYear != endYear -> "${monthDayFormat.format(startDate)}, $startYear – ${monthDayFormat.format(endDate)}, $endYear"
         startMonth == endMonth -> "$startMonth $startDay–$endDay"
         else -> "${monthDayFormat.format(startDate)} – ${monthDayFormat.format(endDate)}"
-    }
-}
-
-/**
- * Creates a selectable card for an inputted Campsite
- *
- * For a given Campsite, this highlights its name, location, occupancy, rating,
- * price, Lottery status, and image.
- *
- * @param campsite the inputted Campsite to make a card for
- * @param onClick the function to run when a campsite card is clicked
- * @return nothing
- */
-@Composable
-private fun CampsiteCard(
-    campsite: Campsite,
-    onClick: () -> Unit,
-) {
-    Surface(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 100.dp),
-        shape = RoundedCornerShape(17.dp),
-        color = Color.White,
-        border = BorderStroke(1.dp, BorderColor),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(13.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(5.dp),
-            ) {
-                Text(
-                    text = campsite.name, // The big name at the top
-                    color = HeaderColor,
-                    fontSize = 14.sp,
-                    lineHeight = 17.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis, // I.e. if the name is too long it gets cut off with "..."
-                )
-                Text(
-                    text = "${campsite.mapLocation} · ${campsite.maxOccupancy} guests", // Location and max occupancy
-                    color = SubText,
-                    fontSize = 11.sp,
-                    lineHeight = 14.sp,
-                    maxLines = 1,
-                )
-
-                // Row that contains the last bit of text
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    if (campsite.ratingCount != 0) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon( // For the little star beside the ratings thingy
-                                imageVector = Icons.Filled.Star,
-                                contentDescription = "Rating", // the code freaks out if I don't have this
-                                tint = SubText,
-                                modifier = Modifier.size(12.dp),
-                            )
-                            Spacer(modifier = Modifier.width(2.dp))
-                            Text(
-                                text = campsite.ratingAverage.toString(), // Average Rating
-                                color = SubText,
-                                fontSize = 10.5.sp,
-                                maxLines = 1,
-                            )
-                        }
-                    } else {
-                        Text(
-                            text = "No ratings", // For when no one has rated a Campsite
-                            color = SubText,
-                            fontSize = 10.5.sp,
-                            maxLines = 1,
-                        )
-                    }
-                    Text( // Used to display the cost per night at a campsite (TO BE IMPLEMENTED)
-                        text = $$"$HellaBread&17Cent", //campsite.pricePerNight.toString(),
-                        color = SubText,
-                        fontSize = 10.5.sp,
-                        maxLines = 1,
-                    )
-
-                    if (campsite.cancellationPolicy != "") {
-                        Text(
-                            // On the mockup, this is where the textboxes would say "Lottery Open" or "2 Days Left"
-                            // ...but I don't think we have a proper variable for that, so I'm putting this here just in case
-                            text = campsite.cancellationPolicy,
-                            color = SubText,
-                            fontSize = 10.5.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false),
-                        )
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.width(10.dp))
-
-            // This is the square with the Campsite Icon (maybe we could change it to the image of the campsite?)
-            Surface(
-                shape = RoundedCornerShape(13.dp),
-                color = Background,
-                modifier = Modifier.size(width = 68.dp, height = 56.dp),
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Filled.Park,
-                        contentDescription = null,
-                        tint = SelectColor,
-                        modifier = Modifier.size(20.dp),
-                    )
-                }
-            }
-        }
     }
 }

@@ -1,4 +1,37 @@
 <resources>
     <string name="app_name">Campsite Reservation</string>
     <string name="app_tagline">Find your next campsite.</string>
+    <plurals name="campsite_occupancy">
+        <item quantity="one">Up to %1$d guest</item>
+        <item quantity="other">Up to %1$d guests</item>
+    </plurals>
+    <string name="campsite_rating">Rating: %1$.1f / 5</string>
+    <string name="campsite_unrated">No ratings yet</string>
+    <string name="campsite_details">Campsite details</string>
+    <string name="back">Back</string>
+    <string name="retry">Retry</string>
+    <string name="no_campsites">No campsites found.</string>
+    <string name="campsite_not_found">Campsite does not exist.</string>
+    <string name="campsite_photo">Photo of %1$s</string>
+    <string name="location_unavailable">Location not provided</string>
+    <string name="occupancy_unavailable">Maximum occupancy not provided</string>
+    <string name="description">Description</string>
+    <string name="rules_and_policy">Rules and policies</string>
+    <string name="cancellation_policy">Cancellation policy</string>
+    <string name="availability">Booking availability</string>
+    <string name="availability_unavailable">Availability not provided yet.</string>
+    <string name="not_provided">Not provided</string>
+    <string name="view_on_map">View on map</string>
+    <string name="no_map_app">No map app is installed.</string>
+    <string name="edit_campsite">Edit campsite</string>
+    <string name="campsite_lotteries">Campsite lotteries</string>
+    <string name="lotteries_loading">Loading lotteries…</string>
+    <string name="lotteries_load_failed">Could not load lotteries. Please try again.</string>
+    <string name="no_campsite_lotteries">No lotteries listed for this campsite.</string>
+    <string name="campsite_lottery_number">Lottery %1$d</string>
+    <string name="lottery_booking_period">Booking: %1$s – %2$s</string>
+    <string name="lottery_registration_period">Registration: %1$s – %2$s</string>
+    <string name="lottery_booking_unavailable">Booking dates not provided.</string>
+    <string name="lottery_registration_unavailable">Registration dates not provided.</string>
+    <string name="lottery_winner_count">Winners: %1$d</string>
 </resources>
