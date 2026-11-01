@@ -3,7 +3,7 @@
 .kotlin/
 .idea/
 local.properties
-/app/google-services.json
+google-services.json
 build/
 **/build/
 .DS_Store
@@ -13,6 +13,7 @@ build/
 firebase-debug*.log
 firestore-debug.log
 ui-debug.log
+app/google-services.json
 
 # Local Python caches and generated exports
 __pycache__/

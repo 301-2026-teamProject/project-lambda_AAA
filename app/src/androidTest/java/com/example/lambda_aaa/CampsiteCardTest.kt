@@ -5,12 +5,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.navigation.compose.rememberNavController
+import androidx.compose.foundation.layout.Column
 import androidx.test.platform.app.InstrumentationRegistry
 import com.example.lambda_aaa.model.Campsite
 import com.example.lambda_aaa.ui.theme.CampsiteReservationTheme
 import com.example.lambda_aaa.view.CampsiteDetailContent
-import com.example.lambda_aaa.view.EntrantDashboardView
+import com.example.lambda_aaa.view.CampsiteCard
 import com.google.firebase.firestore.GeoPoint
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -28,7 +28,7 @@ class CampsiteCardTest {
         mapLocation = GeoPoint(52.873, -118.082),
     )
 
-    @Test fun dashboardCardOpensMatchingDetailsAndReturns() {
+    @Test fun cardOpensMatchingDetailsAndReturns() {
         val valley = pine.copy(cid = "valley", name = "Valley View", address = "Hinton, Alberta",
             maxOccupancy = 10, ratingCount = 0, mapLocation = null)
         compose.setContent {
@@ -37,8 +37,11 @@ class CampsiteCardTest {
                 val campsites = listOf(pine, valley)
                 val selected = campsites.find { it.cid == selectedId }
                 if (selected == null) {
-                    EntrantDashboardView(rememberNavController(), campsiteList = campsites,
-                        onCampsiteClick = { selectedId = it })
+                    Column {
+                        campsites.forEach { campsite ->
+                            CampsiteCard(campsite, onClick = { selectedId = campsite.cid })
+                        }
+                    }
                 } else {
                     CampsiteDetailContent(selected, false, null, {}, { selectedId = null })
                 }
@@ -64,7 +67,7 @@ class CampsiteCardTest {
         compose.onNodeWithText("View on map").assertDoesNotExist()
     }
 
-    @Test fun missingOptionalFieldsAndAvailabilityAreExplicit() {
+    @Test fun missingOptionalFieldsAndEmptyLotteriesAreExplicit() {
         compose.setContent {
             CampsiteReservationTheme {
                 CampsiteDetailContent(Campsite(name = "Unnamed area"), false, null, {}, {})
@@ -74,7 +77,7 @@ class CampsiteCardTest {
         compose.onNodeWithText("Maximum occupancy not provided").assertIsDisplayed()
         compose.onNodeWithText("No ratings yet").assertIsDisplayed()
         compose.onAllNodesWithText("Not provided").assertCountEquals(3)
-        compose.onNodeWithText("Availability not provided yet.").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("No lotteries listed for this campsite.").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("View on map").assertDoesNotExist()
         compose.onNodeWithText("Edit campsite").assertDoesNotExist()
     }

@@ -77,7 +77,7 @@ class CampsiteRepository {
             .addOnFailureListener { e -> onResult(false, e.message) }
     }
 
-    /* get campsite details and also used in campsite information editing */
+    // get campsite details and also used in campsite information editing
     fun getCampsite(cid: String, onResult: (Boolean, Campsite?, String?) -> Unit) {
         campsitesRef.document(cid).get()
             .addOnSuccessListener { snapshot ->

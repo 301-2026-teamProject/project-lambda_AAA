@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.example.lambda_aaa.R
 import com.example.lambda_aaa.controller.CampsiteDetailController
 import com.example.lambda_aaa.model.Campsite
+import com.example.lambda_aaa.model.Lottery
 
 @Composable
 fun CampsiteDetailView(
@@ -46,6 +47,10 @@ fun CampsiteDetailView(
         onRetry = campsiteDetailController::fetchCampsiteAndLottery,
         onBack = onBack,
         onEdit = onEdit,
+        lotteries = campsiteDetailController.lotteries,
+        lotteriesLoading = campsiteDetailController.lotteriesLoading,
+        lotteriesFailed = campsiteDetailController.lotteriesFailed,
+        onRetryLotteries = campsiteDetailController::fetchLotteries,
     )
 }
 
@@ -58,6 +63,10 @@ internal fun CampsiteDetailContent(
     onRetry: () -> Unit,
     onBack: () -> Unit,
     onEdit: (() -> Unit)? = null,
+    lotteries: List<Lottery> = emptyList(),
+    lotteriesLoading: Boolean = false,
+    lotteriesFailed: Boolean = false,
+    onRetryLotteries: () -> Unit = {},
 ) {
     val context = LocalContext.current
     Scaffold(
@@ -121,13 +130,7 @@ internal fun CampsiteDetailContent(
                 DetailSection(stringResource(R.string.description), campsite.description)
                 DetailSection(stringResource(R.string.rules_and_policy), campsite.rulesAndPolicy)
                 DetailSection(stringResource(R.string.cancellation_policy), campsite.cancellationPolicy)
-                // shortcut: no lottery schema yet, show unknown availability until the shared model is ready.
-                Surface(shape = RoundedCornerShape(14.dp), color = TrailSage, contentColor = TrailInk) {
-                    Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(stringResource(R.string.availability), fontWeight = FontWeight.SemiBold)
-                        Text(stringResource(R.string.availability_unavailable))
-                    }
-                }
+                CampsiteLotteriesSection(lotteries, lotteriesLoading, lotteriesFailed, onRetryLotteries)
                 campsite.mapLocation?.let { point ->
                     OutlinedButton(
                         onClick = {
@@ -151,6 +154,46 @@ internal fun CampsiteDetailContent(
                 onEdit?.let { edit ->
                     Button(onClick = edit, modifier = Modifier.fillMaxWidth()) {
                         Text(stringResource(R.string.edit_campsite))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun CampsiteLotteriesSection(
+    lotteries: List<Lottery>,
+    isLoading: Boolean,
+    failed: Boolean,
+    onRetry: () -> Unit,
+) {
+    Surface(shape = RoundedCornerShape(14.dp), color = TrailSage, contentColor = TrailInk) {
+        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.campsite_lotteries), fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.semantics { heading() })
+            when {
+                isLoading -> {
+                    CircularProgressIndicator()
+                    Text(stringResource(R.string.lotteries_loading))
+                }
+                failed -> {
+                    Text(stringResource(R.string.lotteries_load_failed))
+                    TextButton(onClick = onRetry) { Text(stringResource(R.string.retry)) }
+                }
+                lotteries.isEmpty() -> Text(stringResource(R.string.no_campsite_lotteries))
+                else -> lotteries.forEachIndexed { index, lottery ->
+                    if (index > 0) HorizontalDivider()
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(stringResource(R.string.campsite_lottery_number, index + 1),
+                            fontWeight = FontWeight.Medium)
+                        Text(lottery.bookingPeriod?.let {
+                            stringResource(R.string.lottery_booking_period, it.start.toString(), it.end.toString())
+                        } ?: stringResource(R.string.lottery_booking_unavailable))
+                        Text(lottery.registrationPeriod?.let {
+                            stringResource(R.string.lottery_registration_period, it.start.toString(), it.end.toString())
+                        } ?: stringResource(R.string.lottery_registration_unavailable))
+                        Text(stringResource(R.string.lottery_winner_count, lottery.numWinners))
                     }
                 }
             }
