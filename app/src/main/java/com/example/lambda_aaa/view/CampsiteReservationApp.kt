@@ -1,6 +1,7 @@
 package com.example.lambda_aaa.view
 
 import android.R.id.message
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,6 +25,7 @@ fun CampsiteReservationApp(
 ) {
     val navController = rememberNavController()
     val repo = remember { CampsiteRepository() }
+    DisposableEffect(repo) { onDispose { repo.close() } }
     val ownerController = remember {
         CampsiteOwnerController(
             uid = uid,
@@ -65,8 +67,9 @@ fun CampsiteReservationApp(
             arguments = listOf(navArgument("cid") { type = NavType.StringType })
         ) { entry ->
             val cid = entry.arguments?.getString("cid") ?: return@composable
+            val controller = remember(cid, repo) { CampsiteDetailController(cid = cid, repository = repo) }
             CampsiteDetailView(
-                campsiteDetailController = CampsiteDetailController(cid = cid, repository = repo),
+                campsiteDetailController = controller,
                 onBack = { navController.popBackStack() },
                 onEdit = { navController.navigate("editScreen/$cid") }
             )

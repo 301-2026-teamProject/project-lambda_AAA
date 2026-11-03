@@ -46,6 +46,8 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.junit)
+    // Compose's transitive Espresso 3.5 uses an input API removed on newer Android images.
+    androidTestImplementation(libs.androidx.espresso.core)
 
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
@@ -60,6 +62,8 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation("io.coil-kt.coil3:coil-compose:3.6.3")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.6.3")
+    implementation("com.google.firebase:firebase-installations:20.0.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.9")
     constraints {
         implementation("androidx.concurrent:concurrent-futures:1.2.0") {
             because("Match the app runtime to the version required by AndroidX Test.")
