@@ -2,12 +2,7 @@ package com.example.lambda_aaa.model
 
 import java.time.LocalDate
 import java.util.UUID
-
-data class DateRange(val start: LocalDate, val end: LocalDate) {
-    init {
-        require(end.isAfter(start)) { "End date must be after start date" }
-    }
-}
+import com.example.lambda_aaa.model.Campsite
 
 class Lottery(
     val campsite: Campsite,

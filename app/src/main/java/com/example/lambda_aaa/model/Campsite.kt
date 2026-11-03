@@ -4,6 +4,13 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.ServerTimestamp
+import java.time.LocalDate
+
+data class DateRange(val start: LocalDate, val end: LocalDate) {
+    init {
+        require(end.isAfter(start)) { "End date must be after start date" }
+    }
+}
 
 data class Campsite(
     @DocumentId val cid: String = "",
@@ -17,9 +24,11 @@ data class Campsite(
     var imageUrl: String? = null,
     var rulesAndPolicy: String = "",
     var cancellationPolicy: String = "",
-    //var pricePerNight: Double = 0.0,
+    var pricePerNight: Double = 0.0,
     var ratingAverage: Double = 0.0,
     var ratingCount: Int = 0,
+    var lottery: Lottery? = null,
+    var availablePeriod: DateRange = DateRange(LocalDate.now().minusDays(1), LocalDate.now()),
     @ServerTimestamp var creationDate: Timestamp? = null,
     @ServerTimestamp var lastUpdatedDate: Timestamp? = null
 )

@@ -152,11 +152,14 @@ fun CampsiteReservationApp(
 
     if (identifiedUser) {
 
-        val startTab = "owner" // IMPLEMENT THE DEVICE/PROFILE VERIFICATION SO WE KNOW WHERE TO START A USER
-        var selectedTab by remember { mutableStateOf(ScreenTabs.Explore) }
-        val userRole = "user" // IMPLEMENT THE DEVICE/PROFILE VERIFICATION SO WE KNOW WHERE TO START A USER
+        var startTab = "" // IMPLEMENT THE DEVICE/PROFILE VERIFICATION SO WE KNOW WHERE TO START A USER
+        if (currentUser.userRole == Role.OWNER) {
+            startTab = "Owner"
+        } else if (currentUser.userRole == Role.ENTRANT) {
+            startTab = "Explore"
+        }
 
-        val currentUserRole = currentUser.userRole // holds the user's role retrieved from database
+        var selectedTab by remember { mutableStateOf(ScreenTabs.Explore) }
 
         Scaffold(
             containerColor = Background,
@@ -192,7 +195,7 @@ fun CampsiteReservationApp(
                 composable("Trips") { EntrantProfileView(navController, currentUser) }
                 composable("Profile") { EntrantProfileView(navController, currentUser) }
 
-                composable("owner") {
+                composable("Owner") {
                     // shortcut: placeholder user ID, replace when profile verification is connected.
                     com.example.lambda_aaa.view.CampsiteReservationApp(uid = "123")
                 }

@@ -26,9 +26,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.NotificationsNone
-import androidx.compose.material.icons.filled.Park
+//import androidx.compose.material.icons.filled.Park
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Star
+//import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Terrain
 import androidx.compose.material.icons.filled.Tune
 //import androidx.compose.material.icons.filled.WbTwilight // This was one of the icons the mockup uses so don't touch
@@ -45,7 +45,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
@@ -56,13 +55,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.text.input.KeyboardType
-import java.text.ParsePosition
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
-import com.example.lambda_aaa.model.Campsite
 import com.example.lambda_aaa.controller.SearchController
 import com.example.lambda_aaa.model.CampsiteRepository
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
+
 //import com.example.lambda_aaa.model.LotteryRepository
 
 
@@ -98,9 +97,11 @@ fun EntrantDashboardView(
     var selectedLocation by remember {mutableStateOf<String?>(null)}
     var selectedStartDate by remember { mutableStateOf<String?>(null) }
     var selectedEndDate by remember { mutableStateOf<String?>(null) }
+    var timeStartDate by remember { mutableStateOf<LocalDate?>(null) }
+    var timeEndDate by remember { mutableStateOf<LocalDate?>(null) }
     var selectedGuestCount by remember { mutableStateOf<Int?>(null) }
     var showFiltersDialog by remember { mutableStateOf(false) }
-    repo.filterCampsite(searchQuery, selectedLocation, selectedGuestCount, selectedStartDate, selectedEndDate) // Runs every time the values change, letting us dynamically filter things
+    repo.filterCampsite(searchQuery, selectedLocation, selectedGuestCount, timeStartDate, timeEndDate) // Runs every time the values change, letting us dynamically filter things
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -185,6 +186,8 @@ fun EntrantDashboardView(
                                     onRemove = {
                                         selectedStartDate = null
                                         selectedEndDate = null
+                                        timeStartDate = null
+                                        timeEndDate = null
                                     },
                                 )
                             }
@@ -250,12 +253,14 @@ fun EntrantDashboardView(
             initialEndDate = selectedEndDate,
             initialGuestCount = selectedGuestCount,
             onDismiss = { showFiltersDialog = false },
-            onApply = { location, startDate, endDate, guestCount ->
+            onApply = { location, startDate, endDate, guestCount, parsedStart, parsedEnd ->
                 selectedLocation = location
                 selectedStartDate = startDate
                 selectedEndDate = endDate
                 selectedGuestCount = guestCount
                 showFiltersDialog = false
+                timeStartDate = parsedStart
+                timeEndDate = parsedEnd
             },
         )
     }
@@ -483,7 +488,7 @@ private fun CampsiteFiltersDialog(
     initialEndDate: String?,
     initialGuestCount: Int?,
     onDismiss: () -> Unit,
-    onApply: (location: String?, startDate: String?, endDate: String?, guests: Int?) -> Unit,
+    onApply: (location: String?, startDate: String?, endDate: String?, guests: Int?, parsedStart: LocalDate?, parsedEnd: LocalDate?) -> Unit,
 ) {
     var draftLocation by remember { mutableStateOf(initialLocation) }
     var startDate by remember { mutableStateOf(initialStartDate.orEmpty()) }
@@ -651,7 +656,7 @@ private fun CampsiteFiltersDialog(
                     val start = startDate.trim()
                     val end = endDate.trim()
                     if (start.isEmpty() && end.isEmpty() && guestError == null) { // I.e. no errors and no date input
-                        onApply(draftLocation, null, null, parsedGuestCount) // We apply it
+                        onApply(draftLocation, null, null, parsedGuestCount, null, null) // We apply it
                     } else if (start.isEmpty() && end.isEmpty() && guestError != null) {
                         guestError = "Enter a valid whole number."
                     } else if (start.isEmpty() || end.isEmpty()) { // If one is empty but not the other, then that's an error
@@ -663,12 +668,12 @@ private fun CampsiteFiltersDialog(
                             parsedStart == null || parsedEnd == null -> {
                                 dateError = "Enter valid dates in YYYY-MM-DD format."
                             }
-                            parsedStart.after(parsedEnd) -> {
+                            parsedStart.isAfter(parsedEnd) -> {
                                 dateError = "Start date must be on or before the end date."
                             }
                             // If it reaches here, then the dates are valid, but we have to check the guest number
                             guestError == null -> {
-                                onApply(draftLocation, start, end, parsedGuestCount)
+                                onApply(draftLocation, start, end, parsedGuestCount, parsedStart, parsedEnd)
                             }
                         }
                     }
@@ -762,7 +767,7 @@ private fun DropdownSelector(
  * @param value an inputted string that wil be checked to see if it is formatted as a date
  * @return Date?
  */
-private fun parseStrictIsoDate(value: String): Date? {
+private fun parseStrictIsoDate(value: String): LocalDate? {
     // Adapted from Kotlin Foundation, "Regex" API reference.
     // https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.text/-regex/
     // Retrieved 2026-10-25
@@ -772,35 +777,19 @@ private fun parseStrictIsoDate(value: String): Date? {
     // https://developer.android.com/reference/java/util/regex/Pattern
     // Retrieved 2026-10-25
     // Changes: Adapted to fit my string parameters
-    if (!Regex(pattern = "\\d{4}-\\d{2}-\\d{2}").matches(value)) { // the \\d is necessary because of word boundaries
+    if (!Regex("[0-9]{4}-[0-9]{2}-[0-9]{2}").matches(value)) { // forces only numbers between 1 and 9
         // Basically if our string doesn't match the "[4 integers]-[2 integers]-[2 integers]" pattern, then it fails
         return null
     }
 
+    // Adapted from Android Developers, "LocalDate" & "DateTimeFormatter" API reference.
+    // https://developer.android.com/reference/java/time/LocalDate & https://developer.android.com/reference/java/time/format/DateTimeFormatter
+    // Retrieved 2026-11-03
+    // Changes: None, used to understand the Kotlin functions for this function
     return try {
-        // Adapted from Oracle Developers, "SimpleDateFormat" & "DateFormat" API reference.
-        // https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html & https://docs.oracle.com/javase/8/docs/api/java/text/DateFormat.html
-        // Retrieved 2026-10-25
-        // Changes: None, used to figure out how to validify a date (i.e. so we don't accidentally pass feb. 30th)
-
-        // Adapted from Android Developers, "SimpleDateFormat" API reference.
-        // https://developer.android.com/reference/kotlin/java/text/SimpleDateFormat
-        // Retrieved 2026-10-25
-        // Changes: None, used to understand the Kotlin functions for this function
-        val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { // the error handler recommended me to add the locale bit
-            isLenient = false // the oracle page says this can mess with how exact a date, so I'm playing it safe here
-        }
-        // From there, we have to parse the date to turn it into a Date value that the system can actually read
-        val position = ParsePosition(0)
-        val parsed = formatter.parse(value, position) // Used to parse the date, only becomes null if it failed, otherwise it worked
-        if (parsed != null && position.index == value.length && formatter.format(parsed) == value) {
-            // I.e. if the parsing worked, and we parsed the entire thing, and reverse-parsing it gives us the same result, then it works
-            parsed // If this all works, then the try returns this value of type Date
-        } else {
-            null // Otherwise it sends back nothing
-        }
-    } catch (_: IllegalArgumentException) { // try commands need us to catch errors
-        null // returns null if the user typed in anything weird
+        LocalDate.parse(value, DateTimeFormatter.ISO_LOCAL_DATE)
+    } catch (_: DateTimeParseException) {
+        null
     }
 }
 
@@ -818,23 +807,26 @@ private fun formatDateRangeLabel(start: String, end: String): String {
     val endDate = parseStrictIsoDate(end) ?: return "$start – $end"
     // Both of these function try to parse their respective dates, otherwise they just return the YYYY-MM-DD of both together
 
-    fun dateFormatter(pattern: String) = SimpleDateFormat(pattern, Locale.US) // Helper function that formats each day patteran according to US time standards
-    val monthDayFormat = dateFormatter("MMM d") // Formats dates such as 'Mar 7th'
-    val yearFormat = dateFormatter("yyyy") // Format for a four digit year
-    val startMonth = dateFormatter("MMM").format(startDate) // Abbreviated form of a start month
-    val endMonth = dateFormatter("MMM").format(endDate) // Same but for the end day
-    val startDay = dateFormatter("d").format(startDate) // Start day
-    val endDay = dateFormatter("d").format(endDate) // End day
-    val startYear = yearFormat.format(startDate) // start sate year
-    val endYear = yearFormat.format(endDate) // end date year
+    val monthDayFormat = DateTimeFormatter.ofPattern("MMM d", Locale.US) // Formats dates such as 'Mar 7th'
+    val monthFormat =  DateTimeFormatter.ofPattern("MMM", Locale.US) // Format for a four digit year
+    val startMonth = startDate.format(monthFormat) // Abbreviated form of a start month
+    val endMonth = endDate.format(monthFormat) // Same but for the end day
+    val startDay = startDate.dayOfMonth // Start day
+    val endDay =  endDate.dayOfMonth // End day
+    val startYear = startDate.year // start sate year
+    val endYear = endDate.year // end date year
 
     return when {
         // Basically figures out how to format the end result date
         // If the years are NOT the same, it shows as "Month day-th, Year" for both
         // If the years ARE the same, but the months are different, then it does "Month day-th" for both
         // If the Year AND Month are the same, it just does "Month Day1 - Day2"
-        startYear != endYear -> "${monthDayFormat.format(startDate)}, $startYear – ${monthDayFormat.format(endDate)}, $endYear"
-        startMonth == endMonth -> "$startMonth $startDay–$endDay"
-        else -> "${monthDayFormat.format(startDate)} – ${monthDayFormat.format(endDate)}"
+        startYear != endYear ->
+            "${startDate.format(monthDayFormat)}, $startYear – " + "${endDate.format(monthDayFormat)}, $endYear"
+        startMonth == endMonth ->
+            "$startMonth $startDay–$endDay"
+
+        else ->
+            "${startDate.format(monthDayFormat)} – ${endDate.format(monthDayFormat)}"
     }
 }
