@@ -28,6 +28,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.lambda_aaa.R
 import com.example.lambda_aaa.controller.CampsiteDetailController
+import com.example.lambda_aaa.controller.LotteryJoinPhase
+import com.example.lambda_aaa.controller.LotteryJoinState
+import kotlinx.coroutines.delay
 import com.example.lambda_aaa.model.Campsite
 import com.example.lambda_aaa.model.Lottery
 
@@ -37,8 +40,15 @@ fun CampsiteDetailView(
     onBack: () -> Unit,
     onEdit: (() -> Unit)? = null,
 ) {
-    LaunchedEffect(campsiteDetailController) {
+    LaunchedEffect(campsiteDetailController, onEdit == null) {
         campsiteDetailController.fetchCampsiteAndLottery()
+        if (onEdit == null) {
+            campsiteDetailController.identifyEntrant()
+            while (true) {
+                delay(60_000)
+                campsiteDetailController.refreshEligibility()
+            }
+        }
     }
     CampsiteDetailContent(
         campsite = campsiteDetailController.campsite,
@@ -51,6 +61,13 @@ fun CampsiteDetailView(
         lotteriesLoading = campsiteDetailController.lotteriesLoading,
         lotteriesFailed = campsiteDetailController.lotteriesFailed,
         onRetryLotteries = campsiteDetailController::fetchLotteries,
+        showJoinActions = onEdit == null,
+        joinStates = campsiteDetailController.joinStates,
+        identityLoading = campsiteDetailController.identityLoading,
+        identityFailed = campsiteDetailController.identityFailed,
+        onRetryIdentity = campsiteDetailController::identifyEntrant,
+        onJoin = campsiteDetailController::joinLottery,
+        onRetryEntry = campsiteDetailController::refreshEntry,
     )
 }
 
@@ -67,6 +84,13 @@ internal fun CampsiteDetailContent(
     lotteriesLoading: Boolean = false,
     lotteriesFailed: Boolean = false,
     onRetryLotteries: () -> Unit = {},
+    showJoinActions: Boolean = false,
+    joinStates: Map<String, LotteryJoinState> = emptyMap(),
+    identityLoading: Boolean = false,
+    identityFailed: Boolean = false,
+    onRetryIdentity: () -> Unit = {},
+    onJoin: (String) -> Unit = {},
+    onRetryEntry: (String) -> Unit = {},
 ) {
     val context = LocalContext.current
     Scaffold(
@@ -130,7 +154,11 @@ internal fun CampsiteDetailContent(
                 DetailSection(stringResource(R.string.description), campsite.description)
                 DetailSection(stringResource(R.string.rules_and_policy), campsite.rulesAndPolicy)
                 DetailSection(stringResource(R.string.cancellation_policy), campsite.cancellationPolicy)
-                CampsiteLotteriesSection(lotteries, lotteriesLoading, lotteriesFailed, onRetryLotteries)
+                CampsiteLotteriesSection(
+                    lotteries, lotteriesLoading, lotteriesFailed, onRetryLotteries,
+                    showJoinActions, joinStates, identityLoading, identityFailed,
+                    onRetryIdentity, onJoin, onRetryEntry,
+                )
                 campsite.mapLocation?.let { point ->
                     OutlinedButton(
                         onClick = {
@@ -167,6 +195,13 @@ internal fun CampsiteLotteriesSection(
     isLoading: Boolean,
     failed: Boolean,
     onRetry: () -> Unit,
+    showJoinActions: Boolean = false,
+    joinStates: Map<String, LotteryJoinState> = emptyMap(),
+    identityLoading: Boolean = false,
+    identityFailed: Boolean = false,
+    onRetryIdentity: () -> Unit = {},
+    onJoin: (String) -> Unit = {},
+    onRetryEntry: (String) -> Unit = {},
 ) {
     Surface(shape = RoundedCornerShape(14.dp), color = TrailSage, contentColor = TrailInk) {
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -194,6 +229,20 @@ internal fun CampsiteLotteriesSection(
                             stringResource(R.string.lottery_registration_period, it.start.toString(), it.end.toString())
                         } ?: stringResource(R.string.lottery_registration_unavailable))
                         Text(stringResource(R.string.lottery_winner_count, lottery.numWinners))
+                        if (showJoinActions) {
+                            when {
+                                identityLoading -> Text(stringResource(R.string.lottery_identifying))
+                                identityFailed -> {
+                                    Text(stringResource(R.string.lottery_identity_failed))
+                                    TextButton(onClick = onRetryIdentity) { Text(stringResource(R.string.retry)) }
+                                }
+                                else -> LotteryJoinAction(
+                                    joinStates[lottery.id] ?: LotteryJoinState(LotteryJoinPhase.CHECKING),
+                                    onJoin = { onJoin(lottery.id) },
+                                    onRetry = { onRetryEntry(lottery.id) },
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -209,5 +258,29 @@ private fun DetailSection(title: String, value: String) {
             Text(title, fontWeight = FontWeight.SemiBold, modifier = Modifier.semantics { heading() })
             Text(value.ifBlank { stringResource(R.string.not_provided) })
         }
+    }
+}
+
+@Composable
+internal fun LotteryJoinAction(state: LotteryJoinState, onJoin: () -> Unit, onRetry: () -> Unit) {
+    val label = when (state.phase) {
+        LotteryJoinPhase.CHECKING -> R.string.lottery_checking_entry
+        LotteryJoinPhase.READY -> R.string.lottery_join
+        LotteryJoinPhase.JOINING -> R.string.lottery_joining
+        LotteryJoinPhase.JOINED -> R.string.lottery_joined
+        LotteryJoinPhase.NOT_OPEN -> R.string.lottery_not_open
+        LotteryJoinPhase.CLOSED -> R.string.lottery_closed
+        LotteryJoinPhase.UNAVAILABLE -> R.string.lottery_unavailable
+        LotteryJoinPhase.FULL -> R.string.lottery_full
+        LotteryJoinPhase.ERROR -> R.string.lottery_entry_error
+        LotteryJoinPhase.FINISHED -> R.string.lottery_finished
+    }
+    Button(onClick = onJoin, enabled = state.phase == LotteryJoinPhase.READY,
+        modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(label))
+    }
+    state.message?.let { Text(it) }
+    if (state.phase == LotteryJoinPhase.ERROR || state.phase == LotteryJoinPhase.FULL) {
+        TextButton(onClick = onRetry) { Text(stringResource(R.string.retry)) }
     }
 }

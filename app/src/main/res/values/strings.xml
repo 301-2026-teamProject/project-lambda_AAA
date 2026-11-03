@@ -34,4 +34,16 @@
     <string name="lottery_booking_unavailable">Booking dates not provided.</string>
     <string name="lottery_registration_unavailable">Registration dates not provided.</string>
     <string name="lottery_winner_count">Winners: %1$d</string>
+    <string name="lottery_identifying">Checking your profile…</string>
+    <string name="lottery_identity_failed">Could not identify your saved profile. Retry before joining.</string>
+    <string name="lottery_checking_entry">Checking your entry…</string>
+    <string name="lottery_join">Join lottery</string>
+    <string name="lottery_joining">Joining…</string>
+    <string name="lottery_joined">Already joined</string>
+    <string name="lottery_not_open">Registration has not opened</string>
+    <string name="lottery_closed">Registration is closed</string>
+    <string name="lottery_unavailable">Lottery is not available for joining</string>
+    <string name="lottery_full">Waiting list is full</string>
+    <string name="lottery_entry_error">Entry could not be verified</string>
+    <string name="lottery_finished">Lottery entry has a result</string>
 </resources>

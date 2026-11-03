@@ -3,70 +3,215 @@ package com.example.lambda_aaa.controller
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.example.lambda_aaa.model.Campsite
-import com.example.lambda_aaa.model.CampsiteRepository
-import com.example.lambda_aaa.model.Lottery
-import com.example.lambda_aaa.model.LotteryRepository
+import com.example.lambda_aaa.model.*
+import com.example.lambda_aaa.model.detail.CampsiteDetailDataSource
+import com.example.lambda_aaa.model.detail.FirestoreCampsiteDetailDataSource
+import java.time.LocalDate
+
+enum class LotteryJoinPhase { CHECKING, READY, JOINING, JOINED, NOT_OPEN, CLOSED, UNAVAILABLE, FULL, ERROR, FINISHED }
+data class LotteryJoinState(val phase: LotteryJoinPhase, val message: String? = null)
 
 class CampsiteDetailController(
     private val cid: String,
-    private val repository: CampsiteRepository
+    private val data: CampsiteDetailDataSource,
+    private val today: () -> LocalDate = { LocalDate.now() },
 ) {
+    constructor(cid: String, repository: CampsiteRepository) :
+        this(cid, FirestoreCampsiteDetailDataSource(repository))
+
     var campsite by mutableStateOf<Campsite?>(null)
+        private set
     var isLoading by mutableStateOf(true)
         private set
     var errorMessage by mutableStateOf<String?>(null)
         private set
-
     var lotteries by mutableStateOf<List<Lottery>>(emptyList())
         private set
     var lotteriesLoading by mutableStateOf(false)
         private set
     var lotteriesFailed by mutableStateOf(false)
         private set
+    var joinStates by mutableStateOf<Map<String, LotteryJoinState>>(emptyMap())
+        private set
+    var identityLoading by mutableStateOf(false)
+        private set
+    var identityFailed by mutableStateOf(false)
+        private set
+    private var entrantId: String? = null
+    private var entrantEnabled = false
     private var campsiteRequest = 0
     private var lotteryRequest = 0
+    private var identityRequest = 0
+    private val entryRequests = mutableMapOf<String, Int>()
+    private val pendingJoins = mutableSetOf<String>()
+    private var lastDate = today()
+
+
 
     fun fetchCampsiteAndLottery() {
         val request = ++campsiteRequest
-        ++lotteryRequest // Ignore a previous lottery response after a reload
+        ++lotteryRequest
+        entryRequests.clear()
         lotteries = emptyList()
         lotteriesLoading = false
         lotteriesFailed = false
+        joinStates = emptyMap()
         isLoading = true
         errorMessage = null
         campsite = null
-        repository.getCampsite(cid = cid) { success, campsite, _ ->
+        data.getCampsite(cid) { success, loaded, _ ->
             if (request != campsiteRequest) return@getCampsite
-            if (success && campsite != null) {
-                this.campsite = campsite
+            if (success && loaded != null) {
+                campsite = loaded
                 fetchLotteries()
-            } else {
-                errorMessage = if (success) "Campsite does not exist."
-                    else "Could not load campsite. Check your connection and try again."
-            }
+            } else errorMessage = if (success) "Campsite does not exist."
+                else "Could not load campsite. Check your connection and try again."
             isLoading = false
         }
     }
 
-    // Keep campsite details visible if the independent lottery request fails
+
+
     fun fetchLotteries() {
-        if (campsite == null) return
+        val selected = campsite ?: return
         val request = ++lotteryRequest
+        entryRequests.clear()
         lotteriesLoading = true
         lotteriesFailed = false
-        lotteries = emptyList()
-        sharedLotteryRepository.getAllLotteries { success, result, _ ->
-            if (request != lotteryRequest) return@getAllLotteries
+        data.getLotteries(selected) { success, result, _ ->
+            if (request != lotteryRequest) return@getLotteries
             lotteries = if (success) result.filter { it.campsite.cid == cid }
                 .sortedBy { it.bookingPeriod?.start } else emptyList()
             lotteriesFailed = !success
             lotteriesLoading = false
+            joinStates = emptyMap()
+            if (entrantEnabled) lotteries.forEach { refreshEntry(it.id) }
         }
     }
 
-    private companion object {
-        //
-        val sharedLotteryRepository by lazy { LotteryRepository() }
+
+
+    fun identifyEntrant() {
+        entrantEnabled = true
+        val request = ++identityRequest
+        identityLoading = true
+        identityFailed = false
+        entrantId = null
+        data.getEntrantId { success, id, _ ->
+            if (request != identityRequest) return@getEntrantId
+            entrantId = id?.takeIf { success && it.isNotBlank() }
+            identityLoading = false
+            identityFailed = entrantId == null
+            if (!identityFailed) lotteries.forEach { refreshEntry(it.id) }
+        }
+    }
+
+
+
+
+    private fun eligibility(lottery: Lottery): LotteryJoinPhase {
+        val registration = lottery.registrationPeriod ?: return LotteryJoinPhase.UNAVAILABLE
+        val booking = lottery.bookingPeriod ?: return LotteryJoinPhase.UNAVAILABLE
+        if (lottery.numWinners <= 0 || !today().isBefore(booking.end)) return LotteryJoinPhase.UNAVAILABLE
+        // Date only registration windows including their displayed end date
+        return when {
+            today().isBefore(registration.start) -> LotteryJoinPhase.NOT_OPEN
+            today().isAfter(registration.end) -> LotteryJoinPhase.CLOSED
+            else -> LotteryJoinPhase.READY
+        }
+    }
+
+
+
+    private fun setState(id: String, phase: LotteryJoinPhase, message: String? = null) {
+        joinStates = joinStates + (id to LotteryJoinState(phase, message))
+    }
+
+
+
+    fun refreshEntry(id: String) {
+        val lottery = lotteries.find { it.id == id } ?: return
+        if (id in pendingJoins) { setState(id, LotteryJoinPhase.JOINING); return }
+        val uid = entrantId ?: return
+        val generation = lotteryRequest
+        val request = (entryRequests[id] ?: 0) + 1
+        entryRequests[id] = request
+        setState(id, LotteryJoinPhase.CHECKING)
+        data.getEntry(id, uid) { success, entry, _ ->
+            if (generation != lotteryRequest || request != entryRequests[id] || uid != entrantId) return@getEntry
+            when {
+                !success -> setState(id, LotteryJoinPhase.ERROR, "Could not check your entry. Please retry.")
+                entry?.status == EntryStatus.WAITING -> setState(id, LotteryJoinPhase.JOINED)
+                entry != null && entry.status != EntryStatus.WITHDRAWN ->
+                    setState(id, LotteryJoinPhase.FINISHED, "Lottery result: ${entry.status.name.lowercase().replace('_', ' ')}")
+                else -> setState(id, eligibility(lottery))
+            }
+        }
+    }
+
+
+
+    // Recheck the registration window when time changes or before any write
+    fun refreshEligibility() {
+        if (today() != lastDate) {
+            lastDate = today()
+            if (entrantEnabled) lotteries.forEach { refreshEntry(it.id) }
+        }
+    }
+
+
+
+    fun joinLottery(id: String) {
+        val uid = entrantId ?: return
+        val selectedCampsite = campsite ?: return
+        val lottery = lotteries.find { it.id == id } ?: return
+        if (joinStates[id]?.phase != LotteryJoinPhase.READY || id in pendingJoins || lotteriesLoading) return
+        val eligibility = eligibility(lottery)
+        if (eligibility != LotteryJoinPhase.READY) { setState(id, eligibility); return }
+        pendingJoins.add(id)
+        setState(id, LotteryJoinPhase.JOINING)
+        // The owner may have closed or removed the lottery since this screen loaded
+        data.getLotteries(selectedCampsite) { loaded, latest, _ ->
+            val current = latest.find { it.id == id && it.campsite.cid == selectedCampsite.cid }
+            if (!loaded) {
+                pendingJoins.remove(id)
+                setState(id, LotteryJoinPhase.ERROR, "Could not check the lottery. Please retry.")
+            } else if (current == null) {
+                pendingJoins.remove(id)
+                setState(id, LotteryJoinPhase.UNAVAILABLE)
+            } else {
+                lotteries = lotteries.map { if (it.id == id) current else it }
+                checkMembershipAndJoin(current, uid)
+            }
+        }
+    }
+
+
+
+    private fun checkMembershipAndJoin(lottery: Lottery, uid: String) {
+        val id = lottery.id
+        // Check membership once more so a known result is never reset to wating
+        data.getEntry(id, uid) { checked, existing, _ ->
+            if (!checked) {
+                pendingJoins.remove(id)
+                setState(id, LotteryJoinPhase.ERROR, "Could not check your entry. Please retry.")
+            } else if (existing != null && existing.status != EntryStatus.WITHDRAWN) {
+                pendingJoins.remove(id)
+                refreshEntry(id)
+            } else if (eligibility(lottery) != LotteryJoinPhase.READY) {
+                pendingJoins.remove(id)
+                setState(id, eligibility(lottery))
+            } else {
+                data.join(id, uid) { success, message ->
+                    pendingJoins.remove(id)
+                    when {
+                        success -> setState(id, LotteryJoinPhase.JOINED, "You joined the waiting list.")
+                        message == "Already joined." -> setState(id, LotteryJoinPhase.JOINED)
+                        message == "Full." -> setState(id, LotteryJoinPhase.FULL)
+                        else -> setState(id, LotteryJoinPhase.ERROR, "Could not join the lottery. Please retry.")
+                    }
+                }
+            }
+        }
     }
 }
