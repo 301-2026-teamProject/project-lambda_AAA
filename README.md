@@ -1,4 +1,4 @@
-\# Campsite Reservation
+# Campsite Reservation
 
 
 
@@ -6,17 +6,17 @@ Android baseline for the CMPUT 301 Part 3 prototype.
 
 
 
-\## Requirements
+## Requirements
 
 
 
-\- Android Studio with JDK 17
+- Android Studio with JDK 17
 
-\- Android SDK 37
+- Android SDK 37
 
 
 
-\## Run
+## Run
 
 
 
@@ -42,15 +42,15 @@ Command-line verification:
 
 
 
-\## Current scope
+## Current scope
 
 
 
-\- Kotlin and Jetpack Compose application shell
+- Kotlin and Jetpack Compose application shell
 
-\- Material 3 theme with light and dark palettes
+- Material 3 theme with light and dark palettes
 
-\- Launch-screen instrumented test
+- Launch-screen instrumented test
 
 
 
