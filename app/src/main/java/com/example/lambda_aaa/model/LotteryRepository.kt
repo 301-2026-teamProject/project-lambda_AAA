@@ -92,4 +92,10 @@ class LotteryRepository {
             )
         ).addOnFailureListener { Log.e("LotteryRepo", "Update failed", it) }
     }
+
+    fun updateWaitlistCapacity(lottery: Lottery, num: Int) {
+        lottery.waitlistCapacity = num
+        lotteryRef.document(lottery.id).update("waitlistCapacity", num)
+            .addOnFailureListener { Log.e("LotteryRepo", "Update failed", it) }
+    }
 }
