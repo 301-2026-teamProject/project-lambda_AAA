@@ -4,7 +4,7 @@ The detail view uses `CampsiteDetailController`, which loads campsites through
 `CampsiteRepository`. `FirestoreCampsiteDetailDataSource` reads the current flat
 `Lottery.toMap()` fields and preserves the Firestore document ID. It resolves the
 saved user document by installation ID and delegates membership and joining to
-the team's `EntryRepository`. Shared models and repositories are unchanged.
+the team's `EntryRepository`. The model declarations are unchanged by our compatibility fix.
 
 The controller checks dates, saved identity, existing membership and fresh lottery
 data before joining. Registration end dates are inclusive. Existing results are
@@ -41,6 +41,31 @@ Firebase project and deletes its unique temporary document:
   -Pandroid.testInstrumentationRunnerArguments.class=com.example.lambda_aaa.FirestorePersistenceTest \
   -Pandroid.testInstrumentationRunnerArguments.firestoreIntegration=true
 ```
+
+## Current-main campsite compatibility
+
+`CampsiteRepository` uses `CampsiteFirestoreMapper` for single, owner, all-campsite
+and listener reads, and for creates/updates. Availability writes use
+`availablePeriod: {start: "YYYY-MM-DD", end: "YYYY-MM-DD"}`. Reads also accept the
+nested LocalDate maps produced by the previous automatic serializer. Documents
+without availability retain the shared model's default; that default is not proof
+that an owner has configured availability.
+
+An attached lottery is saved as its existing `toMap()` fields plus its `id`, with
+`campsiteID` instead of recursively saving the campsite. Reads reconstruct the
+lottery's campsite reference. Creates use server timestamps; updates preserve the
+stored creation timestamp. No bulk migration or production rules are deployed.
+Older clients using `toObject(Campsite)` cannot decode these dates reliably; ship
+the repository and mapper together. Rolling back to automatic mapping would
+restore the loading bug, so retain the compatible reader for stored documents.
+
+The emulator suite covers old automatic-date documents through the detail/join
+flow and new repository create/read/update/list/listener/delete operations with
+availability, price, an attached lottery and creation-time preservation.
+
+Lottery details still query the separate `lotteries` collection because the
+current `LotteryRepository.create()` writes there. The new `Campsite.lottery`
+field alone does not establish a replacement authoritative lottery write path.
 
 ## Team integration limits
 
