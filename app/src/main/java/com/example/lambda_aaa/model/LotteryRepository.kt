@@ -3,6 +3,7 @@ package com.example.lambda_aaa.model
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import androidx.compose.runtime.mutableStateListOf
+import android.util.Log
 
 class LotteryRepository {
 
@@ -64,5 +65,31 @@ class LotteryRepository {
             .addOnFailureListener { e ->
                 onResult(false, emptyList(), e.message)
             }
+    }
+
+    fun updateNumWinners(lottery: Lottery, num: Int) {
+        lottery.numWinners = num
+        lotteryRef.document(lottery.id).update("numWinners", num)
+            .addOnFailureListener { Log.e("LotteryRepo", "Update failed", it) }
+    }
+
+    fun updateBookingPeriod(lottery: Lottery, period: DateRange) {
+        lottery.bookingPeriod = period
+        lotteryRef.document(lottery.id).update(
+            mapOf(
+                "bookingPeriodStart" to period.start.toString(),
+                "bookingPeriodEnd" to period.end.toString()
+            )
+        ).addOnFailureListener { Log.e("LotteryRepo", "Update failed", it) }
+    }
+
+    fun updateRegistrationPeriod(lottery: Lottery, period: DateRange) {
+        lottery.registrationPeriod = period
+        lotteryRef.document(lottery.id).update(
+            mapOf(
+                "registrationPeriodStart" to period.start.toString(),
+                "registrationPeriodEnd" to period.end.toString()
+            )
+        ).addOnFailureListener { Log.e("LotteryRepo", "Update failed", it) }
     }
 }
