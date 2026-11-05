@@ -37,6 +37,15 @@ class CampsiteDetailControllerTest {
             writtenLottery = lotteryId
             if (deferJoin) completion = result else result(joinError == null, joinError)
         }
+        var leaves = 0
+        var leftUid: String? = null
+        var leftLottery: String? = null
+        override fun leave(lotteryId: String, uid: String, result: (Boolean, String?) -> Unit) {
+            leaves++
+            leftUid = uid
+            leftLottery = lotteryId
+            result(true, null)
+        }
     }
     private fun controller(fake: Fake, now: () -> LocalDate = { date }) =
         CampsiteDetailController("pine", fake, now).also { it.fetchCampsiteAndLottery(); it.identifyEntrant() }
@@ -196,5 +205,14 @@ class CampsiteDetailControllerTest {
         controller.joinLottery("lottery-real-id")
         assertEquals(0, source.writes)
         assertEquals(LotteryJoinPhase.UNAVAILABLE, phase(controller))
+    }
+    @Test fun leavesWaitlistSuccessfully() {
+        val source = Fake().also { it.entry = LotteryEntry(status = EntryStatus.WAITING) }
+        val controller = controller(source)
+        assertEquals(LotteryJoinPhase.JOINED, phase(controller))
+        controller.leaveLottery("lottery-real-id")
+        assertEquals("saved-user-id", source.leftUid)
+        assertEquals("lottery-real-id", source.leftLottery)
+        assertEquals(1, source.leaves)
     }
 }
