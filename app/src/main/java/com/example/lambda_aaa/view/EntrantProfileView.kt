@@ -1,3 +1,7 @@
+/**
+ * UI implementation for the Entrant Profile Screen shown in the GUI mockup storyboards
+ */
+
 package com.example.lambda_aaa.view
 
 import androidx.compose.foundation.background
@@ -40,9 +44,16 @@ private val SubText = Color(0xFF6E716C) // Used for smaller text and Icons. Dark
 private val BorderColor = Color(0xFFDEDCD4) // Used for borders. A muted equivalent of the Background color.
 private val FilterSelectColor = Color(0xFFE1EADF) // Color chosen for filter boxes. A darker version of the Background color.
 private val SelectColor = Color(0xFF526B5A) // Color chosen for other selected elements. A nice Green.
+
+/**
+ * Implements the Entrant Profile Screen according to the GUI mockup on Github.
+ *
+ * @param entrantProfileNavController the nav controller that handles navigation into and out of
+ * EntrantProfileView
+ */
 @Composable
 fun EntrantProfileView(
-    navController: NavController,
+    entrantProfileNavController: NavController,
     user: UserProfile
 ) {
 
@@ -230,7 +241,7 @@ fun EntrantProfileView(
                     // Button to go back to previous screen
                     Button(
                         onClick = {
-                            navController.popBackStack()
+                            entrantProfileNavController.popBackStack()
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF06402B), contentColor = Color.White),

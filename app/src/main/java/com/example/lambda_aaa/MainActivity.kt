@@ -58,6 +58,7 @@ import com.example.lambda_aaa.model.UserProfile
 import com.example.lambda_aaa.ui.theme.CampsiteReservationTheme
 import com.example.lambda_aaa.view.EntrantDashboardView
 import com.example.lambda_aaa.view.EntrantProfileView
+import com.example.lambda_aaa.view.LotteryEditorView
 import com.google.firebase.installations.FirebaseInstallations
 import kotlinx.coroutines.tasks.await
 
@@ -199,6 +200,7 @@ fun CampsiteReservationApp(
                     // shortcut: placeholder user ID, replace when profile verification is connected.
                     com.example.lambda_aaa.view.CampsiteReservationApp(uid = "123")
                 }
+                composable("Lottery Editor") { LotteryEditorView(navController) }
                 //composable("admin") { AdminDashboardView(navController) }
 
             }
