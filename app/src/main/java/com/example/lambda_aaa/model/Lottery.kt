@@ -2,7 +2,6 @@ package com.example.lambda_aaa.model
 
 import java.time.LocalDate
 import java.util.UUID
-import com.example.lambda_aaa.model.Campsite
 
 class Lottery(
     val campsite: Campsite,
