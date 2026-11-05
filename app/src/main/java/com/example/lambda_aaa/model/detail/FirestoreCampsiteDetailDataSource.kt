@@ -51,6 +51,10 @@ class FirestoreCampsiteDetailDataSource(
         entries.joinWaitlist(lotteryId, uid, 0, result)
     }
 
+    override fun leave(lotteryId: String, uid: String, result: (Boolean, String?) -> Unit) {
+        entries.leaveWaitlist(lotteryId, uid, result)
+    }
+
     companion object {
         fun decodeLottery(id: String, fields: Map<String, Any?>, campsite: Campsite): Lottery {
             require(id.isNotBlank() && fields["campsiteID"] == campsite.cid) { "Invalid lottery campsite." }
