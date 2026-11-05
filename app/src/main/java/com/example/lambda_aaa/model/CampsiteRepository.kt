@@ -7,7 +7,9 @@ import com.google.firebase.firestore.ListenerRegistration
 import androidx.compose.runtime.mutableStateListOf
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
-import kotlin.jvm.java
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.QuerySnapshot
 
 class CampsiteRepository {
     private val _campsites = mutableStateListOf<Campsite>()
@@ -33,7 +35,7 @@ class CampsiteRepository {
                 errorMessage = "Could not load campsites. Check your connection and try again."
             } else {
                 try {
-                    _campsites.addAll(snapshots?.toObjects(Campsite::class.java).orEmpty())
+                    _campsites.addAll(snapshots?.documents?.mapNotNull { decode(it) }.orEmpty())
                     errorMessage = null
                 } catch (_: RuntimeException) {
                     errorMessage = "Campsite information could not be read. Please try again later."
@@ -50,7 +52,16 @@ class CampsiteRepository {
     fun addCampsite(campsite: Campsite, onResult: (Boolean, String?) -> Unit) {
         campsite.creationDate = null
         campsite.lastUpdatedDate = null
-        campsitesRef.document(campsite.cid).set(campsite)
+        val fields = try {
+            CampsiteFirestoreMapper.encode(campsite) + mapOf(
+                "creationDate" to FieldValue.serverTimestamp(),
+                "lastUpdatedDate" to FieldValue.serverTimestamp(),
+            )
+        } catch (e: RuntimeException) {
+            onResult(false, e.message)
+            return
+        }
+        campsitesRef.document(campsite.cid).set(fields)
             .addOnSuccessListener { onResult(true, null) }
             .addOnFailureListener { e -> onResult(false, e.message) }
     }
@@ -70,7 +81,16 @@ class CampsiteRepository {
                     return@addOnSuccessListener
                 }
                 campsite.lastUpdatedDate = null
-                docRef.set(campsite)
+                val fields = try {
+                    CampsiteFirestoreMapper.encode(campsite) + mapOf(
+                        "creationDate" to snapshot.getTimestamp("creationDate"),
+                        "lastUpdatedDate" to FieldValue.serverTimestamp(),
+                    )
+                } catch (e: RuntimeException) {
+                    onResult(false, e.message)
+                    return@addOnSuccessListener
+                }
+                docRef.set(fields)
                     .addOnSuccessListener { onResult(true, null) }
                     .addOnFailureListener { e -> onResult(false, e.message) }
             }
@@ -82,7 +102,7 @@ class CampsiteRepository {
         campsitesRef.document(cid).get()
             .addOnSuccessListener { snapshot ->
                 val campsite = try {
-                    snapshot.toObject(Campsite::class.java)
+                    decode(snapshot)
                 } catch (e: RuntimeException) {
                     onResult(false, null, e.message)
                     return@addOnSuccessListener
@@ -99,7 +119,7 @@ class CampsiteRepository {
             .whereEqualTo("ownerId", ownerId)
             .get()
             .addOnSuccessListener { snapshot ->
-                onResult(true, snapshot.toObjects(Campsite::class.java), null)
+                deliverList(snapshot, onResult)
             }
             .addOnFailureListener { e ->
                 onResult(false, emptyList(), e.message)
@@ -109,10 +129,23 @@ class CampsiteRepository {
     fun getAllCampsites(onResult: (Boolean, List<Campsite>, String?) -> Unit) {
         campsitesRef.get()
             .addOnSuccessListener { snapshot ->
-                onResult(true, snapshot.toObjects(Campsite::class.java), null)
+                deliverList(snapshot, onResult)
             }
             .addOnFailureListener { e ->
                 onResult(false, emptyList(), e.message)
             }
+    }
+
+    private fun decode(snapshot: DocumentSnapshot): Campsite? =
+        snapshot.data?.let { CampsiteFirestoreMapper.decode(snapshot.id, it) }
+
+    private fun deliverList(snapshot: QuerySnapshot, onResult: (Boolean, List<Campsite>, String?) -> Unit) {
+        val campsites = try {
+            snapshot.documents.mapNotNull { decode(it) }
+        } catch (e: RuntimeException) {
+            onResult(false, emptyList(), e.message)
+            return
+        }
+        onResult(true, campsites, null)
     }
 }
