@@ -29,6 +29,8 @@ import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.material.icons.filled.EventAvailable
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.PersonOutline
+import androidx.compose.material.icons.outlined.Dashboard
+import androidx.compose.material.icons.outlined.Forest
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -44,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -62,13 +65,26 @@ import com.google.firebase.installations.FirebaseInstallations
 import kotlinx.coroutines.tasks.await
 
 
-private enum class ScreenTabs(val label: String) {
-    Explore("Explore"),
-    Lotteries("Lotteries"),
-    Trips("Trips"),
-    Profile("Profile"),
-} // This is set up in this weird way so that we can dynamically change the number of tabs if we wanted
 
+private data class ScreenTabs(
+    val id: String,
+    val label: String,
+    val icon: ImageVector
+)
+
+private val EntrantTabs = listOf(
+    ScreenTabs("EntrantExplore", "Explore", Icons.Filled.Explore),
+    ScreenTabs("EntrantLottery", "Lotteries", Icons.Filled.ConfirmationNumber),
+    ScreenTabs("EntrantTrips", "Trips", Icons.Filled.EventAvailable),
+    ScreenTabs("Profile", "Profile", Icons.Filled.PersonOutline),
+)
+
+private val OwnerTabs = listOf(
+    ScreenTabs("OwnerHome", "Home", Icons.Outlined.Dashboard),
+    ScreenTabs("OwnerCampsites", "Campsites", Icons.Outlined.Forest),
+    ScreenTabs("OwnerLottery", "Lotteries", Icons.Filled.ConfirmationNumber),
+    ScreenTabs("Profile", "Profile", Icons.Filled.PersonOutline),
+)
 
 private val Background = Color(0xFFF3F0E9) // Used for the background and Campsite icon. Bone-White color.
 private val HeaderColor = Color(0xFF242823) // Used for Headers. Muted Black.
@@ -152,37 +168,36 @@ fun CampsiteReservationApp(
 
     if (identifiedUser) {
 
-        var startTab = "" // IMPLEMENT THE DEVICE/PROFILE VERIFICATION SO WE KNOW WHERE TO START A USER
+        var selectedMenu = EntrantTabs
+        var selectedTab by remember { mutableStateOf(selectedMenu.first().id) }
         if (currentUser.userRole == Role.OWNER) {
-            startTab = "Owner"
-        } else if (currentUser.userRole == Role.ENTRANT) {
-            startTab = "Explore"
+            selectedMenu = OwnerTabs
+            selectedTab = "OwnerHome"
         }
-
-        var selectedTab by remember { mutableStateOf(ScreenTabs.Explore) }
 
         Scaffold(
             containerColor = Background,
 
             bottomBar = {
                 DrawBottomBar(
+                    tabs = selectedMenu,
                     selectedTab = selectedTab,
                     onTabSelected = { tab ->
-                        selectedTab = tab
-                        navController.navigate(tab.label)
+                        selectedTab = tab.id
+                        navController.navigate(tab.id)
                     },
                 )
             }
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = startTab,
+                startDestination = selectedMenu.first().id,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
             ) {
 
-                composable("Explore") {
+                composable("EntrantExplore") {
                     EntrantDashboardView(navController,
                         onCampsiteClick = { navController.navigate("campsite/${Uri.encode(it)}") })
                 }
@@ -191,14 +206,16 @@ fun CampsiteReservationApp(
                     val controller = remember(cid, repository) { CampsiteDetailController(cid, repository) }
                     CampsiteDetailView(controller, onBack = { navController.popBackStack() })
                 }
-                composable("Lotteries") { EntrantProfileView(navController, currentUser) }
-                composable("Trips") { EntrantProfileView(navController, currentUser) }
+                composable("EntrantLottery") { EntrantProfileView(navController, currentUser) }
+                composable("EntrantTrips") { EntrantProfileView(navController, currentUser) }
                 composable("Profile") { EntrantProfileView(navController, currentUser) }
 
-                composable("Owner") {
+                composable("OwnerHome") {
                     // shortcut: placeholder user ID, replace when profile verification is connected.
                     com.example.lambda_aaa.view.CampsiteReservationApp(uid = "123")
                 }
+                composable("OwnerCampsites") { EntrantProfileView(navController, currentUser) }
+                composable("OwnerLottery") { EntrantProfileView(navController, currentUser) }
                 //composable("admin") { AdminDashboardView(navController) }
 
             }
@@ -230,53 +247,56 @@ fun CampsiteReservationApp(
  */
 @Composable
 private fun DrawBottomBar(
-    selectedTab: ScreenTabs,
-    onTabSelected: (ScreenTabs) -> Unit,
+    tabs: List<ScreenTabs>,
+    selectedTab: String,
+    onTabSelected: (ScreenTabs) -> Unit
 ) {
-    Surface(color = Color.White, shadowElevation = 0.dp) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            HorizontalDivider(color = BorderColor, thickness = 1.dp)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .height(62.dp)
-                    .padding(horizontal = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                ScreenTabs.entries.forEach { tab ->
-                    val icon = when (tab) {
-                        ScreenTabs.Explore -> Icons.Filled.Explore
-                        ScreenTabs.Lotteries -> Icons.Filled.ConfirmationNumber
-                        ScreenTabs.Trips -> Icons.Filled.EventAvailable
-                        ScreenTabs.Profile -> Icons.Filled.PersonOutline
-                    }
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxSize()
-                            .clickable {
-                                onTabSelected(tab)
-                                Log.d("TAG", "$selectedTab")
-                            }
-                            .padding(top = 7.dp, bottom = 4.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(3.dp),
-                    ) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = tab.label,
-                            tint = if (tab == selectedTab) HeaderColor else SubText,
-                            modifier = Modifier.size(18.dp),
-                        )
-                        Text(
-                            text = tab.label,
-                            color = if (tab == selectedTab) HeaderColor else SubText,
-                            fontSize = 10.sp,
-                            lineHeight = 12.sp,
-                            fontWeight = FontWeight.Normal,
-                            maxLines = 1,
-                        )
+    if (tabs.isNotEmpty()) {
+        // If the previously selected tab isn't available then we highlight the first available tab instead
+        val effectiveSelectedTab = tabs.firstOrNull { it.id == selectedTab }?.id
+
+        Surface(
+            color = Color.White,
+            shadowElevation = 0.dp
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                HorizontalDivider(color = BorderColor, thickness = 1.dp)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .height(62.dp)
+                        .padding(horizontal = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    tabs.forEach { tab ->
+                        val selected = tab.id == effectiveSelectedTab
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxSize()
+                                .clickable {
+                                    onTabSelected(tab)
+                                }
+                                .padding(top = 7.dp, bottom = 4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(3.dp),
+                        ) {
+                            Icon(
+                                imageVector = tab.icon,
+                                contentDescription = tab.label,
+                                tint = if (selected) HeaderColor else SubText,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Text(
+                                text = tab.label,
+                                color = if (selected) HeaderColor else SubText,
+                                fontSize = 10.sp,
+                                lineHeight = 12.sp,
+                                fontWeight = FontWeight.Normal,
+                                maxLines = 1,
+                            )
+                        }
                     }
                 }
             }
