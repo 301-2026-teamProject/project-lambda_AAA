@@ -55,7 +55,7 @@ private val SubText = Color(0xFF6E716C) // Used for smaller text and Icons. Dark
 private val AddGreen = Color(0xFF315E43) // The big green add button
 
 /**
- * Implements the Lottery Editor Screen according to the GUI mockups on the Wiki page in Github.
+ * Implements the Lottery Editor Screen according to the GUI mockups on the Wiki page in GitHub.
  *
  * @param lotteryEditorNavController the nav controller that handles navigation into and out of
  * LotteryEditorView
@@ -85,8 +85,8 @@ fun LotteryEditorView(
                 .padding(innerPadding)
                 .background(Background)
         ) {
-
             HorizontalDivider(color = BorderColor, thickness = 1.dp)
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -222,7 +222,7 @@ fun LotteryEditorView(
  * Helper function to display the 3x3 inputs fields in the Lottery Editor Screen UI
  */
 @Composable
-fun ThreeByThreeFields() : Unit {
+fun ThreeByThreeFields() {
 
     var registerOpenDate by remember { mutableStateOf("") }
     var registerCloseDate by remember { mutableStateOf("") }

@@ -59,6 +59,7 @@ import com.example.lambda_aaa.ui.theme.CampsiteReservationTheme
 import com.example.lambda_aaa.view.EntrantDashboardView
 import com.example.lambda_aaa.view.EntrantProfileView
 import com.example.lambda_aaa.view.LotteryEditorView
+import com.example.lambda_aaa.view.LotteryWaitlistView
 import com.google.firebase.installations.FirebaseInstallations
 import kotlinx.coroutines.tasks.await
 
@@ -160,6 +161,7 @@ fun CampsiteReservationApp(
             startTab = "Explore"
         }
 
+        startTab = "Lottery Waitlist"
         var selectedTab by remember { mutableStateOf(ScreenTabs.Explore) }
 
         Scaffold(
@@ -201,6 +203,7 @@ fun CampsiteReservationApp(
                     com.example.lambda_aaa.view.CampsiteReservationApp(uid = "123")
                 }
                 composable("Lottery Editor") { LotteryEditorView(navController) }
+                composable ("Lottery Waitlist") { LotteryWaitlistView(navController) }
                 //composable("admin") { AdminDashboardView(navController) }
 
             }
