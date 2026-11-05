@@ -124,7 +124,7 @@ fun CampsiteReservationApp(
             roles = arrayListOf(Role.ENTRANT),
             creationDate = "2026-10-28"
         )
-    }
+    } // A default user initialized for first time users
 
     LaunchedEffect(Unit) {
         // Adapted from Google for Developers Firebase Documentation, Fundamentals: "Manage Firebase

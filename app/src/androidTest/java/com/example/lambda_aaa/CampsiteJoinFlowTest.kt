@@ -12,6 +12,7 @@ import com.example.lambda_aaa.model.detail.FirestoreCampsiteDetailDataSource
 import com.example.lambda_aaa.ui.theme.CampsiteReservationTheme
 import com.example.lambda_aaa.view.CampsiteDetailView
 import com.google.android.gms.tasks.Tasks
+import com.google.android.gms.tasks.TaskCompletionSource
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.firestore.FirebaseFirestore
@@ -125,4 +126,62 @@ class CampsiteJoinFlowTest {
             .get(Source.SERVER), 20, TimeUnit.SECONDS)
         assertTrue(entries.isEmpty)
     }
+    @Test fun campsiteRepositoryRoundTripsNewFieldsAndAttachedLottery() {
+        val original = Campsite(cid = campsiteId, ownerId = userId, name = "Availability test",
+            pricePerNight = 65.0, availablePeriod = DateRange(today.plusDays(10), today.plusDays(20)))
+        original.lottery = Lottery(original, DateRange(today.plusDays(10), today.plusDays(12)),
+            DateRange(today.minusDays(1), today.plusDays(1)), 2, lotteryId)
+        writeCampsite { campsites.addCampsite(original, it) }
+        val stored = Tasks.await(db.collection("campsites").document(campsiteId).get(Source.SERVER), 20, TimeUnit.SECONDS)
+        assertFalse(stored.metadata.isFromCache)
+        assertEquals(today.plusDays(10).toString(), stored.getString("availablePeriod.start"))
+        assertEquals(lotteryId, stored.getString("lottery.id"))
+        assertNull(stored.get("lottery.campsite"))
+        assertNotNull(stored.getTimestamp("creationDate"))
+        val loaded = readCampsite()
+        assertEquals(original.availablePeriod, loaded.availablePeriod)
+        assertEquals(65.0, loaded.pricePerNight, 0.0)
+        assertEquals(lotteryId, loaded.lottery!!.id)
+        assertSame(loaded, loaded.lottery!!.campsite)
+        assertEquals(original.lottery!!.bookingPeriod, loaded.lottery!!.bookingPeriod)
+        loaded.availablePeriod = DateRange(today.plusDays(11), today.plusDays(21))
+        loaded.pricePerNight = 70.0
+        writeCampsite { campsites.updateCampsite(loaded, it) }
+        val reloaded = readCampsite()
+        assertEquals(loaded.availablePeriod, reloaded.availablePeriod)
+        assertEquals(70.0, reloaded.pricePerNight, 0.0)
+        assertEquals(stored.getTimestamp("creationDate"), reloaded.creationDate)
+        assertNotNull(reloaded.lastUpdatedDate)
+        val all = TaskCompletionSource<List<Campsite>>()
+        campsites.getAllCampsites { success, result, message ->
+            if (success) all.setResult(result) else all.setException(IllegalStateException(message))
+        }
+        assertTrue(Tasks.await(all.task, 20, TimeUnit.SECONDS).any { it.cid == campsiteId })
+        val owned = TaskCompletionSource<List<Campsite>>()
+        campsites.getOwnerCampsites(userId) { success, result, message ->
+            if (success) owned.setResult(result) else owned.setException(IllegalStateException(message))
+        }
+        assertEquals(campsiteId, Tasks.await(owned.task, 20, TimeUnit.SECONDS).single().cid)
+        compose.waitUntil(20_000) { campsites.campsiteList.any { it.cid == campsiteId && it.pricePerNight == 70.0 } }
+        writeCampsite { campsites.deleteCampsite(reloaded, it) }
+        assertFalse(Tasks.await(db.collection("campsites").document(campsiteId).get(Source.SERVER), 20, TimeUnit.SECONDS).exists())
+    }
+
+    private fun writeCampsite(operation: ((Boolean, String?) -> Unit) -> Unit) {
+        val completion = TaskCompletionSource<Boolean>()
+        operation { success, message ->
+            if (success) completion.setResult(true) else completion.setException(IllegalStateException(message))
+        }
+        Tasks.await(completion.task, 20, TimeUnit.SECONDS)
+    }
+
+    private fun readCampsite(): Campsite {
+        val completion = TaskCompletionSource<Campsite>()
+        campsites.getCampsite(campsiteId) { success, campsite, message ->
+            if (success && campsite != null) completion.setResult(campsite)
+            else completion.setException(IllegalStateException(message ?: "Campsite missing"))
+        }
+        return Tasks.await(completion.task, 20, TimeUnit.SECONDS)
+    }
+
 }
