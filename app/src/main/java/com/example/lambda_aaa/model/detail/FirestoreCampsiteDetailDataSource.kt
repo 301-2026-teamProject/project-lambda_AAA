@@ -64,7 +64,10 @@ class FirestoreCampsiteDetailDataSource(
             val count = fields["numWinners"] as? Number
                 ?: throw IllegalArgumentException("Missing winner count.")
             require(count.toLong() in 0..Int.MAX_VALUE.toLong() && count.toDouble() == count.toLong().toDouble())
-            return Lottery(campsite, range("bookingPeriod"), range("registrationPeriod"), count.toInt(), id)
+            return Lottery(campsite = campsite, name = fields["name"] as? String?: "",
+                bookingPeriod = range("bookingPeriod"), registrationPeriod = range("registrationPeriod"),
+                numWinners = count.toInt(), waitlistCapacity = (fields["waitlistCapacity"] as? Number)?.toInt() ?: 0,
+                id = id)
         }
     }
 }
