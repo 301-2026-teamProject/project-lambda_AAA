@@ -46,4 +46,5 @@
     <string name="lottery_full">Waiting list is full</string>
     <string name="lottery_entry_error">Entry could not be verified</string>
     <string name="lottery_finished">Lottery entry has a result</string>
+    <string name="lottery_leave">Leave waiting list</string>
 </resources>

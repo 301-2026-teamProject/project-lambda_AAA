@@ -11,4 +11,5 @@ interface CampsiteDetailDataSource {
     fun getEntrantId(result: (Boolean, String?, String?) -> Unit)
     fun getEntry(lotteryId: String, uid: String, result: (Boolean, LotteryEntry?, String?) -> Unit)
     fun join(lotteryId: String, uid: String, result: (Boolean, String?) -> Unit)
+    fun leave(lotteryId: String, uid: String, result: (Boolean, String?) -> Unit)
 }

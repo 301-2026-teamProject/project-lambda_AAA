@@ -67,6 +67,7 @@ fun CampsiteDetailView(
         identityFailed = campsiteDetailController.identityFailed,
         onRetryIdentity = campsiteDetailController::identifyEntrant,
         onJoin = campsiteDetailController::joinLottery,
+        onLeave = campsiteDetailController::leaveLottery,
         onRetryEntry = campsiteDetailController::refreshEntry,
     )
 }
@@ -90,6 +91,7 @@ internal fun CampsiteDetailContent(
     identityFailed: Boolean = false,
     onRetryIdentity: () -> Unit = {},
     onJoin: (String) -> Unit = {},
+    onLeave: (String) -> Unit = {},
     onRetryEntry: (String) -> Unit = {},
 ) {
     val context = LocalContext.current
@@ -157,7 +159,7 @@ internal fun CampsiteDetailContent(
                 CampsiteLotteriesSection(
                     lotteries, lotteriesLoading, lotteriesFailed, onRetryLotteries,
                     showJoinActions, joinStates, identityLoading, identityFailed,
-                    onRetryIdentity, onJoin, onRetryEntry,
+                    onRetryIdentity, onJoin, onLeave, onRetryEntry,
                 )
                 campsite.mapLocation?.let { point ->
                     OutlinedButton(
@@ -201,6 +203,7 @@ internal fun CampsiteLotteriesSection(
     identityFailed: Boolean = false,
     onRetryIdentity: () -> Unit = {},
     onJoin: (String) -> Unit = {},
+    onLeave: (String) -> Unit = {},
     onRetryEntry: (String) -> Unit = {},
 ) {
     Surface(shape = RoundedCornerShape(14.dp), color = TrailSage, contentColor = TrailInk) {
@@ -267,7 +270,7 @@ internal fun LotteryJoinAction(state: LotteryJoinState, onJoin: () -> Unit, onRe
         LotteryJoinPhase.CHECKING -> R.string.lottery_checking_entry
         LotteryJoinPhase.READY -> R.string.lottery_join
         LotteryJoinPhase.JOINING -> R.string.lottery_joining
-        LotteryJoinPhase.JOINED -> R.string.lottery_joined
+        LotteryJoinPhase.JOINED -> R.string.lottery_leave
         LotteryJoinPhase.NOT_OPEN -> R.string.lottery_not_open
         LotteryJoinPhase.CLOSED -> R.string.lottery_closed
         LotteryJoinPhase.UNAVAILABLE -> R.string.lottery_unavailable
