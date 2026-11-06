@@ -243,6 +243,7 @@ internal fun CampsiteLotteriesSection(
                                     joinStates[lottery.id] ?: LotteryJoinState(LotteryJoinPhase.CHECKING),
                                     onJoin = { onJoin(lottery.id) },
                                     onRetry = { onRetryEntry(lottery.id) },
+                                    onLeave = { onLeave(lottery.id) },
                                 )
                             }
                         }
@@ -265,7 +266,7 @@ private fun DetailSection(title: String, value: String) {
 }
 
 @Composable
-internal fun LotteryJoinAction(state: LotteryJoinState, onJoin: () -> Unit, onRetry: () -> Unit) {
+internal fun LotteryJoinAction(state: LotteryJoinState, onJoin: () -> Unit, onRetry: () -> Unit, onLeave: () -> Unit = {}) {
     val label = when (state.phase) {
         LotteryJoinPhase.CHECKING -> R.string.lottery_checking_entry
         LotteryJoinPhase.READY -> R.string.lottery_join
@@ -278,7 +279,8 @@ internal fun LotteryJoinAction(state: LotteryJoinState, onJoin: () -> Unit, onRe
         LotteryJoinPhase.ERROR -> R.string.lottery_entry_error
         LotteryJoinPhase.FINISHED -> R.string.lottery_finished
     }
-    Button(onClick = onJoin, enabled = state.phase == LotteryJoinPhase.READY,
+    Button(onClick = if (state.phase == LotteryJoinPhase.JOINED) onLeave else onJoin,
+        enabled = state.phase == LotteryJoinPhase.READY || state.phase == LotteryJoinPhase.JOINED,
         modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(label))
     }

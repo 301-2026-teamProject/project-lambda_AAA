@@ -24,8 +24,8 @@ class CampsiteFirestoreMapperTest {
 
     @Test fun linkedLotteryDoesNotSerializeCircularCampsite() {
         val original = Campsite(cid = "pine", availablePeriod = DateRange(start, end))
-        original.lottery = Lottery(original, DateRange(start, start.plusDays(2)),
-            DateRange(start.minusDays(10), start.minusDays(1)), 3, "lottery-id")
+        original.lottery = Lottery(original.cid, "Test lottery", DateRange(start, start.plusDays(2)),
+            DateRange(start.minusDays(10), start.minusDays(1)), 3, id = "lottery-id")
         val fields = CampsiteFirestoreMapper.encode(original)
         val lotteryFields = fields["lottery"] as Map<*, *>
         assertFalse(lotteryFields.containsKey("campsite"))
@@ -34,7 +34,7 @@ class CampsiteFirestoreMapperTest {
         assertEquals("lottery-id", restored.lottery!!.id)
         assertEquals(original.lottery!!.bookingPeriod, restored.lottery!!.bookingPeriod)
         assertEquals(original.lottery!!.registrationPeriod, restored.lottery!!.registrationPeriod)
-        assertSame(restored, restored.lottery!!.campsite)
+        assertEquals(restored.cid, restored.lottery!!.campsiteID)
     }
 
     @Test fun readsPreviouslyAutomaticallySerializedLocalDates() {
@@ -61,7 +61,7 @@ class CampsiteFirestoreMapperTest {
     @Test(expected = IllegalArgumentException::class)
     fun rejectsLotteryForAnotherCampsite() {
         val campsite = Campsite(cid = "pine")
-        campsite.lottery = Lottery(Campsite(cid = "other"))
+        campsite.lottery = Lottery("other", "Other lottery")
         CampsiteFirestoreMapper.encode(campsite)
     }
 
@@ -76,7 +76,7 @@ class CampsiteFirestoreMapperTest {
             "numWinners" to 2L)))
         assertEquals("existing-lottery", restored.lottery!!.id)
         assertEquals(DateRange(start, end), restored.lottery!!.bookingPeriod)
-        assertSame(restored, restored.lottery!!.campsite)
+        assertEquals(restored.cid, restored.lottery!!.campsiteID)
     }
 
 }
