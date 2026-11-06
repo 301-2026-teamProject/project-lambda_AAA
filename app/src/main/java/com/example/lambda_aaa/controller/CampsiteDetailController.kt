@@ -214,4 +214,19 @@ class CampsiteDetailController(
             }
         }
     }
+    fun leaveLottery(id: String) {
+        val uid = entrantId ?: return
+        val lottery = lotteries.find { it.id == id } ?: return
+        if (joinStates[id]?.phase != LotteryJoinPhase.JOINED || id in pendingJoins || lotteriesLoading) return
+        pendingJoins.add(id)
+        setState(id, LotteryJoinPhase.JOINING)
+        data.leave(id, uid) { success, message ->
+            pendingJoins.remove(id)
+            if (success) {
+                refreshEntry(id)
+            } else {
+                setState(id, LotteryJoinPhase.ERROR, message ?: "Could not leave the waitlist. Please retry.")
+            }
+        }
+    }
 }

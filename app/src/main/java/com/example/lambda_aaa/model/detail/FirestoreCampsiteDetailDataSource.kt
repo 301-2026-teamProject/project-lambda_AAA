@@ -51,6 +51,10 @@ class FirestoreCampsiteDetailDataSource(
         entries.joinWaitlist(lotteryId, uid, 0, result)
     }
 
+    override fun leave(lotteryId: String, uid: String, result: (Boolean, String?) -> Unit) {
+        entries.leaveWaitlist(lotteryId, uid, result)
+    }
+
     companion object {
         fun decodeLottery(id: String, fields: Map<String, Any?>, campsite: Campsite): Lottery {
             require(id.isNotBlank() && fields["campsiteID"] == campsite.cid) { "Invalid lottery campsite." }
@@ -64,7 +68,10 @@ class FirestoreCampsiteDetailDataSource(
             val count = fields["numWinners"] as? Number
                 ?: throw IllegalArgumentException("Missing winner count.")
             require(count.toLong() in 0..Int.MAX_VALUE.toLong() && count.toDouble() == count.toLong().toDouble())
-            return Lottery(campsite, range("bookingPeriod"), range("registrationPeriod"), count.toInt(), id)
+            return Lottery(campsite = campsite, name = fields["name"] as? String?: "",
+                bookingPeriod = range("bookingPeriod"), registrationPeriod = range("registrationPeriod"),
+                numWinners = count.toInt(), waitlistCapacity = (fields["waitlistCapacity"] as? Number)?.toInt() ?: 0,
+                id = id)
         }
     }
 }
