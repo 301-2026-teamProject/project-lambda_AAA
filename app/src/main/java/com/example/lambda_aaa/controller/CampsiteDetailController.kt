@@ -208,7 +208,7 @@ class CampsiteDetailController(
                         success -> setState(id, LotteryJoinPhase.JOINED, "You joined the waiting list.")
                         message == "Already joined." -> setState(id, LotteryJoinPhase.JOINED)
                         message == "Full." -> setState(id, LotteryJoinPhase.FULL)
-                        else -> setState(id, LotteryJoinPhase.ERROR, "Could not join the lottery. Please retry.")
+                        else -> setState(id, LotteryJoinPhase.ERROR, message ?: "Could not join the lottery. Please retry.")
                     }
                 }
             }

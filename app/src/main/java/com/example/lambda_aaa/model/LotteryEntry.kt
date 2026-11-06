@@ -2,6 +2,7 @@ package com.example.lambda_aaa.model
 
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentId
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ServerTimestamp
 import java.util.UUID
 
@@ -16,6 +17,6 @@ data class LotteryEntry(
         "lotteryId" to lotteryId,
         "userId" to userId,
         "status" to status.name,
-        "timestamp" to timestamp
+        "timestamp" to (timestamp ?: FieldValue.serverTimestamp())
     )
 }
