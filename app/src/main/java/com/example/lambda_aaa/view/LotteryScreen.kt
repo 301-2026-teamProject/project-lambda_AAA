@@ -48,8 +48,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import com.example.lambda_aaa.model.LotteryViewModel
 
+// CreateLotteryScreen is a screen to create lottery associated with a campsite
+// DateField is an outlined text field for booking and registration periods with Android's date picker dialog
+// NumberField is an outlined text field that ensures inputs are numbers
+// toLocalDate and toEpochMilli functions convert to their respective formats
 @Composable
 fun CreateLotteryScreen(
     campsites: List<Campsite>,
@@ -125,10 +130,10 @@ fun CreateLotteryScreen(
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                NumberField("Number of winners", form.winnersText, Modifier.weight(1f)) {
+                NumberField("Number of winners", form.winnersText, Modifier.weight(1f).testTag("winnersField")) {
                     form = form.copy(winnersText = it)
                 }
-                NumberField("Waitlist capacity", form.capacityText, Modifier.weight(1f)) {
+                NumberField("Waitlist capacity", form.capacityText, Modifier.weight(1f).testTag("capacityField")) {
                     form = form.copy(capacityText = it)
                 }
             }
@@ -152,6 +157,7 @@ fun CreateLotteryScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
+                    .testTag("createLotteryButton")
             ) { Text(if (isSaving) "Creating" else "Create lottery") }
         }
     }
