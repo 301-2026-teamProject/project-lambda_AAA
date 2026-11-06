@@ -47,8 +47,17 @@ class FirestoreCampsiteDetailDataSource(
         entries.getEntry(lotteryId, uid, result)
 
     override fun join(lotteryId: String, uid: String, result: (Boolean, String?) -> Unit) {
-        // shortcut: current Lottery has no capacity field; wire capacity here when the shared model adds it.
-        entries.joinWaitlist(lotteryId, uid, 0, result)
+        db.collection("lotteries").document(lotteryId).get(Source.SERVER)
+            .addOnSuccessListener { snapshot ->
+                val lottery = try {
+                    snapshot.data?.let { Lottery.fromMap(snapshot.id, it) }
+                } catch (e: RuntimeException) {
+                    result(false, e.message)
+                    return@addOnSuccessListener
+                }
+                if (lottery == null) result(false, "Lottery no longer exists.")
+                else entries.joinWaitlist(lotteryId, uid, lottery.waitlistCapacity, result)
+            }.addOnFailureListener { result(false, it.message) }
     }
 
     override fun leave(lotteryId: String, uid: String, result: (Boolean, String?) -> Unit) {
