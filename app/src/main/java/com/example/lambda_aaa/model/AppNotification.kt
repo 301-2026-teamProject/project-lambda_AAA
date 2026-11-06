@@ -14,6 +14,10 @@ data class AppNotification(
     var isRead: Boolean = false,
     @ServerTimestamp var timestamp: Timestamp? = null
 ) {
+    /**
+     * Serializes AppNotification into Map<String, Any?> so that it can be stored in Firestore
+     * Collaborators: NotificationType, Timestamp, Firestore
+     */
     fun toMap(): Map<String, Any?> = mapOf(
         "recipientId" to recipientId,
         "senderId" to senderId,
