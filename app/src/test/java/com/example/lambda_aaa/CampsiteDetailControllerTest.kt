@@ -12,7 +12,7 @@ class CampsiteDetailControllerTest {
     private val date = LocalDate.of(2026, 11, 3)
     private val campsite = Campsite(cid = "pine", name = "Pine Ridge")
     private fun lottery(start: LocalDate = date.minusDays(1), end: LocalDate = date.plusDays(1)) =
-        Lottery(campsite, DateRange(date.plusDays(10), date.plusDays(12)), DateRange(start, end), 3, "lottery-real-id")
+        Lottery(campsite.cid, name = "", DateRange(date.plusDays(10), date.plusDays(12)), DateRange(start, end), 3, waitlistCapacity = 30, "lottery-real-id")
 
     private inner class Fake : CampsiteDetailDataSource {
         var available = listOf(lottery())
@@ -173,14 +173,14 @@ class CampsiteDetailControllerTest {
         assertTrue(controller.lotteries.isEmpty())
     }
     @Test fun excludesLotteriesForOtherCampsites() {
-        val source = Fake().also { it.available = listOf(lottery(), Lottery(Campsite(cid = "other"))) }
+        val source = Fake().also { it.available = listOf(lottery(), Lottery(Campsite(cid = "other").cid, name = "testing")) }
         assertEquals(listOf("lottery-real-id"), controller(source).lotteries.map { it.id })
     }
     @Test fun decodesTeammateFlatSchemaWithoutLosingDocumentId() {
         val original = lottery()
         val restored = FirestoreCampsiteDetailDataSource.decodeLottery("stored-id", original.toMap(), campsite)
         assertEquals("stored-id", restored.id)
-        assertEquals(campsite, restored.campsite)
+        assertEquals(campsite.cid, restored.campsiteID)
         assertEquals(original.bookingPeriod, restored.bookingPeriod)
         assertEquals(original.registrationPeriod, restored.registrationPeriod)
         assertEquals(3, restored.numWinners)

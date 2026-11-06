@@ -17,11 +17,11 @@ class CampsiteLotteriesTest {
 
     @Test fun displaysBookingRegistrationAndWinnerCountForMultipleLotteries() {
         val campsite = Campsite(cid = "pine", name = "Pine Ridge")
-        val first = Lottery(campsite,
+        val first = Lottery(campsite.cid, name = "testing",
             bookingPeriod = DateRange(LocalDate.of(2026, 12, 10), LocalDate.of(2026, 12, 12)),
             registrationPeriod = DateRange(LocalDate.of(2026, 11, 1), LocalDate.of(2026, 11, 30)),
-            numWinners = 3)
-        val second = Lottery(campsite, numWinners = 1)
+            waitlistCapacity = 30, numWinners = 3)
+        val second = Lottery(campsite.cid, name = "testing", numWinners = 1)
         compose.setContent {
             CampsiteReservationTheme { CampsiteLotteriesSection(listOf(first, second), false, false, {}) }
         }
