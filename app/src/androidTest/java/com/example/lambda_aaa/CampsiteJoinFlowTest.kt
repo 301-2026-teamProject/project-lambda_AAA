@@ -8,6 +8,7 @@ import com.example.lambda_aaa.model.Campsite
 import com.example.lambda_aaa.model.CampsiteRepository
 import com.example.lambda_aaa.model.DateRange
 import com.example.lambda_aaa.model.Lottery
+import com.example.lambda_aaa.model.LotteryRepository
 import com.example.lambda_aaa.model.detail.FirestoreCampsiteDetailDataSource
 import com.example.lambda_aaa.ui.theme.CampsiteReservationTheme
 import com.example.lambda_aaa.view.CampsiteDetailView
@@ -94,7 +95,7 @@ class CampsiteJoinFlowTest {
         compose.waitUntil(20_000) {
             controller.joinStates[lotteryId]?.phase == com.example.lambda_aaa.controller.LotteryJoinPhase.JOINED
         }
-        compose.onNodeWithText("Already joined").assertIsNotEnabled()
+        compose.onNodeWithText("Leave waiting list").assertIsEnabled()
         val saved = Tasks.await(db.collection("lottery_entries").whereEqualTo("lotteryId", lotteryId)
             .get(Source.SERVER), 20, TimeUnit.SECONDS)
         assertFalse(saved.metadata.isFromCache)
@@ -105,6 +106,17 @@ class CampsiteJoinFlowTest {
         compose.runOnIdle { reloaded.fetchCampsiteAndLottery(); reloaded.identifyEntrant() }
         compose.waitUntil(20_000) {
             reloaded.joinStates[lotteryId]?.phase == com.example.lambda_aaa.controller.LotteryJoinPhase.JOINED
+        }
+        compose.onNodeWithText("Leave waiting list").performScrollTo().performClick()
+        compose.waitUntil(20_000) {
+            controller.joinStates[lotteryId]?.phase == com.example.lambda_aaa.controller.LotteryJoinPhase.READY
+        }
+        val withdrawn = Tasks.await(db.collection("lottery_entries").whereEqualTo("lotteryId", lotteryId)
+            .get(Source.SERVER), 20, TimeUnit.SECONDS)
+        assertEquals("WITHDRAWN", withdrawn.documents.single().getString("status"))
+        compose.onNodeWithText("Join lottery").performScrollTo().performClick()
+        compose.waitUntil(20_000) {
+            controller.joinStates[lotteryId]?.phase == com.example.lambda_aaa.controller.LotteryJoinPhase.JOINED
         }
         compose.onNodeWithContentDescription("Back").performClick()
         compose.runOnIdle { assertTrue(back) }
@@ -165,6 +177,67 @@ class CampsiteJoinFlowTest {
         compose.waitUntil(20_000) { campsites.campsiteList.any { it.cid == campsiteId && it.pricePerNight == 70.0 } }
         writeCampsite { campsites.deleteCampsite(reloaded, it) }
         assertFalse(Tasks.await(db.collection("campsites").document(campsiteId).get(Source.SERVER), 20, TimeUnit.SECONDS).exists())
+    }
+
+    @Test fun capacityBlocksNewAndWithdrawnEntries() {
+        Tasks.await(db.collection("lotteries").document(lotteryId).update("waitlistCapacity", 1), 20, TimeUnit.SECONDS)
+        val occupied = db.collection("lottery_entries").document("$prefix-occupied")
+        Tasks.await(occupied.set(mapOf("lotteryId" to lotteryId, "userId" to "other", "status" to "WAITING")), 20, TimeUnit.SECONDS)
+        fun joinResult(): Pair<Boolean, String?> {
+            val result = TaskCompletionSource<Pair<Boolean, String?>>()
+            source.join(lotteryId, userId) { success, message -> result.setResult(success to message) }
+            return Tasks.await(result.task, 20, TimeUnit.SECONDS)
+        }
+        assertEquals(false to "Full.", joinResult())
+        val withdrawn = db.collection("lottery_entries").document("$prefix-withdrawn")
+        Tasks.await(withdrawn.set(mapOf("lotteryId" to lotteryId, "userId" to userId, "status" to "WITHDRAWN")), 20, TimeUnit.SECONDS)
+        assertEquals(false to "Full.", joinResult())
+        assertEquals("WITHDRAWN", Tasks.await(withdrawn.get(Source.SERVER), 20, TimeUnit.SECONDS).getString("status"))
+        Tasks.await(occupied.delete(), 20, TimeUnit.SECONDS)
+        assertTrue(joinResult().first)
+        assertEquals("WAITING", Tasks.await(withdrawn.get(Source.SERVER), 20, TimeUnit.SECONDS).getString("status"))
+    }
+
+    @Test fun selectedEntryCannotBeResetByJoinOrLeave() {
+        val doc = db.collection("lottery_entries").document("$prefix-selected")
+        Tasks.await(doc.set(mapOf("lotteryId" to lotteryId, "userId" to userId, "status" to "SELECTED")), 20, TimeUnit.SECONDS)
+        val join = TaskCompletionSource<Boolean>()
+        source.join(lotteryId, userId) { success, _ -> join.setResult(success) }
+        assertFalse(Tasks.await(join.task, 20, TimeUnit.SECONDS))
+        val leave = TaskCompletionSource<Boolean>()
+        source.leave(lotteryId, userId) { success, _ -> leave.setResult(success) }
+        assertFalse(Tasks.await(leave.task, 20, TimeUnit.SECONDS))
+        assertEquals("SELECTED", Tasks.await(doc.get(Source.SERVER), 20, TimeUnit.SECONDS).getString("status"))
+    }
+
+    @Test fun lotteryRepositoryCreateUpdateAndReadUseSameSchema() {
+        val repo = LotteryRepository()
+        try {
+            val lottery = Lottery(campsiteId, "Repository lottery", DateRange(today.plusDays(10), today.plusDays(12)),
+                DateRange(today.minusDays(1), today.plusDays(1)), 2, 5, lotteryId)
+            writeCampsite { repo.create(lottery, it) }
+            lottery.waitlistCapacity = 7
+            lottery.bookingPeriod = DateRange(today.plusDays(11), today.plusDays(13))
+            writeCampsite { repo.updateLottery(lottery, it) }
+            val read = TaskCompletionSource<Lottery>()
+            repo.getLottery(lotteryId) { success, loaded, message ->
+                if (success && loaded != null) read.setResult(loaded)
+                else read.setException(IllegalStateException(message))
+            }
+            val loaded = Tasks.await(read.task, 20, TimeUnit.SECONDS)
+            assertEquals(lotteryId, loaded.id)
+            assertEquals(campsiteId, loaded.campsiteID)
+            assertEquals(lottery.bookingPeriod, loaded.bookingPeriod)
+            assertEquals(7, loaded.waitlistCapacity)
+            val all = TaskCompletionSource<List<Lottery>>()
+            repo.getAllLotteries { success, values, message ->
+                if (success) all.setResult(values) else all.setException(IllegalStateException(message))
+            }
+            assertEquals(lotteryId, Tasks.await(all.task, 20, TimeUnit.SECONDS).single().id)
+            val saved = Tasks.await(db.collection("lotteries").document(lotteryId).get(Source.SERVER), 20, TimeUnit.SECONDS)
+            assertEquals(today.plusDays(11).toString(), saved.getString("bookingPeriodStart"))
+            assertNull(saved.get("bookingPeriod"))
+        } finally { repo.close() }
     }
 
     private fun writeCampsite(operation: ((Boolean, String?) -> Unit) -> Unit) {
