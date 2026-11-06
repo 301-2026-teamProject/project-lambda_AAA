@@ -10,6 +10,16 @@ interface CampsiteDetailDataSource {
     fun getLotteries(campsite: Campsite, result: (Boolean, List<Lottery>, String?) -> Unit)
     fun getEntrantId(result: (Boolean, String?, String?) -> Unit)
     fun getEntry(lotteryId: String, uid: String, result: (Boolean, LotteryEntry?, String?) -> Unit)
+
+    /**
+     * Joins the waitlist for a specific lottery
+     * Collaborators: EntryRepository, LotteryEntry
+     */
     fun join(lotteryId: String, uid: String, result: (Boolean, String?) -> Unit)
+
+    /**
+     * Withdraws an entrant from the waitlist for a specific lottery
+     * Collaborators: EntryRepository, LotteryEntry
+     */
     fun leave(lotteryId: String, uid: String, result: (Boolean, String?) -> Unit)
 }
