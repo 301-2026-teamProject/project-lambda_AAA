@@ -122,7 +122,7 @@ fun CampsiteReservationApp(
             email = "alex@example.ca",
             phone = "780-555-0123",
             profilePhotoUrl = "https://picsum.photos/200",
-            roles = arrayListOf(Role.OWNER),
+            roles = arrayListOf(Role.ENTRANT),
             creationDate = "2026-10-28"
         )
     } // A default user initialized for first time users

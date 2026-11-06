@@ -55,13 +55,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.text.input.KeyboardType
-import java.util.Locale
 import com.example.lambda_aaa.controller.SearchController
 import com.example.lambda_aaa.model.CampsiteRepository
+import com.example.lambda_aaa.helper.DateField
+import com.example.lambda_aaa.helper.formatDateRangeLabel
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
-
 //import com.example.lambda_aaa.model.LotteryRepository
 
 
@@ -95,8 +93,6 @@ fun EntrantDashboardView(
     val locations = campsiteList.map{ it.address }.distinct() // Gets SPECIFICALLY the general location of a campsite, like Jasper or Banff
     var searchQuery by remember { mutableStateOf("") }
     var selectedLocation by remember {mutableStateOf<String?>(null)}
-    var selectedStartDate by remember { mutableStateOf<String?>(null) }
-    var selectedEndDate by remember { mutableStateOf<String?>(null) }
     var timeStartDate by remember { mutableStateOf<LocalDate?>(null) }
     var timeEndDate by remember { mutableStateOf<LocalDate?>(null) }
     var selectedGuestCount by remember { mutableStateOf<Int?>(null) }
@@ -180,12 +176,10 @@ fun EntrantDashboardView(
                                 )
                             }
                             // Prints the Date Filter
-                            if (selectedStartDate != null && selectedEndDate != null) {
+                            if (timeStartDate != null && timeEndDate != null) {
                                 FilterBox(
-                                    label = formatDateRangeLabel(selectedStartDate!!, selectedEndDate!!),
+                                    label = formatDateRangeLabel(timeStartDate!!, timeEndDate!!),
                                     onRemove = {
-                                        selectedStartDate = null
-                                        selectedEndDate = null
                                         timeStartDate = null
                                         timeEndDate = null
                                     },
@@ -249,18 +243,16 @@ fun EntrantDashboardView(
         CampsiteFiltersDialog(
             locations = locations,
             initialLocation = selectedLocation,
-            initialStartDate = selectedStartDate,
-            initialEndDate = selectedEndDate,
+            initialStartDate = timeStartDate,
+            initialEndDate = timeEndDate,
             initialGuestCount = selectedGuestCount,
             onDismiss = { showFiltersDialog = false },
-            onApply = { location, startDate, endDate, guestCount, parsedStart, parsedEnd ->
+            onApply = { location, startDate, endDate, guestCount ->
                 selectedLocation = location
-                selectedStartDate = startDate
-                selectedEndDate = endDate
+                timeStartDate = startDate
+                timeEndDate = endDate
                 selectedGuestCount = guestCount
                 showFiltersDialog = false
-                timeStartDate = parsedStart
-                timeEndDate = parsedEnd
             },
         )
     }
@@ -484,15 +476,15 @@ private fun FilterButton(onClick: () -> Unit) {
 private fun CampsiteFiltersDialog(
     locations: List<String>,
     initialLocation: String?,
-    initialStartDate: String?,
-    initialEndDate: String?,
+    initialStartDate: LocalDate?,
+    initialEndDate: LocalDate?,
     initialGuestCount: Int?,
     onDismiss: () -> Unit,
-    onApply: (location: String?, startDate: String?, endDate: String?, guests: Int?, parsedStart: LocalDate?, parsedEnd: LocalDate?) -> Unit,
+    onApply: (location: String?, startDate: LocalDate?, endDate: LocalDate?, guests: Int?) -> Unit,
 ) {
     var draftLocation by remember { mutableStateOf(initialLocation) }
-    var startDate by remember { mutableStateOf(initialStartDate.orEmpty()) }
-    var endDate by remember { mutableStateOf(initialEndDate.orEmpty()) }
+    var startDate by remember { mutableStateOf(initialStartDate) }
+    var endDate by remember { mutableStateOf(initialEndDate) }
     var guestCountText by remember { mutableStateOf(initialGuestCount?.toString().orEmpty()) }
     var guestError by remember { mutableStateOf<String?>(null) }
     var dateError by remember { mutableStateOf<String?>(null) }
@@ -559,37 +551,22 @@ private fun CampsiteFiltersDialog(
                         // Retrieved 2026-10-24
                         // Changes: None, I just used this as a reference to make the outlined text fields correctly
                         // The before date
-                        OutlinedTextField(
-                            value = startDate,
-                            onValueChange = {
-                                startDate = it
-                                dateError = null // if you change the input, the error gets disabled
-                            },
-                            modifier = Modifier.weight(1f),
-                            label = { Text("Start date", fontSize = 11.sp) },
-                            singleLine = true,
-                            isError = dateError != null, // turns the textbox red if the user inputted something incorrect
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii),
-                            textStyle = TextStyle(fontSize = 12.sp, color = HeaderColor),
+                        DateField("Start date", startDate, onError = (dateError != null), onValueChange = {
+                            startDate = it
+                            dateError = null
+                        },
+                            modifier = Modifier.weight(1f)
                         )
-                        // The after date
-                        OutlinedTextField(
-                            value = endDate,
-                            onValueChange = {
-                                endDate = it
-                                dateError = null // if you change the input, the error gets disabled
-                            },
-                            modifier = Modifier.weight(1f),
-                            label = { Text("End date", fontSize = 11.sp) },
-                            singleLine = true,
-                            isError = dateError != null,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii),
-                            textStyle = TextStyle(fontSize = 12.sp, color = HeaderColor),
+                        DateField("End date", endDate, onError = (dateError != null), onValueChange = {
+                            endDate = it
+                            dateError = null
+                        },
+                            modifier = Modifier.weight(1f)
                         )
-                    }
+                      }
                     // Just used to guarantee the user inputs a correct string
                     Text(
-                        text = dateError?: "Enter dates as YYYY-MM-DD, for example 2026-11-04.",
+                        text = dateError?: "Select a Start Date and a later End Date",
                         color = if (dateError != null) MaterialTheme.colorScheme.error else SubText,
                         fontSize = 11.sp,
                         lineHeight = 15.sp,
@@ -653,27 +630,21 @@ private fun CampsiteFiltersDialog(
                         guestError = "Enter a valid whole number."
                     }
 
-                    val start = startDate.trim()
-                    val end = endDate.trim()
-                    if (start.isEmpty() && end.isEmpty() && guestError == null) { // I.e. no errors and no date input
-                        onApply(draftLocation, null, null, parsedGuestCount, null, null) // We apply it
-                    } else if (start.isEmpty() && end.isEmpty() && guestError != null) {
+
+                    if (startDate == null && endDate == null && guestError == null) { // I.e. no errors and no date input
+                        onApply(draftLocation, null, null, parsedGuestCount) // We apply it
+                    } else if (startDate == null && endDate == null) {
                         guestError = "Enter a valid whole number."
-                    } else if (start.isEmpty() || end.isEmpty()) { // If one is empty but not the other, then that's an error
+                    } else if (startDate == null || endDate == null) { // If one is empty but not the other, then that's an error
                         dateError = "Enter both a start date and an end date."
                     } else {
-                        val parsedStart = parseStrictIsoDate(start) // We have to use our function to parse it
-                        val parsedEnd = parseStrictIsoDate(end)
                         when {
-                            parsedStart == null || parsedEnd == null -> {
-                                dateError = "Enter valid dates in YYYY-MM-DD format."
-                            }
-                            parsedStart.isAfter(parsedEnd) -> {
-                                dateError = "Start date must be on or before the end date."
+                            startDate!!.isAfter(endDate) -> {
+                                dateError = "Start date must be before the end date."
                             }
                             // If it reaches here, then the dates are valid, but we have to check the guest number
                             guestError == null -> {
-                                onApply(draftLocation, start, end, parsedGuestCount, parsedStart, parsedEnd)
+                                onApply(draftLocation, startDate, endDate, parsedGuestCount)
                             }
                         }
                     }
@@ -755,78 +726,5 @@ private fun DropdownSelector(
                 )
             }
         }
-    }
-}
-
-/**
- * Checks if an inputted date matches the exact YYYY-MM-DD format
- *
- * Parses a given date to check whether it follows the YYYY-MM-DD format
- * and checks whether it is valid (i.e. not an impossible dates)
- *
- * @param value an inputted string that wil be checked to see if it is formatted as a date
- * @return Date?
- */
-private fun parseStrictIsoDate(value: String): LocalDate? {
-    // Adapted from Kotlin Foundation, "Regex" API reference.
-    // https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.text/-regex/
-    // Retrieved 2026-10-25
-    // Changes: None, used to see how this function works
-
-    // Adapted from Android Developers, "Pattern" API reference.
-    // https://developer.android.com/reference/java/util/regex/Pattern
-    // Retrieved 2026-10-25
-    // Changes: Adapted to fit my string parameters
-    if (!Regex("[0-9]{4}-[0-9]{2}-[0-9]{2}").matches(value)) { // forces only numbers between 1 and 9
-        // Basically if our string doesn't match the "[4 integers]-[2 integers]-[2 integers]" pattern, then it fails
-        return null
-    }
-
-    // Adapted from Android Developers, "LocalDate" & "DateTimeFormatter" API reference.
-    // https://developer.android.com/reference/java/time/LocalDate & https://developer.android.com/reference/java/time/format/DateTimeFormatter
-    // Retrieved 2026-11-03
-    // Changes: None, used to understand the Kotlin functions for this function
-    return try {
-        LocalDate.parse(value, DateTimeFormatter.ISO_LOCAL_DATE)
-    } catch (_: DateTimeParseException) {
-        null
-    }
-}
-
-/**
- * Turns a Date value into a readable text
- *
- * A date of the format YYYY-MM-DD will turn into a value following the format "Month day-th, Year"
- *
- * @param start an inputted string that wil be checked to see if it is formatted as a date
- * @param end
- * @return String
- */
-private fun formatDateRangeLabel(start: String, end: String): String {
-    val startDate = parseStrictIsoDate(start) ?: return "$start – $end"
-    val endDate = parseStrictIsoDate(end) ?: return "$start – $end"
-    // Both of these function try to parse their respective dates, otherwise they just return the YYYY-MM-DD of both together
-
-    val monthDayFormat = DateTimeFormatter.ofPattern("MMM d", Locale.US) // Formats dates such as 'Mar 7th'
-    val monthFormat =  DateTimeFormatter.ofPattern("MMM", Locale.US) // Format for a four digit year
-    val startMonth = startDate.format(monthFormat) // Abbreviated form of a start month
-    val endMonth = endDate.format(monthFormat) // Same but for the end day
-    val startDay = startDate.dayOfMonth // Start day
-    val endDay =  endDate.dayOfMonth // End day
-    val startYear = startDate.year // start sate year
-    val endYear = endDate.year // end date year
-
-    return when {
-        // Basically figures out how to format the end result date
-        // If the years are NOT the same, it shows as "Month day-th, Year" for both
-        // If the years ARE the same, but the months are different, then it does "Month day-th" for both
-        // If the Year AND Month are the same, it just does "Month Day1 - Day2"
-        startYear != endYear ->
-            "${startDate.format(monthDayFormat)}, $startYear – " + "${endDate.format(monthDayFormat)}, $endYear"
-        startMonth == endMonth ->
-            "$startMonth $startDay–$endDay"
-
-        else ->
-            "${startDate.format(monthDayFormat)} – ${endDate.format(monthDayFormat)}"
     }
 }
