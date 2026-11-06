@@ -40,6 +40,26 @@ service cloud.firestore {
         false;
     }
 
+    match /campsites/{cid} {
+      allow read, write: if true;
+    }
+
+    match /users/{user} {
+      allow read, write: if true;
+    }
+
+    match /lotteries/{id} {
+      allow read, write: if true;
+    }
+
+    match /lottery_entries/{id} {
+      allow read, write: if true;
+    }
+
+    match /notifications/{id} {
+      allow read, write: if true;
+    }
+
     match /{document=**} {
       allow read: if false;
       allow create, update: if isValidDocument(

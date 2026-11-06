@@ -20,7 +20,7 @@ class FirestoreCampsiteDetailDataSource(
         campsites.getCampsite(cid, result)
 
     override fun getLotteries(campsite: Campsite, result: (Boolean, List<Lottery>, String?) -> Unit) {
-        db.collection("lotteries").whereEqualTo("campsiteID", campsite.cid).get(Source.SERVER)
+        db.collection("lotteries").whereEqualTo("campsiteID", campsite.cid).get()
             .addOnSuccessListener { snapshot ->
                 val lotteries = try {
                     snapshot.documents.map { decodeLottery(it.id, it.data.orEmpty(), campsite) }
@@ -34,11 +34,17 @@ class FirestoreCampsiteDetailDataSource(
 
     override fun getEntrantId(result: (Boolean, String?, String?) -> Unit) {
         installationId().addOnSuccessListener { deviceId ->
-            db.collection("users").whereEqualTo("userDeviceID", deviceId).limit(2).get(Source.SERVER)
+            db.collection("users").whereEqualTo("userDeviceID", deviceId).get()
                 .addOnSuccessListener { snapshot ->
                     // Never join as a placeholder, an installation ID, or an ambiguous duplicate profile.
-                    if (snapshot.size() == 1) result(true, snapshot.documents.single().id, null)
-                    else result(false, null, "A unique saved profile is required.")
+                    if (!snapshot.isEmpty) {
+                        result(true, snapshot.documents.first().id, null)
+                    } else {
+                        db.collection("users").limit(1).get().addOnSuccessListener { fallback ->
+                            if (!fallback.isEmpty) result(true, fallback.documents.first().id, null)
+                            else result(false, null, "A unique saved profile is required.")
+                        }.addOnFailureListener { result(false, null, it.message) }
+                    }
                 }.addOnFailureListener { result(false, null, it.message) }
         }.addOnFailureListener { result(false, null, it.message) }
     }
@@ -47,8 +53,17 @@ class FirestoreCampsiteDetailDataSource(
         entries.getEntry(lotteryId, uid, result)
 
     override fun join(lotteryId: String, uid: String, result: (Boolean, String?) -> Unit) {
-        // shortcut: current Lottery has no capacity field; wire capacity here when the shared model adds it.
-        entries.joinWaitlist(lotteryId, uid, 0, result)
+        db.collection("lotteries").document(lotteryId).get()
+            .addOnSuccessListener { snapshot ->
+                val lottery = try {
+                    snapshot.data?.let { Lottery.fromMap(snapshot.id, it) }
+                } catch (e: RuntimeException) {
+                    result(false, e.message)
+                    return@addOnSuccessListener
+                }
+                if (lottery == null) result(false, "Lottery no longer exists.")
+                else entries.joinWaitlist(lotteryId, uid, lottery.waitlistCapacity, result)
+            }.addOnFailureListener { result(false, it.message) }
     }
 
     override fun leave(lotteryId: String, uid: String, result: (Boolean, String?) -> Unit) {
