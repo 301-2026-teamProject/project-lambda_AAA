@@ -209,9 +209,9 @@ class CampsiteDetailController(
 
 
     /**
-     * join the lottery given lottery id and the device-based entrant identity
-     *
-     * @param id lottery id
+     * Joins the waitlist for a specific lottery
+     * Checks eligibility and existing membership
+     * Collaborators: CampsiteDetailDataSource, Lottery, LotteryJoinPhase, EntryRepository
      */
     fun joinLottery(id: String) {
         val uid = entrantId ?: return
@@ -276,6 +276,8 @@ class CampsiteDetailController(
      * Withdraw entrant from the lottery event
      *
      * @param id lottery id
+     * Withdraws an entrant from the waitlist for a specific lottery
+     * Collaborators: CampsiteDetailDataSource, EntryRepository, LotteryJoinPhase
      */
     fun leaveLottery(id: String) {
         val uid = entrantId ?: return

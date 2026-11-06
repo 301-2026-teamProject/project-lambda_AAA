@@ -163,7 +163,7 @@ fun CampsiteReservationApp(
                 identifiedUser = !identifiedUser
             }
             .addOnFailureListener { error ->
-                Log.w("Listener", "Error is", error)
+                Log.w("MainActivity Listener", "Error is", error)
             }
     }
 
@@ -193,7 +193,6 @@ fun CampsiteReservationApp(
             NavHost(
                 navController = navController,
                 startDestination = selectedMenu.first().id,
-                //startDestination = "OwnerLotteryWaitlist",
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
@@ -243,7 +242,7 @@ fun CampsiteReservationApp(
 /**
  * Creates specific buttons for each selectable tab in EntrantView.
  *
- * The user can move between the Explore, Lotteries, Trips, and Profiles screens
+ * The user can move between the various screens (that are different by role)
  * by pressing their respective buttons.
  *
  * @return nothing
