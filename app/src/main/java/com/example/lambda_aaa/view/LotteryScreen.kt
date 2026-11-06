@@ -48,6 +48,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import com.example.lambda_aaa.model.LotteryViewModel
 
 @Composable
@@ -125,10 +126,10 @@ fun CreateLotteryScreen(
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                NumberField("Number of winners", form.winnersText, Modifier.weight(1f)) {
+                NumberField("Number of winners", form.winnersText, Modifier.weight(1f).testTag("winnersField")) {
                     form = form.copy(winnersText = it)
                 }
-                NumberField("Waitlist capacity", form.capacityText, Modifier.weight(1f)) {
+                NumberField("Waitlist capacity", form.capacityText, Modifier.weight(1f).testTag("capacityField")) {
                     form = form.copy(capacityText = it)
                 }
             }
@@ -152,6 +153,7 @@ fun CreateLotteryScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
+                    .testTag("createLotteryButton")
             ) { Text(if (isSaving) "Creating" else "Create lottery") }
         }
     }

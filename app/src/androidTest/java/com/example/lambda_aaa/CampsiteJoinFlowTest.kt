@@ -54,9 +54,9 @@ class CampsiteJoinFlowTest {
         val campsite = Campsite(cid = campsiteId, name = "Integration Pine Ridge", address = "Jasper",
             maxOccupancy = 8, description = "Forest campsite", rulesAndPolicy = "Quiet after 10 PM",
             cancellationPolicy = "48 hours")
-        val lottery = Lottery(campsite.cid, "Test lottery",
+        val lottery = Lottery(campsite.cid, name = "testing",
             DateRange(today.plusDays(10), today.plusDays(12)),
-            DateRange(today.minusDays(1), today.plusDays(1)), 2, id = lotteryId)
+            DateRange(today.minusDays(1), today.plusDays(1)), 2, waitlistCapacity = 30, lotteryId)
         Tasks.await(db.collection("campsites").document(campsiteId).set(campsite), 20, TimeUnit.SECONDS)
         Tasks.await(db.collection("lotteries").document(lotteryId).set(lottery.toMap()), 20, TimeUnit.SECONDS)
         Tasks.await(db.collection("users").document(userId).set(mapOf("userDeviceID" to deviceId)), 20, TimeUnit.SECONDS)
@@ -141,8 +141,8 @@ class CampsiteJoinFlowTest {
     @Test fun campsiteRepositoryRoundTripsNewFieldsAndAttachedLottery() {
         val original = Campsite(cid = campsiteId, ownerId = userId, name = "Availability test",
             pricePerNight = 65.0, availablePeriod = DateRange(today.plusDays(10), today.plusDays(20)))
-        original.lottery = Lottery(original.cid, "Test lottery", DateRange(today.plusDays(10), today.plusDays(12)),
-            DateRange(today.minusDays(1), today.plusDays(1)), 2, id = lotteryId)
+        original.lottery = Lottery(original.cid, name="testing", DateRange(today.plusDays(10), today.plusDays(12)),
+            DateRange(today.minusDays(1), today.plusDays(1)), 2, waitlistCapacity = 30, lotteryId)
         writeCampsite { campsites.addCampsite(original, it) }
         val stored = Tasks.await(db.collection("campsites").document(campsiteId).get(Source.SERVER), 20, TimeUnit.SECONDS)
         assertFalse(stored.metadata.isFromCache)
@@ -154,7 +154,7 @@ class CampsiteJoinFlowTest {
         assertEquals(original.availablePeriod, loaded.availablePeriod)
         assertEquals(65.0, loaded.pricePerNight, 0.0)
         assertEquals(lotteryId, loaded.lottery!!.id)
-        assertEquals(loaded.cid, loaded.lottery!!.campsiteID)
+        assertSame(loaded.cid, loaded.lottery!!.campsiteID)
         assertEquals(original.lottery!!.bookingPeriod, loaded.lottery!!.bookingPeriod)
         loaded.availablePeriod = DateRange(today.plusDays(11), today.plusDays(21))
         loaded.pricePerNight = 70.0
