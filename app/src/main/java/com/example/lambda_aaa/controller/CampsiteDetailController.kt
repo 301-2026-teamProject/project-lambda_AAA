@@ -11,6 +11,30 @@ import java.time.LocalDate
 enum class LotteryJoinPhase { CHECKING, READY, JOINING, JOINED, NOT_OPEN, CLOSED, UNAVAILABLE, FULL, ERROR, FINISHED }
 data class LotteryJoinState(val phase: LotteryJoinPhase, val message: String? = null)
 
+/**
+ * Controller for retrieving data from CampsiteRepository into views
+ *
+ * Bridges view and repository so that views can get data from CampsiteRepository but never has to touch it. Also
+ * contains loading indicators during data extraction period.
+ *
+ * @property cid campsite id
+ * @property data methods for accessing and retrieving data from database
+ * @property today date of the current system time
+ * @property campsite stores campsite session-persistent data
+ * @property isLoading stores campsite loading status
+ * @property errorMessage stores error message
+ * @property lotteries stores lottery of the campsite
+ * @property lotteriesLoading stores lottery loading status
+ * @property joinStates store the join state of a given lottery id
+ * @property identityLoading store loading status of device-based identification
+ * @property identityFailed true if identification fails
+ * @property entrantId stores id of the entrant after identifyEntrant() method
+ * @property lotteryRequest stores number of lottery request
+ * @property identityRequest stores number of identification request
+ * @property entryRequests stores map from entrant id to request count
+ * @property pendingJoins stores pending entrant id
+ * @property lastDate stores current date of system time
+ */
 class CampsiteDetailController(
     private val cid: String,
     private val data: CampsiteDetailDataSource,
@@ -47,7 +71,13 @@ class CampsiteDetailController(
     private var lastDate = today()
 
 
-
+    /**
+     * fetch campsite; actually this method doesn't retrieve lottery since the function is delegated
+     * to another method fetchLotteries(), but changing the name of this function will affect other
+     * functions and will be a lot of work.
+     *
+     * @return the campsite if query match; null otherwise
+     */
     fun fetchCampsiteAndLottery() {
         val request = ++campsiteRequest
         ++lotteryRequest
@@ -71,7 +101,11 @@ class CampsiteDetailController(
     }
 
 
-
+    /**
+     * fetch lottery given the campsite cid
+     *
+     * @return return the lottery of that campsite if query matches; null otherwise
+     */
     fun fetchLotteries() {
         val selected = campsite ?: return
         val request = ++lotteryRequest
@@ -90,7 +124,11 @@ class CampsiteDetailController(
     }
 
 
-
+    /**
+     * get the entrant id
+     *
+     * @return entrant id if query matches; null otherwise
+     */
     fun identifyEntrant() {
         entrantEnabled = true
         val request = ++identityRequest
@@ -107,8 +145,12 @@ class CampsiteDetailController(
     }
 
 
-
-
+    /**
+     * Check join eligibility of an entrant given the lottery
+     *
+     * @param lottery the given lottery of a campsite event
+     * @return the join state of that lottery
+     */
     private fun eligibility(lottery: Lottery): LotteryJoinPhase {
         val registration = lottery.registrationPeriod ?: return LotteryJoinPhase.UNAVAILABLE
         val booking = lottery.bookingPeriod ?: return LotteryJoinPhase.UNAVAILABLE
@@ -122,7 +164,13 @@ class CampsiteDetailController(
     }
 
 
-
+    /**
+     * Set the state of the lottery
+     *
+     * @param id lottery id
+     * @param phase the desired lottery phase after updating
+     * @param message optional lottery update message
+     */
     private fun setState(id: String, phase: LotteryJoinPhase, message: String? = null) {
         joinStates = joinStates + (id to LotteryJoinState(phase, message))
     }
@@ -160,7 +208,11 @@ class CampsiteDetailController(
     }
 
 
-
+    /**
+     * join the lottery given lottery id and the device-based entrant identity
+     *
+     * @param id lottery id
+     */
     fun joinLottery(id: String) {
         val uid = entrantId ?: return
         val selectedCampsite = campsite ?: return
@@ -187,7 +239,12 @@ class CampsiteDetailController(
     }
 
 
-
+    /**
+     * Check membership of the entrant and joins them to the lottery
+     *
+     * @param lottery the given lottery of the campsite event
+     * @param uid the entrant's user id
+     */
     private fun checkMembershipAndJoin(lottery: Lottery, uid: String) {
         val id = lottery.id
         // Check membership once more so a known result is never reset to wating
@@ -214,6 +271,12 @@ class CampsiteDetailController(
             }
         }
     }
+
+    /**
+     * Withdraw entrant from the lottery event
+     *
+     * @param id lottery id
+     */
     fun leaveLottery(id: String) {
         val uid = entrantId ?: return
         val lottery = lotteries.find { it.id == id } ?: return
