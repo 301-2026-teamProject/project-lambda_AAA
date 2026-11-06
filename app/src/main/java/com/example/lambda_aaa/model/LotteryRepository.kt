@@ -5,6 +5,10 @@ import com.google.firebase.firestore.firestore
 import androidx.compose.runtime.mutableStateListOf
 import android.util.Log
 
+//LotteryRepository stores all lotteries
+// On start obtains all lotteries from FireStore
+// Provides methods to update whole lottery / lotteries or individual fields
+// Provides getter methods for lottery specified through a lottery ID
 class LotteryRepository {
 
     private val _lotteries = mutableStateListOf<Lottery>()
