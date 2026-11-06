@@ -2,6 +2,8 @@ package com.example.lambda_aaa.model
 
 import androidx.lifecycle.ViewModel
 
+
+// create lottery screen uses the viewModel to save state of form
 class LotteryViewModel(
     private val repository: LotteryRepository = LotteryRepository()
 ): ViewModel() {

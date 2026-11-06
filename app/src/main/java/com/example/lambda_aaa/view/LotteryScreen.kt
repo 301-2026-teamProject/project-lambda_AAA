@@ -52,6 +52,10 @@ import androidx.compose.ui.platform.testTag
 import com.example.lambda_aaa.model.Lottery
 import com.example.lambda_aaa.model.LotteryViewModel
 
+// CreateLotteryScreen is a screen to create lottery associated with a campsite
+// DateField is an outlined text field for booking and registration periods with Android's date picker dialog
+// NumberField is an outlined text field that ensures inputs are numbers
+// toLocalDate and toEpochMilli functions convert to their respective formats
 @Composable
 fun CreateLotteryScreen(
     campsites: List<Campsite>,
