@@ -15,19 +15,22 @@ class EntryRepository {
             .whereEqualTo("userId", userId)
             .get()
             .addOnSuccessListener { userSnapshot ->
-                if (!userSnapshot.isEmpty) {
-                    val doc = userSnapshot.documents[0]
-                    val currentStatus = doc.getString("status")
-                    if (currentStatus == EntryStatus.WAITING.name) {
-                        onResult(false, "Already joined.")
-                        return@addOnSuccessListener
-                    } else {
-                        doc.reference.update("status", EntryStatus.WAITING.name)
-                            .addOnSuccessListener { onResult(true, null) }
-                            .addOnFailureListener { e -> onResult(false, e.message) }
+                val existing = userSnapshot.documents.firstOrNull()
+                if (existing != null) {
+                    val status = existing.getString("status")
+                    if (status != EntryStatus.WITHDRAWN.name) {
+                        onResult(false, if (status == EntryStatus.WAITING.name) "Already joined."
+                            else "This entry already has a lottery result.")
                         return@addOnSuccessListener
                     }
                 }
+                fun saveEntry() {
+                    if (existing == null) createNewEntry(lotteryId, userId, onResult)
+                    else existing.reference.update("status", EntryStatus.WAITING.name)
+                        .addOnSuccessListener { onResult(true, null) }
+                        .addOnFailureListener { onResult(false, it.message) }
+                }
+
                 if (maxCapacity > 0) {
                     entriesRef.whereEqualTo("lotteryId", lotteryId)
                         .get()
@@ -39,11 +42,11 @@ class EntryRepository {
                                 onResult(false, "Full.")
                                 return@addOnSuccessListener
                             }
-                            createNewEntry(lotteryId, userId, onResult)
+                            saveEntry()
                         }
                         .addOnFailureListener { e -> onResult(false, e.message) }
                 } else {
-                    createNewEntry(lotteryId, userId, onResult)
+                    saveEntry()
                 }
             }
             .addOnFailureListener { e -> onResult(false, e.message) }
@@ -71,6 +74,8 @@ class EntryRepository {
             .addOnSuccessListener { snapshot ->
                 if (snapshot.isEmpty) {
                     onResult(false, "No waitlist found.")
+                } else if (snapshot.documents.any { it.getString("status") != EntryStatus.WAITING.name }) {
+                    onResult(false, "Only waiting entries can be withdrawn.")
                 } else {
                     val batch = db.batch()
                     for (doc in snapshot.documents) {

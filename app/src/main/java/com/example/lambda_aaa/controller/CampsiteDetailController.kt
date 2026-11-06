@@ -80,7 +80,7 @@ class CampsiteDetailController(
         lotteriesFailed = false
         data.getLotteries(selected) { success, result, _ ->
             if (request != lotteryRequest) return@getLotteries
-            lotteries = if (success) result.filter { it.campsite.cid == cid }
+            lotteries = if (success) result.filter { it.campsiteID == cid }
                 .sortedBy { it.bookingPeriod?.start } else emptyList()
             lotteriesFailed = !success
             lotteriesLoading = false
@@ -172,7 +172,7 @@ class CampsiteDetailController(
         setState(id, LotteryJoinPhase.JOINING)
         // The owner may have closed or removed the lottery since this screen loaded
         data.getLotteries(selectedCampsite) { loaded, latest, _ ->
-            val current = latest.find { it.id == id && it.campsite.cid == selectedCampsite.cid }
+            val current = latest.find { it.id == id && it.campsiteID == selectedCampsite.cid }
             if (!loaded) {
                 pendingJoins.remove(id)
                 setState(id, LotteryJoinPhase.ERROR, "Could not check the lottery. Please retry.")
