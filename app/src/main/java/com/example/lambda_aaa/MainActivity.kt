@@ -163,7 +163,7 @@ fun CampsiteReservationApp(
                 identifiedUser = !identifiedUser
             }
             .addOnFailureListener { error ->
-                Log.w("Listener", "Error is", error)
+                Log.w("MainActivity Listener", "Error is", error)
             }
     }
 
@@ -193,7 +193,6 @@ fun CampsiteReservationApp(
             NavHost(
                 navController = navController,
                 startDestination = selectedMenu.first().id,
-                //startDestination = "OwnerLotteryWaitlist",
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
