@@ -160,7 +160,11 @@ class CampsiteDetailController(
     }
 
 
-
+    /**
+     * Joins the waitlist for a specific lottery
+     * Checks eligibility and existing membership
+     * Collaborators: CampsiteDetailDataSource, Lottery, LotteryJoinPhase, EntryRepository
+     */
     fun joinLottery(id: String) {
         val uid = entrantId ?: return
         val selectedCampsite = campsite ?: return
@@ -214,6 +218,11 @@ class CampsiteDetailController(
             }
         }
     }
+
+    /**
+     * Withdraws an entrant from the waitlist for a specific lottery
+     * Collaborators: CampsiteDetailDataSource, EntryRepository, LotteryJoinPhase
+     */
     fun leaveLottery(id: String) {
         val uid = entrantId ?: return
         val lottery = lotteries.find { it.id == id } ?: return
