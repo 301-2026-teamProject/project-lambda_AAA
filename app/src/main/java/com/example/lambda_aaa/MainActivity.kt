@@ -161,7 +161,7 @@ fun CampsiteReservationApp(
             startTab = "Explore"
         }
 
-        startTab = "Lottery Waitlist"
+        startTab = "Lottery Editor"
         var selectedTab by remember { mutableStateOf(ScreenTabs.Explore) }
 
         Scaffold(
