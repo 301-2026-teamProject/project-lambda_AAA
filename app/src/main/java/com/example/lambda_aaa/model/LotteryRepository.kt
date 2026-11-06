@@ -14,15 +14,18 @@ class LotteryRepository {
     init {
         lotteryRef.addSnapshotListener { snapshots, exception ->
             if (exception != null) {
+                Log.e("LotteryRepo", "Listen failed", exception)
                 return@addSnapshotListener
             }
 
-            _lotteries.clear()
-
-            snapshots?.toObjects(Lottery::class.java)?.let {
-                _lotteries.clear()
-                _lotteries.addAll(it)
+            val decoded = snapshots?.documents.orEmpty().mapNotNull { doc ->
+                runCatching { Lottery.fromMap(doc.id, doc.data.orEmpty()) }
+                    .onFailure { Log.w("LotteryRepo", "Skipping bad lottery ${doc.id}", it) }
+                    .getOrNull()
             }
+
+            _lotteries.clear()
+            _lotteries.addAll(decoded)
         }
     }
 

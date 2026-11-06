@@ -4,7 +4,7 @@ import java.time.LocalDate
 import java.util.UUID
 
 class Lottery(
-    val campsite: Campsite,
+    val campsiteID : String,
     val name: String,
     var bookingPeriod: DateRange? = null,
     var registrationPeriod: DateRange? = null,
@@ -14,7 +14,7 @@ class Lottery(
 ) {
     fun toMap(): Map<String, Any?> = mapOf(
         "id" to id,
-        "campsiteID" to campsite.cid,
+        "campsiteID" to campsiteID,
         "name" to name,
         "bookingPeriodStart" to bookingPeriod?.start?.toString(),
         "bookingPeriodEnd" to bookingPeriod?.end?.toString(),
@@ -23,10 +23,33 @@ class Lottery(
         "numWinners" to numWinners,
         "waitlistCapacity" to waitlistCapacity
     )
+
+    companion object {
+        fun fromMap(id: String, fields: Map<String, Any?>): Lottery {
+            fun range(prefix: String): DateRange? {
+                val start = fields["${prefix}Start"] as? String
+                val end = fields["${prefix}End"] as? String
+                return if (start != null && end != null) {
+                    DateRange(LocalDate.parse(start), LocalDate.parse(end))
+                } else null
+            }
+
+            return Lottery(
+                campsiteID = fields["campsiteID"] as? String
+                    ?: throw IllegalArgumentException("Missing campsiteID"),
+                name = fields["name"] as? String ?: "",
+                bookingPeriod = range("bookingPeriod"),
+                registrationPeriod = range("registrationPeriod"),
+                numWinners = (fields["numWinners"] as? Number)?.toInt() ?: 0,
+                waitlistCapacity = (fields["waitlistCapacity"] as? Number)?.toInt() ?: 0,
+                id = id
+            )
+        }
+    }
 }
 
 data class LotteryForm(
-    val campsite: Campsite? = null,
+    val campsiteID: String? = null,
     val name: String = "",
     val regStart: LocalDate? = null,
     val regEnd: LocalDate? = null,
@@ -42,7 +65,7 @@ data class LotteryForm(
         val winners = numWinners
         val capacity = waitlistCapacity
 
-        if (campsite == null || name.isBlank() ||
+        if (campsiteID == null || name.isBlank() ||
             regStart == null || regEnd == null ||
             bookStart == null || bookEnd == null ||
             winners == null || capacity == null
@@ -54,7 +77,7 @@ data class LotteryForm(
         if (winners >= capacity) return null
 
         return Lottery(
-            campsite = campsite,
+            campsiteID = campsiteID,
             name = name.trim(),
             registrationPeriod = DateRange(regStart, regEnd),
             bookingPeriod = DateRange(bookStart, bookEnd),
