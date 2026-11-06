@@ -11,20 +11,23 @@ class LotteryRepository {
     private val campsiteDb = Firebase.firestore
     private val lotteryRef = campsiteDb.collection("lotteries")
 
-    init {
-        lotteryRef.addSnapshotListener { snapshots, exception ->
+    private val listener = lotteryRef.addSnapshotListener { snapshots, exception ->
             if (exception != null) {
+                Log.e("LotteryRepo", "Listen failed", exception)
                 return@addSnapshotListener
             }
 
-            _lotteries.clear()
-
-            snapshots?.toObjects(Lottery::class.java)?.let {
-                _lotteries.clear()
-                _lotteries.addAll(it)
+            val decoded = snapshots?.documents.orEmpty().mapNotNull { doc ->
+                runCatching { Lottery.fromMap(doc.id, doc.data.orEmpty()) }
+                    .onFailure { Log.w("LotteryRepo", "Skipping bad lottery ${doc.id}", it) }
+                    .getOrNull()
             }
+
+            _lotteries.clear()
+            _lotteries.addAll(decoded)
         }
-    }
+
+    fun close() { listener.remove() }
 
     fun create(lottery: Lottery, onResult: (Boolean, String?) -> Unit) {
         lotteryRef.document(lottery.id).set(lottery.toMap())
@@ -40,7 +43,7 @@ class LotteryRepository {
                     onResult(false, "Lottery does not exist.")
                     return@addOnSuccessListener
                 }
-                docRef.set(lottery)
+                docRef.set(lottery.toMap())
                     .addOnSuccessListener { onResult(true, null) }
                     .addOnFailureListener { e -> onResult(false, e.message) }
             }
@@ -50,7 +53,13 @@ class LotteryRepository {
     fun getLottery(id: String, onResult: (Boolean, Lottery?, String?) -> Unit) {
         lotteryRef.document(id).get()
             .addOnSuccessListener { snapshot ->
-                onResult(true, snapshot.toObject(Lottery::class.java), null)
+                val lottery = try {
+                    snapshot.data?.let { Lottery.fromMap(snapshot.id, it) }
+                } catch (e: RuntimeException) {
+                    onResult(false, null, e.message)
+                    return@addOnSuccessListener
+                }
+                onResult(true, lottery, null)
             }
             .addOnFailureListener { e ->
                 onResult(false, null, e.message)
@@ -60,7 +69,13 @@ class LotteryRepository {
     fun getAllLotteries(onResult: (Boolean, List<Lottery>, String?) -> Unit) {
         lotteryRef.get()
             .addOnSuccessListener { snapshot ->
-                onResult(true, snapshot.toObjects(Lottery::class.java), null)
+                val lotteries = try {
+                    snapshot.documents.map { Lottery.fromMap(it.id, it.data.orEmpty()) }
+                } catch (e: RuntimeException) {
+                    onResult(false, emptyList(), e.message)
+                    return@addOnSuccessListener
+                }
+                onResult(true, lotteries, null)
             }
             .addOnFailureListener { e ->
                 onResult(false, emptyList(), e.message)

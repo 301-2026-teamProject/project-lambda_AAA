@@ -15,7 +15,7 @@ internal object CampsiteFirestoreMapper {
         "ratingCount" to c.ratingCount,
         "availablePeriod" to mapOf("start" to c.availablePeriod.start.toString(), "end" to c.availablePeriod.end.toString()),
         "lottery" to c.lottery?.let {
-            require(it.campsite.cid == c.cid) { "Lottery belongs to a different campsite." }
+            require(it.campsiteID == c.cid) { "Lottery belongs to a different campsite." }
             it.toMap() + ("id" to it.id)
         },
         "creationDate" to c.creationDate, "lastUpdatedDate" to c.lastUpdatedDate,
@@ -46,24 +46,10 @@ internal object CampsiteFirestoreMapper {
             require(raw is Map<*, *>) { "Invalid attached lottery." }
             val lotteryId = raw["id"] as? String
             require(!lotteryId.isNullOrBlank()) { "Attached lottery has no ID." }
-            val name = raw["name"] as? String
-            require(!name.isNullOrBlank()) { "Attached lottery has no ID." }
             val campsiteId = raw["campsiteID"] ?: (raw["campsite"] as? Map<*, *>)?.get("cid")
             require(campsiteId == null || campsiteId == id) { "Lottery belongs to a different campsite." }
-            fun period(name: String): DateRange? {
-                raw[name]?.let { return decodeRange(it) }
-                val start = raw["${name}Start"]
-                val end = raw["${name}End"]
-                if (start == null && end == null) return null
-                return DateRange(decodeDate(start), decodeDate(end))
-            }
-            val winners = raw["numWinners"] as? Number
-            require(winners != null && winners.toLong() in 0..Int.MAX_VALUE.toLong()
-                && winners.toDouble() == winners.toLong().toDouble()) { "Invalid winner count." }
-            val waitlistCapacity = raw["waitlistCapacity"] as? Int
-            require(waitlistCapacity != null && waitlistCapacity.toLong() in 0..Int.MAX_VALUE.toLong()
-                    && winners.toDouble() == winners.toLong().toDouble()) { "Invalid winner count." }
-            c.lottery = Lottery(campsite = c, name = name, bookingPeriod = period("bookingPeriod"), registrationPeriod = period("registrationPeriod"), winners.toInt(), waitlistCapacity = waitlistCapacity)
+            val fields = raw.entries.associate { (key, value) -> key as String to value }
+            c.lottery = Lottery.fromMap(lotteryId, fields + ("campsiteID" to id))
         }
         return c
     }

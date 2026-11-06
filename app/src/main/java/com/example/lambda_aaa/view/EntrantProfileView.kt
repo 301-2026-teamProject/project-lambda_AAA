@@ -1,3 +1,7 @@
+/**
+ * UI implementation for the Entrant Profile Screen shown in the GUI mockup storyboards
+ */
+
 package com.example.lambda_aaa.view
 
 import androidx.compose.foundation.background
@@ -11,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -18,6 +23,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -37,12 +44,16 @@ import com.example.lambda_aaa.model.UserProfile
 private val Background = Color(0xFFF3F0E9) // Used for the background and Campsite icon. Bone-White color.
 private val HeaderColor = Color(0xFF242823) // Used for Headers. Muted Black.
 private val SubText = Color(0xFF6E716C) // Used for smaller text and Icons. Dark Gray.
-private val BorderColor = Color(0xFFDEDCD4) // Used for borders. A muted equivalent of the Background color.
-private val FilterSelectColor = Color(0xFFE1EADF) // Color chosen for filter boxes. A darker version of the Background color.
-private val SelectColor = Color(0xFF526B5A) // Color chosen for other selected elements. A nice Green.
+
+/**
+ * Implements the Entrant Profile Screen according to the GUI mockup on GitHub.
+ *
+ * @param entrantProfileNavController the nav controller that handles navigation into and out of
+ * EntrantProfileView
+ */
 @Composable
 fun EntrantProfileView(
-    navController: NavController,
+    entrantProfileNavController: NavController,
     user: UserProfile
 ) {
 
@@ -128,7 +139,11 @@ fun EntrantProfileView(
                             OutlinedTextField(
                                 value = currentImageUrl,
                                 onValueChange = { currentImageUrl = it },
-                                label = { Text("Input new image url")}
+                                label = { Text("Input new image url")},
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor = Color.White
+                                )
                             )
 
                             Spacer(modifier = Modifier.height(8.dp))
@@ -153,17 +168,29 @@ fun EntrantProfileView(
                     Text(text = "Name", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     OutlinedTextField(
                         value = name,
-                        onValueChange = { name = it }
+                        onValueChange = { name = it },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.White
+                        )
                     )
                     Text(text = "Email", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     OutlinedTextField(
                         value = email,
-                        onValueChange = { email = it}
+                        onValueChange = { email = it},
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.White
+                        )
                     )
                     Text(text = "Phone", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     OutlinedTextField(
                         value = phoneNumber,
-                        onValueChange = { phoneNumber = it}
+                        onValueChange = { phoneNumber = it},
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.White
+                        )
                     )
 
                     Row (modifier = Modifier.padding(16.dp),
@@ -201,7 +228,7 @@ fun EntrantProfileView(
 
                     Text("Policy and Guidelines >", fontSize = 12.sp)
 
-                    Row() {
+                    Row {
 
                         // Saves what is currently in the text fields as the user's new profile information
                         Button(
@@ -230,7 +257,7 @@ fun EntrantProfileView(
                     // Button to go back to previous screen
                     Button(
                         onClick = {
-                            navController.popBackStack()
+                            entrantProfileNavController.popBackStack()
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF06402B), contentColor = Color.White),

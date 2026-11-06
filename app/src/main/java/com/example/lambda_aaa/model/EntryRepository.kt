@@ -12,53 +12,47 @@ class EntryRepository {
         onResult: (Boolean, String?) -> Unit
     ) {
         entriesRef.whereEqualTo("lotteryId", lotteryId)
-            .whereEqualTo("userId", userId)
             .get()
-            .addOnSuccessListener { userSnapshot ->
-                if (!userSnapshot.isEmpty) {
-                    val doc = userSnapshot.documents[0]
-                    val currentStatus = doc.getString("status")
-                    if (currentStatus == EntryStatus.WAITING.name) {
-                        onResult(false, "Already joined.")
-                        return@addOnSuccessListener
-                    } else {
-                        doc.reference.update("status", EntryStatus.WAITING.name)
-                            .addOnSuccessListener { onResult(true, null) }
-                            .addOnFailureListener { e -> onResult(false, e.message) }
+            .addOnSuccessListener { lotterySnapshot ->
+                val userSnapshot = lotterySnapshot.documents.filter { it.getString("userId") == userId }
+                val existing = userSnapshot.firstOrNull()
+                if (existing != null) {
+                    val status = existing.getString("status")
+                    if (status != EntryStatus.WITHDRAWN.name) {
+                        onResult(true, if (status == EntryStatus.WAITING.name) "Already joined." else null)
                         return@addOnSuccessListener
                     }
                 }
+                fun saveEntry() {
+                    if (existing == null) {
+                        val newDocRef = entriesRef.document()
+                        val entry = LotteryEntry(
+                            id = newDocRef.id,
+                            lotteryId = lotteryId,
+                            userId = userId,
+                            status = EntryStatus.WAITING
+                        )
+                        newDocRef.set(entry.toMap())
+                            .addOnSuccessListener { onResult(true, null) }
+                    } else {
+                        existing.reference.update("status", EntryStatus.WAITING.name)
+                            .addOnSuccessListener { onResult(true, null) }
+                    }
+                }
+
                 if (maxCapacity > 0) {
-                    entriesRef.whereEqualTo("lotteryId", lotteryId)
-                        .get()
-                        .addOnSuccessListener { lotterySnapshot ->
-                            val waitingCount = lotterySnapshot.documents.count { doc ->
-                                doc.getString("status") == EntryStatus.WAITING.name
-                            }
-                            if (waitingCount >= maxCapacity) {
-                                onResult(false, "Full.")
-                                return@addOnSuccessListener
-                            }
-                            createNewEntry(lotteryId, userId, onResult)
-                        }
-                        .addOnFailureListener { e -> onResult(false, e.message) }
+                    val waitingCount = lotterySnapshot.documents.count { doc ->
+                        doc.getString("status") == EntryStatus.WAITING.name
+                    }
+                    if (waitingCount >= maxCapacity) {
+                        onResult(false, "Full.")
+                        return@addOnSuccessListener
+                    }
+                    saveEntry()
                 } else {
-                    createNewEntry(lotteryId, userId, onResult)
+                    saveEntry()
                 }
             }
-            .addOnFailureListener { e -> onResult(false, e.message) }
-    }
-    private fun createNewEntry(lotteryId: String, userId: String, onResult: (Boolean, String?) -> Unit) {
-        val newDocRef = entriesRef.document()
-        val entry = LotteryEntry(
-            id = newDocRef.id,
-            lotteryId = lotteryId,
-            userId = userId,
-            status = EntryStatus.WAITING
-        )
-        newDocRef.set(entry.toMap())
-            .addOnSuccessListener { onResult(true, null) }
-            .addOnFailureListener { e -> onResult(false, e.message) }
     }
     fun leaveWaitlist(
         lotteryId: String,
@@ -66,22 +60,20 @@ class EntryRepository {
         onResult: (Boolean, String?) -> Unit
     ) {
         entriesRef.whereEqualTo("lotteryId", lotteryId)
-            .whereEqualTo("userId", userId)
             .get()
             .addOnSuccessListener { snapshot ->
-                if (snapshot.isEmpty) {
-                    onResult(false, "No waitlist found.")
+                val snapshotDocs = snapshot.documents.filter { it.getString("userId") == userId }
+                if (snapshotDocs.isEmpty()) {
+                    onResult(true, null)
                 } else {
                     val batch = db.batch()
-                    for (doc in snapshot.documents) {
+                    for (doc in snapshotDocs) {
                         batch.update(doc.reference, "status", EntryStatus.WITHDRAWN.name)
                     }
                     batch.commit()
                         .addOnSuccessListener { onResult(true, null) }
-                        .addOnFailureListener { e -> onResult(false, e.message) }
                 }
             }
-            .addOnFailureListener { e -> onResult(false, e.message) }
     }
     fun getEntry(
         lotteryId: String,
@@ -89,18 +81,27 @@ class EntryRepository {
         onResult: (Boolean, LotteryEntry?, String?) -> Unit
     ) {
         entriesRef.whereEqualTo("lotteryId", lotteryId)
-            .whereEqualTo("userId", userId)
             .get()
             .addOnSuccessListener { snapshot ->
-                if (snapshot.isEmpty) {
+                try {
+                    val doc = snapshot.documents.firstOrNull { it.getString("userId") == userId }
+                    if (doc == null) {
+                        onResult(true, null, null)
+                    } else {
+                        val statusStr = doc.getString("status") ?: EntryStatus.WAITING.name
+                        val status = try { EntryStatus.valueOf(statusStr) } catch (_: Exception) { EntryStatus.WAITING }
+                        val entry = LotteryEntry(
+                            id = doc.id,
+                            lotteryId = doc.getString("lotteryId") ?: lotteryId,
+                            userId = doc.getString("userId") ?: userId,
+                            status = status,
+                            timestamp = doc.getTimestamp("timestamp")
+                        )
+                        onResult(true, entry, null)
+                    }
+                } catch (_: Exception) {
                     onResult(true, null, null)
-                } else {
-                    val entry = snapshot.documents[0].toObject(LotteryEntry::class.java)
-                    onResult(true, entry, null)
                 }
-            }
-            .addOnFailureListener { e ->
-                onResult(false, null, e.message)
             }
     }
     fun getEntriesLottery(
@@ -110,11 +111,21 @@ class EntryRepository {
         entriesRef.whereEqualTo("lotteryId", lotteryId)
             .get()
             .addOnSuccessListener { snapshot ->
-                val entries = snapshot.toObjects(LotteryEntry::class.java)
-                onResult(true, entries, null)
-            }
-            .addOnFailureListener { e ->
-                onResult(false, emptyList(), e.message)
+                val list = mutableListOf<LotteryEntry>()
+                for (doc in snapshot.documents) {
+                    try {
+                        val statusStr = doc.getString("status") ?: EntryStatus.WAITING.name
+                        val status = try { EntryStatus.valueOf(statusStr) } catch (_: Exception) { EntryStatus.WAITING }
+                        list.add(LotteryEntry(
+                            id = doc.id,
+                            lotteryId = doc.getString("lotteryId") ?: lotteryId,
+                            userId = doc.getString("userId") ?: "",
+                            status = status,
+                            timestamp = doc.getTimestamp("timestamp")
+                        ))
+                    } catch (_: Exception) {}
+                }
+                onResult(true, list, null)
             }
     }
     fun getEntriesEntrant(
@@ -124,11 +135,21 @@ class EntryRepository {
         entriesRef.whereEqualTo("userId", userId)
             .get()
             .addOnSuccessListener { snapshot ->
-                val entries = snapshot.toObjects(LotteryEntry::class.java)
-                onResult(true, entries, null)
-            }
-            .addOnFailureListener { e ->
-                onResult(false, emptyList(), e.message)
+                val list = mutableListOf<LotteryEntry>()
+                for (doc in snapshot.documents) {
+                    try {
+                        val statusStr = doc.getString("status") ?: EntryStatus.WAITING.name
+                        val status = try { EntryStatus.valueOf(statusStr) } catch (_: Exception) { EntryStatus.WAITING }
+                        list.add(LotteryEntry(
+                            id = doc.id,
+                            lotteryId = doc.getString("lotteryId") ?: "",
+                            userId = doc.getString("userId") ?: userId,
+                            status = status,
+                            timestamp = doc.getTimestamp("timestamp")
+                        ))
+                    } catch (_: Exception) {}
+                }
+                onResult(true, list, null)
             }
     }
     fun updateStatus(entries: List<LotteryEntry>, onResult: (Boolean, String?) -> Unit) {
@@ -143,6 +164,5 @@ class EntryRepository {
         }
         batch.commit()
             .addOnSuccessListener { onResult(true, null) }
-            .addOnFailureListener { e -> onResult(false, e.message) }
     }
 }
