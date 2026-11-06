@@ -3,6 +3,10 @@ package com.example.lambda_aaa.model
 import java.time.LocalDate
 import java.util.UUID
 
+// Lottery class is associated to a single (for now) campsite object through its campsiteID
+// bookingPeriod and registrationPeriod are of type DateRange? which ensures start date is before end date
+// all fields except campsite id and name are nullable as lottery should not exist without a campsite
+
 class Lottery(
     val campsiteID : String,
     val name: String,
