@@ -77,28 +77,24 @@ private val AddGreen = Color(0xFF315E43) // The big green add button
 fun LotteryWaitlistView(
     lotteryWaitlistNavController: NavController
 ) {
-    var gotEntries by remember { mutableStateOf(false) }
+    /* Backend dependence had some errors that weren't fixed in time
+
+    var gotEntries by remember { mutableStateOf(true) }
     val entries = remember { mutableStateListOf<LotteryEntry>() }
-    val campsites = remember {mutableStateListOf<Campsite>()}
-    val entrants = remember { mutableStateListOf<UserProfile>() }
+    //val entrants = remember { mutableStateListOf<UserProfile>() }
     var numEntries by remember { mutableIntStateOf(0) }
     var numWinners by remember { mutableIntStateOf(0) }
     var lotteryID by remember { mutableStateOf("") }
+     */
 
+    /*
     LaunchedEffect(Unit) {
-
-        Log.d("Firestore", "Step 1: Attempting to call Firestore...")
 
         // Search for entrants enrolled in lottery
         Firebase.firestore.collection("campsites")
             .get()
-            .addOnSuccessListener { result ->
-                Log.d("Firestore", "Step 2: WTF is going on")
-                if (!result.isEmpty) {
-                    val sites = result.toObjects(Campsite::class.java)
-                    campsites.addAll(sites)
-                }
-                /*
+            .addOnSuccessListener { waitlist ->
+
                 // If there are entries, get a list of them
                 if (!waitlist.isEmpty) {
                     numEntries = waitlist.count()
@@ -106,8 +102,6 @@ fun LotteryWaitlistView(
                     entries.addAll(lotteryEntries)
                     lotteryID = entries[0].lotteryId
                 }
-
-                 */
 
             }
             .addOnFailureListener { error ->
@@ -157,8 +151,7 @@ fun LotteryWaitlistView(
         gotEntries = !gotEntries
 
     }
-
-    if (gotEntries) {
+    */
 
         Scaffold(
             containerColor = Background,
@@ -224,169 +217,164 @@ fun LotteryWaitlistView(
                     }
                 }
 
-                Column(
+                LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
                         .padding(horizontal = 16.dp)
                         .padding(top = 20.dp, bottom = 20.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column {
-                            Text(
-                                text = "REGISTRATION ENDED",
-                                fontSize = 13.sp,
-                                color = SubText,
-                                fontWeight = FontWeight.Medium
-                            )
-
-                            Text(
-                                text = "$numEntries entrants",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-
-                        Surface(
-                            shape = RoundedCornerShape(14.dp),
-                            color = TrailSage,
-                            contentColor = TrailInk,
-                            modifier = Modifier.fillMaxWidth(0.3f),
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(
-                                "$numWinners winners",
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.sp,
-                                modifier = Modifier.padding(4.dp)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(10.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Surface(
-                            shape = RoundedCornerShape(14.dp),
-                            color = AddGreen,
-                            border = BorderStroke(1.dp, BorderColor),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Button(
-                                onClick = {},
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color.Transparent,
-                                    contentColor = Color.White
+                            Column {
+                                Text(
+                                    text = "REGISTRATION ENDED",
+                                    fontSize = 13.sp,
+                                    color = SubText,
+                                    fontWeight = FontWeight.Medium
                                 )
-                            ) { Text("Draw winners") }
-                        }
-                    }
 
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            "Entrants",
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 16.sp
-                        )
-
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = Color.White,
-                            border = BorderStroke(1.dp, BorderColor),
-                            modifier = Modifier.fillMaxWidth(0.28f),
-                        ) {
-                            Text(
-                                "All statuses",
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.sp,
-                                modifier = Modifier.padding(5.dp)
-                            )
-                        }
-                    }
-
-                    /*
-                    LazyColumn() {
-                        items(entrants) { person ->
-                            val initials = ExtractInitials(person.userName)
+                                Text(
+                                    text = "17 entrants",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
 
                             Surface(
                                 shape = RoundedCornerShape(14.dp),
-                                color = Color.White,
-                                border = BorderStroke(1.dp, BorderColor),
-                                modifier = Modifier.fillMaxWidth()
+                                color = TrailSage,
+                                contentColor = TrailInk,
+                                modifier = Modifier.fillMaxWidth(0.3f),
                             ) {
-                                Box(modifier = Modifier.background(color = TrailSage, shape = CircleShape)) {
-                                    Text(initials, fontSize = 16.sp)
-                                }
-
                                 Text(
-                                    person.userName,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp
+                                    "5 winners",
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.sp,
+                                    modifier = Modifier.padding(4.dp)
                                 )
                             }
                         }
                     }
 
-                     */
+                    item {Spacer(modifier = Modifier.width(10.dp))}
 
-                    Surface(
-                        shape = RoundedCornerShape(14.dp),
-                        color = Color.White,
-                        border = BorderStroke(1.dp, BorderColor),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Button(
-                            onClick = {},
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.Transparent,
-                                contentColor = Color.Black
-                            )
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
                         ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Send,
-                                contentDescription = null,
-                                modifier = Modifier.size(ButtonDefaults.IconSize)
+                            Surface(
+                                shape = RoundedCornerShape(14.dp),
+                                color = AddGreen,
+                                border = BorderStroke(1.dp, BorderColor),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Button(
+                                    onClick = {},
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color.Transparent,
+                                        contentColor = Color.White
+                                    )
+                                ) { Text("Draw winners") }
+                            }
+                        }
+                    }
+
+
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                "Entrants",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 16.sp
                             )
 
-                            Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = Color.White,
+                                border = BorderStroke(1.dp, BorderColor),
+                                modifier = Modifier.fillMaxWidth(0.28f),
+                            ) {
+                                Text(
+                                    "All statuses",
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.sp,
+                                    modifier = Modifier.padding(5.dp)
+                                )
+                            }
+                        }
+                    }
 
-                            Text("Notify waitlist")
+                    // Hardcoded proof of concept until backend errors are resolved
+                    item {
+
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = Color.White,
+                            border = BorderStroke(1.dp, BorderColor),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(modifier = Modifier.padding(10.dp)) {
+                                Box(modifier = Modifier.background(color = TrailSage, shape = CircleShape)) {
+                                    Text(
+                                        "AC",
+                                        fontSize = 16.sp,
+                                        modifier = Modifier.padding(5.dp))
+                                }
+
+                                Text(
+                                    "Alex Camper",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    modifier = Modifier.padding(5.dp)
+                                )
+                            }
+
+                        }
+                    }
+
+                    item {
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = Color.White,
+                            border = BorderStroke(1.dp, BorderColor),
+                            modifier = Modifier.fillMaxWidth(1f)
+                        ) {
+                            Button(
+                                onClick = {},
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color.Transparent,
+                                    contentColor = Color.Black
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.Send,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(ButtonDefaults.IconSize)
+                                )
+
+                                Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
+
+                                Text("Notify waitlist")
+                            }
                         }
                     }
 
                 }
 
+
             }
         }
-    }
-
-    else {
-
-        Column (
-            modifier = Modifier.fillMaxSize().padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text("Getting waitlist...", fontSize = 24.sp)
-            Spacer(modifier = Modifier.height(8.dp))
-            CircularProgressIndicator()
-        }
-
-    }
 
 }
 
