@@ -39,6 +39,7 @@ fun CampsiteDetailView(
     campsiteDetailController: CampsiteDetailController,
     onBack: () -> Unit,
     onEdit: (() -> Unit)? = null,
+    onLotteryUpdate: ((Lottery) -> Unit)? = null,
 ) {
     LaunchedEffect(campsiteDetailController, onEdit == null) {
         campsiteDetailController.fetchCampsiteAndLottery()
@@ -69,6 +70,7 @@ fun CampsiteDetailView(
         onJoin = campsiteDetailController::joinLottery,
         onLeave = campsiteDetailController::leaveLottery,
         onRetryEntry = campsiteDetailController::refreshEntry,
+        onLotteryUpdate = onLotteryUpdate,
     )
 }
 
@@ -93,6 +95,7 @@ internal fun CampsiteDetailContent(
     onJoin: (String) -> Unit = {},
     onLeave: (String) -> Unit = {},
     onRetryEntry: (String) -> Unit = {},
+    onLotteryUpdate: ((Lottery) -> Unit)? = {},
 ) {
     val context = LocalContext.current
     Scaffold(
@@ -159,7 +162,9 @@ internal fun CampsiteDetailContent(
                 CampsiteLotteriesSection(
                     lotteries, lotteriesLoading, lotteriesFailed, onRetryLotteries,
                     showJoinActions, joinStates, identityLoading, identityFailed,
-                    onRetryIdentity, onJoin, onLeave, onRetryEntry,
+                    onRetryIdentity, onJoin, onLeave, onRetryEntry, onLotteryUpdate = { lottery ->
+                        onLotteryUpdate?.invoke(lottery)
+                    }
                 )
                 campsite.mapLocation?.let { point ->
                     OutlinedButton(
@@ -205,9 +210,11 @@ internal fun CampsiteLotteriesSection(
     onJoin: (String) -> Unit = {},
     onLeave: (String) -> Unit = {},
     onRetryEntry: (String) -> Unit = {},
+    onLotteryUpdate: (Lottery) -> Unit = {},
 ) {
     Surface(shape = RoundedCornerShape(14.dp), color = TrailSage, contentColor = TrailInk) {
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+
             Text(stringResource(R.string.campsite_lotteries), fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.semantics { heading() })
             when {
@@ -245,6 +252,19 @@ internal fun CampsiteLotteriesSection(
                                     onRetry = { onRetryEntry(lottery.id) },
                                     onLeave = { onLeave(lottery.id) },
                                 )
+                            }
+                        } else {
+                            when {
+                                identityLoading -> Text(stringResource(R.string.lottery_identifying))
+                                identityFailed -> {
+                                    Text(stringResource(R.string.lottery_identity_failed))
+                                    TextButton(onClick = onRetryIdentity) { Text(stringResource(R.string.retry)) }
+                                }
+                                else -> {
+                                    Button(onClick = {onLotteryUpdate(lottery) } ) {
+                                        Text("Edit Lottery")
+                                    }
+                                }
                             }
                         }
                     }

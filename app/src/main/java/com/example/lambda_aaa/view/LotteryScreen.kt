@@ -49,6 +49,7 @@ import androidx.compose.material3.Button
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import com.example.lambda_aaa.model.Lottery
 import com.example.lambda_aaa.model.LotteryViewModel
 
 // CreateLotteryScreen is a screen to create lottery associated with a campsite
@@ -159,6 +160,110 @@ fun CreateLotteryScreen(
                     .height(52.dp)
                     .testTag("createLotteryButton")
             ) { Text(if (isSaving) "Creating" else "Create lottery") }
+        }
+    }
+}
+
+@Composable
+fun EditLotteryScreen(
+    lottery: Lottery,
+    onClose: () -> Unit,
+    viewModel: LotteryViewModel = viewModel()
+) {
+    var form by remember { mutableStateOf(LotteryForm(campsiteID = lottery.campsiteID, name = lottery.name, lottery.registrationPeriod!!.start, lottery.registrationPeriod!!.end, lottery.bookingPeriod!!.start, lottery.bookingPeriod!!.end, lottery.numWinners.toString(), lottery.waitlistCapacity.toString())) }
+    val updatedLottery = form.toLotteryOrNull()
+    var isSaving by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    errorMessage?.let {
+        Text(it, color = MaterialTheme.colorScheme.error)
+    }
+
+    Column(Modifier.fillMaxSize()) {
+        // Top bar
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onClose) {
+                Icon(
+                    Icons.Default.Close,
+                    contentDescription = "Close"
+                )
+            }
+            Text(
+                "Edit lottery",
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(Modifier.width(48.dp)) // balances the close button so the title stays centred
+        }
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            OutlinedTextField(
+                value = form.name,
+                onValueChange = { form = form.copy(name = it) },
+                label = { Text("Lottery name") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                DateField("Registration opens", form.regStart, Modifier.weight(1f)) {
+                    form = form.copy(regStart = it)
+                }
+                DateField("Registration closes", form.regEnd, Modifier.weight(1f)) {
+                    form = form.copy(regEnd = it)
+                }
+            }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                DateField("Booking starts", form.bookStart, Modifier.weight(1f)) {
+                    form = form.copy(bookStart = it)
+                }
+                DateField("Booking ends", form.bookEnd, Modifier.weight(1f)) {
+                    form = form.copy(bookEnd = it)
+                }
+            }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                NumberField("Number of winners", form.winnersText, Modifier.weight(1f).testTag("winnersField")) {
+                    form = form.copy(winnersText = it)
+                }
+                NumberField("Waitlist capacity", form.capacityText, Modifier.weight(1f).testTag("capacityField")) {
+                    form = form.copy(capacityText = it)
+                }
+            }
+
+            CapacityCheck(form.numWinners, form.waitlistCapacity)
+            Button(
+                enabled = !isSaving,
+                onClick = {
+                    updatedLottery?.let {
+                        isSaving = true
+                        errorMessage = null
+                        viewModel.editLottery(it, lotteryID = lottery.id) { success, error ->
+                            isSaving = false
+                            if (success) onClose()
+                            else errorMessage = error ?: "Couldn't edit lottery"
+                        }
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3D5A40)),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .testTag("createLotteryButton")
+            ) { Text(if (isSaving) "Saving" else "Update lottery") }
         }
     }
 }
