@@ -42,13 +42,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
-// Colors used to color buttons, text, and background
-private val Background = Color(0xFFF3F0E9) // Used for the background and Campsite icon. Bone-White color.
-private val BorderColor = Color(0xFFDEDCD4) // Used for borders. A muted equivalent of the Background color.
-private val HeaderColor = Color(0xFF242823) // Used for Headers. Muted Black.
-private val SubText = Color(0xFF6E716C) // Used for smaller text and Icons. Dark Gray.
-private val AddGreen = Color(0xFF315E43) // The big green add button
-
 /**
  * Implements the UI from the GitHub GUI mockup of Lottery Waitlist Screen
  *
@@ -155,8 +148,8 @@ fun LotteryWaitlistView(
 
                     Surface(
                         shape = RoundedCornerShape(14.dp),
-                        color = TrailSage,
-                        contentColor = TrailInk,
+                        color = FilterSelectColor,
+                        contentColor = HeaderColor,
                         modifier = Modifier.fillMaxWidth(0.3f),
                     ) {
                         Text(

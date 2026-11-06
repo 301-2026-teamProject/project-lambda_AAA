@@ -41,10 +41,6 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.example.lambda_aaa.model.UserProfile
 
-private val Background = Color(0xFFF3F0E9) // Used for the background and Campsite icon. Bone-White color.
-private val HeaderColor = Color(0xFF242823) // Used for Headers. Muted Black.
-private val SubText = Color(0xFF6E716C) // Used for smaller text and Icons. Dark Gray.
-
 /**
  * Implements the Entrant Profile Screen according to the GUI mockup on GitHub.
  *
