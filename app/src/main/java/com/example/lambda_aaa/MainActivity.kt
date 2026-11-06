@@ -193,7 +193,8 @@ fun CampsiteReservationApp(
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = selectedMenu.first().id,
+                //startDestination = selectedMenu.first().id,
+                startDestination = "OwnerLotteryWaitlist",
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
@@ -218,6 +219,8 @@ fun CampsiteReservationApp(
                 }
                 composable("OwnerCampsites") { EntrantProfileView(navController, currentUser) }
                 composable("OwnerLottery") { EntrantProfileView(navController, currentUser) }
+                composable("OwnerLotteryEditor"){ LotteryEditorView(navController) }
+                composable("OwnerLotteryWaitlist") { LotteryWaitlistView(navController) }
                 //composable("admin") { AdminDashboardView(navController) }
 
             }
