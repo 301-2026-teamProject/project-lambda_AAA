@@ -61,7 +61,6 @@ import com.example.lambda_aaa.model.UserProfile
 import com.example.lambda_aaa.ui.theme.CampsiteReservationTheme
 import com.example.lambda_aaa.view.EntrantDashboardView
 import com.example.lambda_aaa.view.EntrantProfileView
-import com.example.lambda_aaa.view.LotteryEditorView
 import com.example.lambda_aaa.view.LotteryWaitlistView
 import com.google.firebase.installations.FirebaseInstallations
 import kotlinx.coroutines.tasks.await
@@ -123,7 +122,7 @@ fun CampsiteReservationApp(
             email = "alex@example.ca",
             phone = "780-555-0123",
             profilePhotoUrl = "https://picsum.photos/200",
-            roles = arrayListOf(Role.OWNER),
+            roles = arrayListOf(Role.ENTRANT),
             creationDate = "2026-10-28"
         )
     } // A default user initialized for first time users
@@ -193,8 +192,8 @@ fun CampsiteReservationApp(
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                //startDestination = selectedMenu.first().id,
-                startDestination = "OwnerLotteryWaitlist",
+                startDestination = selectedMenu.first().id,
+                //startDestination = "OwnerLotteryWaitlist",
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
@@ -219,7 +218,6 @@ fun CampsiteReservationApp(
                 }
                 composable("OwnerCampsites") { EntrantProfileView(navController, currentUser) }
                 composable("OwnerLottery") { EntrantProfileView(navController, currentUser) }
-                composable("OwnerLotteryEditor"){ LotteryEditorView(navController) }
                 composable("OwnerLotteryWaitlist") { LotteryWaitlistView(navController) }
                 //composable("admin") { AdminDashboardView(navController) }
 

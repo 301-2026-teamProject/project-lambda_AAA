@@ -1,3 +1,7 @@
+/**
+ * Code for implementing the Lottery Waitlist Screen as show on the GUI mockup found in GitHub
+ */
+
 package com.example.lambda_aaa.view
 
 import androidx.compose.foundation.BorderStroke
@@ -13,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -44,6 +49,12 @@ private val HeaderColor = Color(0xFF242823) // Used for Headers. Muted Black.
 private val SubText = Color(0xFF6E716C) // Used for smaller text and Icons. Dark Gray.
 private val AddGreen = Color(0xFF315E43) // The big green add button
 
+/**
+ * Implements the UI from the GitHub GUI mockup of Lottery Waitlist Screen
+ *
+ * @param lotteryWaitlistNavController the controller that handles navigation into and out of
+ * LotteryWaitlistView
+ */
 @Composable
 fun LotteryWaitlistView(
     lotteryWaitlistNavController: NavController
@@ -219,10 +230,15 @@ fun LotteryWaitlistView(
                             contentColor = Color.Black
                         )
                     ) {
-                        Row{Icons.AutoMirrored.Filled.Send}
-                        Row(horizontalArrangement = Arrangement.Center){
-                            Text("Notify waitlist")
-                        }
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Send,
+                            contentDescription = null,
+                            modifier = Modifier.size(ButtonDefaults.IconSize)
+                        )
+
+                        Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
+
+                        Text("Notify waitlist")
                     }
                 }
 
@@ -230,4 +246,25 @@ fun LotteryWaitlistView(
 
         }
     }
+}
+
+/**
+ * Helper function to extract the Entrant's initials for display
+ *
+ * @param name the name of the Entrant whose initials are to be extracted
+ * @return the initials of the Entrant as a string of two capital characters
+ */
+fun ExtractInitials(name: String) : String {
+    var cleanName = name.trim()
+    val firstInitial = cleanName[0]
+    var initials = ""
+    cleanName = cleanName.substring(1)
+
+    for (char in cleanName) {
+        if (char.isUpperCase()) {
+            initials = "$firstInitial$char"
+        }
+    }
+
+    return initials
 }

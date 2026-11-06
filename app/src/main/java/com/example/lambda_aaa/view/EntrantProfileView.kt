@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -22,6 +23,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -136,7 +139,11 @@ fun EntrantProfileView(
                             OutlinedTextField(
                                 value = currentImageUrl,
                                 onValueChange = { currentImageUrl = it },
-                                label = { Text("Input new image url")}
+                                label = { Text("Input new image url")},
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor = Color.White
+                                )
                             )
 
                             Spacer(modifier = Modifier.height(8.dp))
@@ -161,17 +168,29 @@ fun EntrantProfileView(
                     Text(text = "Name", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     OutlinedTextField(
                         value = name,
-                        onValueChange = { name = it }
+                        onValueChange = { name = it },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.White
+                        )
                     )
                     Text(text = "Email", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     OutlinedTextField(
                         value = email,
-                        onValueChange = { email = it}
+                        onValueChange = { email = it},
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.White
+                        )
                     )
                     Text(text = "Phone", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     OutlinedTextField(
                         value = phoneNumber,
-                        onValueChange = { phoneNumber = it}
+                        onValueChange = { phoneNumber = it},
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.White
+                        )
                     )
 
                     Row (modifier = Modifier.padding(16.dp),
