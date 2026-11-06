@@ -16,6 +16,7 @@ import androidx.navigation.NavType
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import com.example.lambda_aaa.controller.CampsiteDetailController
+import com.example.lambda_aaa.model.Lottery
 
 /**
  * Main app logic */
@@ -34,6 +35,7 @@ fun CampsiteReservationApp(
     }
 
     var editMessage by remember { mutableStateOf<Pair<Boolean, String>?>(null) }
+    var selectedLottery by remember {mutableStateOf<Lottery?>(null)}
 
     fun goHome(success: Boolean, msg: String) {
         editMessage = success to msg
@@ -71,7 +73,10 @@ fun CampsiteReservationApp(
             CampsiteDetailView(
                 campsiteDetailController = controller,
                 onBack = { navController.popBackStack() },
-                onEdit = { navController.navigate("editScreen/$cid") }
+                onEdit = { navController.navigate("editScreen/$cid") },
+                onLotteryUpdate = { lottery ->
+                    selectedLottery = lottery
+                    navController.navigate("lotteryEdit/$cid") }
             )
         }
         composable(
@@ -85,6 +90,18 @@ fun CampsiteReservationApp(
                 onDone = { ok, msg -> goHome(ok, msg) },
                 onBack = { navController.popBackStack() },
                 controller = controller
+            )
+        }
+        composable(
+            "lotteryEdit/{cid}",
+            arguments = listOf(navArgument("cid") { type = NavType.StringType })
+        ) {
+            EditLotteryScreen(
+                lottery = selectedLottery!!,
+                onClose = {
+                    navController.popBackStack()
+                    //selectedLottery = null
+                },
             )
         }
     }

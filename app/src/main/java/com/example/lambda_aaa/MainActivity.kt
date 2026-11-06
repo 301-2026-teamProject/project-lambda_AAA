@@ -122,7 +122,7 @@ fun CampsiteReservationApp(
             email = "alex@example.ca",
             phone = "780-555-0123",
             profilePhotoUrl = "https://picsum.photos/200",
-            roles = arrayListOf(Role.ENTRANT),
+            roles = arrayListOf(Role.OWNER),
             creationDate = "2026-10-28"
         )
     } // A default user initialized for first time users
@@ -243,7 +243,7 @@ fun CampsiteReservationApp(
 /**
  * Creates specific buttons for each selectable tab in EntrantView.
  *
- * The user can move between the Explore, Lotteries, Trips, and Profiles screens
+ * The user can move between the various screens (that are different by role)
  * by pressing their respective buttons.
  *
  * @return nothing

@@ -8,4 +8,8 @@ class LotteryViewModel(
     fun createLottery(lottery: Lottery, onResult: (Boolean, String?) -> Unit) {
         repository.create(lottery, onResult)
     }
+
+    fun editLottery(lottery: Lottery, lotteryID: String, onResult: (Boolean, String?) -> Unit) {
+        repository.updateLottery(lottery, lotteryID, onResult)
+    }
 }

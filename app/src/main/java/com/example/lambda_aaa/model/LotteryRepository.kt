@@ -35,8 +35,9 @@ class LotteryRepository {
             .addOnFailureListener { e -> onResult(false, e.message) }
     }
 
-    fun updateLottery(lottery: Lottery, onResult: (Boolean, String?) -> Unit) {
-        val docRef = lotteryRef.document(lottery.id)
+    fun updateLottery(lottery: Lottery, lotteryID: String, onResult: (Boolean, String?) -> Unit) {
+        val docRef = lotteryRef.document(lotteryID)
+        Log.w("Listener", "ID: ${lottery.id}")
         docRef.get()
             .addOnSuccessListener { snapshot ->
                 if (!snapshot.exists()) {
@@ -44,7 +45,10 @@ class LotteryRepository {
                     return@addOnSuccessListener
                 }
                 docRef.set(lottery.toMap())
-                    .addOnSuccessListener { onResult(true, null) }
+                    .addOnSuccessListener { updated ->
+                        Log.d("LotteryUpdate", "path=${docRef.path}, id=${lottery.id}, data=${lottery.toMap()}")
+                        Log.d("LotteryUpdate", "server data=${updated}")
+                        onResult(true, null) }
                     .addOnFailureListener { e -> onResult(false, e.message) }
             }
             .addOnFailureListener { e -> onResult(false, e.message) }
