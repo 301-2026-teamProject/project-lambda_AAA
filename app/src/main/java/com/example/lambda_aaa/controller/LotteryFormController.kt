@@ -22,6 +22,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.padding
 
+// CampsiteDropdown creates a dropdown menu of the provided campsite list
+// CapacityCheck displays a box that changes color depending on the relation between numWinners and
+// waitlistCapacity
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CampsiteDropdown(
