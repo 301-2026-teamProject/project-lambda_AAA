@@ -29,6 +29,7 @@ class Lottery(
     )
 
     companion object {
+        // converts FireStore json objects / fields into a lottery object
         fun fromMap(id: String, fields: Map<String, Any?>): Lottery {
             require(id.isNotBlank()) { "Missing lottery ID" }
             fun date(raw: Any?): LocalDate = when (raw) {
@@ -67,6 +68,9 @@ class Lottery(
     }
 }
 
+// validates data entered in LotteryForm
+// ensures periods start dates are before end dates
+// ensures none of the fields are null
 data class LotteryForm(
     val campsiteID: String? = null,
     val name: String = "",
