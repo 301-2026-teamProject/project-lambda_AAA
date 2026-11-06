@@ -23,6 +23,13 @@ import com.example.lambda_aaa.model.NotificationType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+        /**
+         * Displays entrants notification inbox
+         * Loads notifications for the user on start
+         * Filters for lottery updates
+         * Handles marking notifications as read
+         * Collaborators: NotificationController, AppNotification, NotificationCard
+         */
 fun NotificationView(
     userId: String,
     notificationController: NotificationController = remember { NotificationController() },
@@ -89,6 +96,12 @@ fun NotificationView(
         }
     }
 }
+
+/**
+ * Displays individual notifications in the inbox
+ * Changes header based on read and win or non-selection
+ * Collaborators: AppNotification, NotificationType
+ */
 @Composable
 private fun NotificationCard(
     notification: AppNotification,
