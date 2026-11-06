@@ -54,20 +54,7 @@ class FirestoreCampsiteDetailDataSource(
     companion object {
         fun decodeLottery(id: String, fields: Map<String, Any?>, campsite: Campsite): Lottery {
             require(id.isNotBlank() && fields["campsiteID"] == campsite.cid) { "Invalid lottery campsite." }
-            fun range(prefix: String): DateRange? {
-                val start = fields["${prefix}Start"]
-                val end = fields["${prefix}End"]
-                if (start == null && end == null) return null
-                require(start is String && end is String) { "Incomplete $prefix." }
-                return DateRange(LocalDate.parse(start), LocalDate.parse(end))
-            }
-            val count = fields["numWinners"] as? Number
-                ?: throw IllegalArgumentException("Missing winner count.")
-            require(count.toLong() in 0..Int.MAX_VALUE.toLong() && count.toDouble() == count.toLong().toDouble())
-            return Lottery(campsite = campsite, name = fields["name"] as? String?: "",
-                bookingPeriod = range("bookingPeriod"), registrationPeriod = range("registrationPeriod"),
-                numWinners = count.toInt(), waitlistCapacity = (fields["waitlistCapacity"] as? Number)?.toInt() ?: 0,
-                id = id)
+            return Lottery.fromMap(id, fields)
         }
     }
 }
