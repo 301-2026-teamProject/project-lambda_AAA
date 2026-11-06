@@ -15,7 +15,7 @@ internal object CampsiteFirestoreMapper {
         "ratingCount" to c.ratingCount,
         "availablePeriod" to mapOf("start" to c.availablePeriod.start.toString(), "end" to c.availablePeriod.end.toString()),
         "lottery" to c.lottery?.let {
-            require(it.campsite.cid == c.cid) { "Lottery belongs to a different campsite." }
+            require(it.campsiteID == c.cid) { "Lottery belongs to a different campsite." }
             it.toMap() + ("id" to it.id)
         },
         "creationDate" to c.creationDate, "lastUpdatedDate" to c.lastUpdatedDate,
@@ -63,7 +63,7 @@ internal object CampsiteFirestoreMapper {
             val waitlistCapacity = raw["waitlistCapacity"] as? Int
             require(waitlistCapacity != null && waitlistCapacity.toLong() in 0..Int.MAX_VALUE.toLong()
                     && winners.toDouble() == winners.toLong().toDouble()) { "Invalid winner count." }
-            c.lottery = Lottery(campsite = c, name = name, bookingPeriod = period("bookingPeriod"), registrationPeriod = period("registrationPeriod"), winners.toInt(), waitlistCapacity = waitlistCapacity)
+            c.lottery = Lottery(campsiteID = c.cid, name = name, bookingPeriod = period("bookingPeriod"), registrationPeriod = period("registrationPeriod"), winners.toInt(), waitlistCapacity = waitlistCapacity)
         }
         return c
     }
