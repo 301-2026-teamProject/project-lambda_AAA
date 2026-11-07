@@ -65,8 +65,6 @@ import com.example.lambda_aaa.view.LotteryWaitlistView
 import com.google.firebase.installations.FirebaseInstallations
 import kotlinx.coroutines.tasks.await
 
-
-
 private data class ScreenTabs(
     val id: String,
     val label: String,
@@ -79,7 +77,6 @@ private val EntrantTabs = listOf(
     ScreenTabs("EntrantTrips", "Trips", Icons.Filled.EventAvailable),
     ScreenTabs("Profile", "Profile", Icons.Filled.PersonOutline),
 )
-
 private val OwnerTabs = listOf(
     ScreenTabs("OwnerHome", "Home", Icons.Outlined.Dashboard),
     ScreenTabs("OwnerCampsites", "Campsites", Icons.Outlined.Forest),
@@ -240,7 +237,7 @@ fun CampsiteReservationApp(
 }
 
 /**
- * Creates specific buttons for each selectable tab in EntrantView.
+ * Creates specific buttons for each selectable tab at the bottom of the screen.
  *
  * The user can move between the various screens (that are different by role)
  * by pressing their respective buttons.

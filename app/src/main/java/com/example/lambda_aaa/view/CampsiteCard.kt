@@ -25,19 +25,19 @@ fun CampsiteCard(campsite: Campsite, onClick: () -> Unit, modifier: Modifier = M
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(17.dp),
         color = androidx.compose.ui.graphics.Color.White,
-        contentColor = TrailInk,
-        border = BorderStroke(1.dp, TrailBorder),
+        contentColor = HeaderColor,
+        border = BorderStroke(1.dp, BorderColor),
     ) {
         Row(Modifier.padding(13.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                 Text(campsite.name, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                 Text(campsite.address.ifBlank { stringResource(R.string.location_unavailable) },
-                    color = TrailMuted, fontSize = 12.sp)
-                Text(occupancyText(campsite), color = TrailMuted, fontSize = 12.sp)
-                Text(ratingText(campsite), color = TrailMuted, fontSize = 12.sp)
+                    color = SubText, fontSize = 12.sp)
+                Text(occupancyText(campsite), color = SubText, fontSize = 12.sp)
+                Text(ratingText(campsite), color = SubText, fontSize = 12.sp)
             }
             Spacer(Modifier.width(10.dp))
-            Surface(shape = RoundedCornerShape(13.dp), color = TrailThumb) {
+            Surface(shape = RoundedCornerShape(13.dp), color = Background) {
                 CampsiteImage(campsite, Modifier.size(width = 68.dp, height = 64.dp))
             }
         }

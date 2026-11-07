@@ -22,7 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.sp
-import com.example.lambda_aaa.view.TrailInk
+import com.example.lambda_aaa.view.HeaderColor
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -64,7 +64,7 @@ fun DateField(
             modifier = modifier.fillMaxWidth(),
             isError = onError,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii),
-            textStyle = TextStyle(fontSize = 12.sp, color = TrailInk),
+            textStyle = TextStyle(fontSize = 12.sp, color = HeaderColor),
         )
         // Transparent layer on top, because a read-only text field swallows clicks
         Box(

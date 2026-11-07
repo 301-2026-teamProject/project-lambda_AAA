@@ -62,16 +62,6 @@ import com.example.lambda_aaa.helper.formatDateRangeLabel
 import java.time.LocalDate
 //import com.example.lambda_aaa.model.LotteryRepository
 
-
-private val Background = Color(0xFFF3F0E9) // Used for the background and Campsite icon. Bone-White color.
-private val HeaderColor = Color(0xFF242823) // Used for Headers. Muted Black.
-private val SubText = Color(0xFF6E716C) // Used for smaller text and Icons. Dark Gray.
-private val BorderColor = Color(0xFFDEDCD4) // Used for borders. A muted equivalent of the Background color.
-private val FilterSelectColor = Color(0xFFE1EADF) // Color chosen for filter boxes. A darker version of the Background color.
-private val SelectColor = Color(0xFF526B5A) // Color chosen for other selected elements. A nice Green.
-
-
-
 /**
  * Prints the Dashboard view for Campsite Entrants.
  *
