@@ -56,9 +56,11 @@ import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import com.example.lambda_aaa.model.Campsite
+import com.example.lambda_aaa.model.LotteryRepository
 
 // Colors used to color buttons, text, and background
 
@@ -72,81 +74,72 @@ import com.example.lambda_aaa.model.Campsite
 fun LotteryWaitlistView(
     lotteryWaitlistNavController: NavController
 ) {
-    /* Backend dependence had some errors that weren't fixed in time
 
     var gotEntries by remember { mutableStateOf(true) }
     val entries = remember { mutableStateListOf<LotteryEntry>() }
-    //val entrants = remember { mutableStateListOf<UserProfile>() }
+    val entrants = remember { mutableStateListOf("") }
+    val entriesStatus = remember { mutableStateListOf("") }
     var numEntries by remember { mutableIntStateOf(0) }
     var numWinners by remember { mutableIntStateOf(0) }
     var lotteryID by remember { mutableStateOf("") }
-     */
 
-    /*
+
     LaunchedEffect(Unit) {
 
         // Search for entrants enrolled in lottery
-        Firebase.firestore.collection("campsites")
-            .get()
-            .addOnSuccessListener { waitlist ->
+        try {
 
-                // If there are entries, get a list of them
-                if (!waitlist.isEmpty) {
-                    numEntries = waitlist.count()
-                    val lotteryEntries = waitlist.toObjects(LotteryEntry::class.java)
-                    entries.addAll(lotteryEntries)
-                    lotteryID = entries[0].lotteryId
-                }
-
-            }
-            .addOnFailureListener { error ->
-                Log.e("LotteryWaitlist Entries Listener", "Error is", error)
-            }
-            .await()
-
-        /*
-        Firebase.firestore.collection("lotteries")
-            .document(lotteryID)
-            .get()
-            .addOnSuccessListener { activeLottery ->
-
-                // If lottery exists, get the number of winners
-                if (activeLottery.exists()) {
-                    val lottery = activeLottery.toObject(LotteryForm::class.java)
-                    numWinners = lottery?.numWinners ?: 0
-                }
-
-            }
-            .addOnFailureListener { error ->
-                Log.e("LotteryWaitlist Lotteries Listener", "Error is", error)
-            }
-            .await()
-
-        for (i in 0 until numEntries) {
-            Firebase.firestore.collection("users")
-                .document(entries[i].userId)
+            val waitlistSnapshot = Firebase.firestore.collection("lottery_entries")
                 .get()
-                .addOnSuccessListener { user ->
-
-                    // If there are entries, get a list of them
-                    if (user.exists()) {
-                        val foundUser = user.toObject(UserProfile::class.java)!!
-                        entrants.add(foundUser)
-                    }
-
-                }
-                .addOnFailureListener { error ->
-                    Log.e("LotteryWaitlist Find Loop Listener", "Error is", error)
-                }
                 .await()
 
+            // If there were entries, put them into a list
+            if (!waitlistSnapshot.isEmpty) {
+                numEntries = waitlistSnapshot.count()
+                val lotteryEntries = waitlistSnapshot.toObjects(LotteryEntry::class.java)
+                entries.addAll(lotteryEntries)
+                lotteryID = entries[0].lotteryId
+            }
+
+        } catch (e: Exception) {
+            Log.e("Query Lottery Entries Error", "Failed to fetch documents: ${e.message}", e)
         }
-        */
+
+        val lotteryDB = LotteryRepository()
+        lotteryDB.getLottery(lotteryID, onResult = {success, lottery, msg ->
+            if (success) {
+                numWinners = lottery?.numWinners ?: 0
+            }
+            else {
+                Log.e("Lottery Error", "No matching lottery found")
+            }
+        })
+
+        for (i in 0..numWinners) {
+            try {
+
+                val userSnapshot = Firebase.firestore.collection("users")
+                    .document(entries[i].userId)
+                    .get()
+                    .await()
+
+                // If there were entries, put them into a list
+                if (userSnapshot.exists()) {
+                    val currentEntrant = userSnapshot.toObject(UserProfile::class.java)!!
+                    entrants.add(currentEntrant.userName)
+                    entriesStatus.add(entries[i].status.toString())
+                }
+
+            } catch (e: Exception) {
+                Log.e("Query Users Error", "Failed to fetch documents: ${e.message}", e)
+            }
+
+        }
 
         gotEntries = !gotEntries
 
     }
-    */
+
 
     Scaffold(
         containerColor = Background,
@@ -235,7 +228,7 @@ fun LotteryWaitlistView(
                             )
 
                             Text(
-                                text = "17 entrants",
+                                text = "$numEntries entrants",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -248,7 +241,7 @@ fun LotteryWaitlistView(
                             modifier = Modifier.fillMaxWidth(0.3f),
                         ) {
                             Text(
-                                "5 winners",
+                                "$numWinners winners",
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 13.sp,
                                 modifier = Modifier.padding(4.dp)
@@ -310,8 +303,9 @@ fun LotteryWaitlistView(
                     }
                 }
 
-                // Hardcoded proof of concept until backend errors are resolved
-                item {
+                itemsIndexed(entrants) { index, user ->
+
+                    val userInitials = ExtractInitials(user)
 
                     Surface(
                         shape = RoundedCornerShape(14.dp),
@@ -322,17 +316,28 @@ fun LotteryWaitlistView(
                         Row(modifier = Modifier.padding(10.dp)) {
                             Box(modifier = Modifier.background(color = FilterSelectColor, shape = CircleShape)) {
                                 Text(
-                                    "AC",
+                                    userInitials,
                                     fontSize = 16.sp,
                                     modifier = Modifier.padding(5.dp))
                             }
 
-                            Text(
-                                "Alex Camper",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                                modifier = Modifier.padding(5.dp)
-                            )
+                            Column() {
+
+                                Text(
+                                    user,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    modifier = Modifier.padding(5.dp)
+                                )
+
+                                Text(
+                                    entriesStatus[index],
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.sp,
+                                    color = SubText,
+                                )
+
+                            }
                         }
 
                     }

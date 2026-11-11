@@ -189,7 +189,8 @@ fun CampsiteReservationApp(
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = selectedMenu.first().id,
+                //startDestination = selectedMenu.first().id,
+                startDestination = "OwnerLotteryWaitlist",
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
