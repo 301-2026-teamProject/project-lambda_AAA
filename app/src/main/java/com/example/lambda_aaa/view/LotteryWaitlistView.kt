@@ -111,11 +111,11 @@ fun LotteryWaitlistView(
                 numWinners = lottery?.numWinners ?: 0
             }
             else {
-                Log.e("Lottery Error", "No matching lottery found")
+                Log.e("Lottery Error", "No matching lottery found: $msg")
             }
         })
 
-        for (i in 0..numWinners) {
+        for (i in 0..numEntries) {
             try {
 
                 val userSnapshot = Firebase.firestore.collection("users")
@@ -124,7 +124,7 @@ fun LotteryWaitlistView(
                     .await()
 
                 // If there were entries, put them into a list
-                if (userSnapshot.exists()) {
+                if (userSnapshot != null && userSnapshot.exists()) {
                     val currentEntrant = userSnapshot.toObject(UserProfile::class.java)!!
                     entrants.add(currentEntrant.userName)
                     entriesStatus.add(entries[i].status.toString())
@@ -303,9 +303,38 @@ fun LotteryWaitlistView(
                     }
                 }
 
+                // Hardcoded proof of concept until backend errors are resolved
+                item {
+
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = Color.White,
+                        border = BorderStroke(1.dp, BorderColor),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(modifier = Modifier.padding(10.dp)) {
+                            Box(modifier = Modifier.background(color = FilterSelectColor, shape = CircleShape)) {
+                                Text(
+                                    "AC",
+                                    fontSize = 16.sp,
+                                    modifier = Modifier.padding(5.dp))
+                            }
+
+                            Text(
+                                "Alex Camper",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                modifier = Modifier.padding(5.dp)
+                            )
+                        }
+
+                    }
+                }
+
+                /*
                 itemsIndexed(entrants) { index, user ->
 
-                    val userInitials = ExtractInitials(user)
+                    val userInitials = extractInitials(user)
 
                     Surface(
                         shape = RoundedCornerShape(14.dp),
@@ -342,6 +371,8 @@ fun LotteryWaitlistView(
 
                     }
                 }
+
+                 */
 
                 item {
                     Surface(
@@ -384,7 +415,7 @@ fun LotteryWaitlistView(
  * @param name the name of the Entrant whose initials are to be extracted
  * @return the initials of the Entrant as a string of two capital characters
  */
-private fun ExtractInitials(name: String) : String {
+private fun extractInitials(name: String) : String {
     var cleanName = name.trim()
     val firstInitial = cleanName[0]
     var initials = ""

@@ -54,6 +54,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.lambda_aaa.model.LotteryEntry
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import com.example.lambda_aaa.model.Role

@@ -1,6 +1,9 @@
 package com.example.lambda_aaa.model
 
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentId
+import com.google.firebase.firestore.PropertyName
+import com.google.firebase.firestore.ServerTimestamp
 
 /**
  * Holds information about users
