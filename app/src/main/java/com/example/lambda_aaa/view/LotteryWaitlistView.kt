@@ -140,7 +140,6 @@ fun LotteryWaitlistView(
 
     }
 
-
     Scaffold(
         containerColor = Background,
     ) { innerPadding ->

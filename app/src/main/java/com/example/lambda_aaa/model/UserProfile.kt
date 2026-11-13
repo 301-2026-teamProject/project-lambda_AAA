@@ -123,4 +123,14 @@ data class UserProfile(
     fun updateDeviceID(newDeviceID: String) : Unit {
         deviceID = newDeviceID
     }
+
+    fun toMap(): Map<String, Any?> = mapOf(
+        "deviceID" to userDeviceID,
+        "name" to userName,
+        "email" to userEmail,
+        "phone" to userPhone,
+        "profilePhotoUrl" to userPhoto,
+        "roles" to userRole,
+    )
+
 }

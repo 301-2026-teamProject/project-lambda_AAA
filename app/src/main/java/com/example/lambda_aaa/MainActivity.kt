@@ -142,7 +142,7 @@ fun CampsiteReservationApp(
 
         // Search for user in database
         Firebase.firestore.collection("users")
-            .whereEqualTo("userDeviceID", installationID)
+            .whereEqualTo("deviceID", installationID)
             .get()
             .addOnSuccessListener { result ->
 
@@ -150,7 +150,7 @@ fun CampsiteReservationApp(
                 if (result.isEmpty) {
                     currentUser.updateDeviceID(installationID)
                     Firebase.firestore.collection("users")
-                        .add(currentUser)
+                        .add(currentUser.toMap())
                 }
 
                 // Otherwise get user information from database
@@ -190,8 +190,8 @@ fun CampsiteReservationApp(
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                //startDestination = selectedMenu.first().id,
-                startDestination = "OwnerLotteryWaitlist",
+                startDestination = selectedMenu.first().id,
+                //startDestination = "OwnerLotteryWaitlist",
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
