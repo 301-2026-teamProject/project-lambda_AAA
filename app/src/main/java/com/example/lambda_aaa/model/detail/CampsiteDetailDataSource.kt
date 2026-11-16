@@ -4,7 +4,7 @@ import com.example.lambda_aaa.model.Campsite
 import com.example.lambda_aaa.model.Lottery
 import com.example.lambda_aaa.model.LotteryEntry
 
-/** Boundary for stories 5/6; replace the adapter when the shared lottery API changes. */
+
 interface CampsiteDetailDataSource {
     fun getCampsite(cid: String, result: (Boolean, Campsite?, String?) -> Unit)
     fun getLotteries(campsite: Campsite, result: (Boolean, List<Lottery>, String?) -> Unit)
