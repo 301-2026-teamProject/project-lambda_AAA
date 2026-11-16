@@ -57,8 +57,13 @@ import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.draw.clip
 import com.example.lambda_aaa.model.Campsite
+
 
 // Colors used to color buttons, text, and background
 
@@ -147,6 +152,10 @@ fun LotteryWaitlistView(
 
     }
     */
+
+
+    var showNotifyDialog by remember { mutableStateOf(false) }
+    var notificationMessage by rememberSaveable{ mutableStateOf("")}
 
     Scaffold(
         containerColor = Background,
@@ -257,7 +266,7 @@ fun LotteryWaitlistView(
                     }
                 }
 
-                item {Spacer(modifier = Modifier.width(10.dp))}
+                item { Spacer(modifier = Modifier.width(10.dp)) }
 
                 item {
                     Row(
@@ -320,11 +329,17 @@ fun LotteryWaitlistView(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(modifier = Modifier.padding(10.dp)) {
-                            Box(modifier = Modifier.background(color = FilterSelectColor, shape = CircleShape)) {
+                            Box(
+                                modifier = Modifier.background(
+                                    color = FilterSelectColor,
+                                    shape = CircleShape
+                                )
+                            ) {
                                 Text(
                                     "AC",
                                     fontSize = 16.sp,
-                                    modifier = Modifier.padding(5.dp))
+                                    modifier = Modifier.padding(5.dp)
+                                )
                             }
 
                             Text(
@@ -346,7 +361,7 @@ fun LotteryWaitlistView(
                         modifier = Modifier.fillMaxWidth(1f)
                     ) {
                         Button(
-                            onClick = {},
+                            onClick = { showNotifyDialog = true },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color.Transparent,
                                 contentColor = Color.Black
@@ -370,8 +385,40 @@ fun LotteryWaitlistView(
 
         }
     }
+    if (showNotifyDialog){
+        AlertDialog(
+            onDismissRequest = {
+                showNotifyDialog = false
+            },
+            title = {Text ("Notify waitlist")},
+            text = {
+                OutlinedTextField(
+                    value = notificationMessage,
+                    onValueChange = { newText -> notificationMessage = newText},
+                    label = {
+                        Text("Message")
+                    }
+                )
+            },
+            confirmButton =  {
+                TextButton(
+                    onClick = {
 
+                    },
+                    enabled = notificationMessage.isNotBlank()
+                ) { Text("Send")
+            }
+    },
+            dismissButton = {
+                TextButton(
+                    onClick = {showNotifyDialog = false}
+                ){
+                    Text("Cancel")
+                }
+            }
+        )
 }
+
 
 /**
  * Helper function to extract the Entrant's initials for display
@@ -392,4 +439,4 @@ private fun ExtractInitials(name: String) : String {
     }
 
     return initials
-}
+}}
