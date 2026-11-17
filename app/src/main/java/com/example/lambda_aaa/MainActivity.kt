@@ -54,6 +54,7 @@ import androidx.compose.material3.Button
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.lambda_aaa.model.LotteryEntry
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import com.example.lambda_aaa.model.Role
@@ -84,7 +85,6 @@ private val EntrantTabs = listOf(
     ScreenTabs("EntrantTrips", "Trips", Icons.Filled.EventAvailable),
     ScreenTabs("Profile", "Profile", Icons.Filled.PersonOutline),
 )
-
 private val OwnerTabs = listOf(
     ScreenTabs("OwnerHome", "Home", Icons.Outlined.Dashboard),
     ScreenTabs("OwnerCampsites", "Campsites", Icons.Outlined.Forest),
@@ -128,7 +128,6 @@ fun CampsiteReservationApp(
             phone = "780-555-0123",
             profilePhotoUrl = "https://picsum.photos/200",
             roles = arrayListOf(Role.ENTRANT),
-            creationDate = "2026-10-28"
         )
     } // A default user initialized for first time users
 
@@ -137,46 +136,48 @@ fun CampsiteReservationApp(
         // installations and IDs"
         // https://firebase.google.com/docs/projects/manage-installations#kotlin_1
         // Retrieved 2026-10-30
-        // Changes: Changed one line and added two to do device based identification for users
-        FirebaseInstallations.getInstance().id.addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                installationID = task.result
-                Log.d("Installations", "Installation ID is: $installationID")
-            } else {
-                Log.e("Installations", "Unable to get Installation ID")
+        // Changes: Changed into a try-catch block due to asynchronous issues.
+        try {
+
+            installationID = FirebaseInstallations.getInstance().id.await()
+            Log.d("Installations", "Installation ID is: $installationID")
+
+        } catch (e: Exception) {
+            Log.e("Installations", "Unable to get Installation ID", e)
+        }
+
+        try {
+
+            val result =  Firebase.firestore.collection("users")
+                .whereEqualTo("deviceID", installationID)
+                .get()
+                .await()
+
+            // If user does not exist, put placeholder user information into database
+            if (result.isEmpty) {
+                currentUser.updateDeviceID(installationID)
+                Firebase.firestore.collection("users").add(currentUser)
             }
-        }.await()
 
-        // Search for user in database
-        Firebase.firestore.collection("users")
-            .whereEqualTo("userDeviceID", installationID)
-            .get()
-            .addOnSuccessListener { result ->
-
-                // If user does not exist, put placeholder user information into database
-                if (result.isEmpty) {
-                    currentUser.updateDeviceID(installationID)
-                    Firebase.firestore.collection("users")
-                        .add(currentUser)
-                }
-
-                // Otherwise get user information from database
-                else {
-                    currentUser = result.documents[0].toObject(UserProfile::class.java)!!
-                }
-
-                identifiedUser = !identifiedUser
+            // Otherwise get user information from database
+            else {
+                currentUser = result.documents[0].toObject(UserProfile::class.java)!!
             }
-            .addOnFailureListener { error ->
-                Log.w("MainActivity Listener", "Error is", error)
-            }
+
+            identifiedUser = !identifiedUser
+
+        } catch (e: Exception) {
+            Log.e("Identification Error", "Unable to identify user", e)
+        }
+
+
     }
 
     if (identifiedUser) {
 
         var selectedMenu = EntrantTabs
         var selectedTab by remember { mutableStateOf(selectedMenu.first().id) }
-        if (currentUser.userRole == Role.OWNER) {
+        if (currentUser.roles[0] == Role.OWNER) {
             selectedMenu = OwnerTabs
             selectedTab = "OwnerHome"
         }
@@ -245,7 +246,7 @@ fun CampsiteReservationApp(
 }
 
 /**
- * Creates specific buttons for each selectable tab in EntrantView.
+ * Creates specific buttons for each selectable tab at the bottom of the screen.
  *
  * The user can move between the various screens (that are different by role)
  * by pressing their respective buttons.

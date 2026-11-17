@@ -99,15 +99,15 @@ internal fun CampsiteDetailContent(
 ) {
     val context = LocalContext.current
     Scaffold(
-        containerColor = TrailCanvas,
-        contentColor = TrailInk,
+        containerColor = Background,
+        contentColor = HeaderColor,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.campsite_details), style = MaterialTheme.typography.titleMedium) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White, titleContentColor = TrailInk),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White, titleContentColor = HeaderColor),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = TrailInk)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = HeaderColor)
                     }
                 },
             )
@@ -129,7 +129,7 @@ internal fun CampsiteDetailContent(
                 Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                Surface(shape = RoundedCornerShape(18.dp), color = TrailThumb) {
+                Surface(shape = RoundedCornerShape(18.dp), color = Background) {
                     Box(Modifier.fillMaxWidth().heightIn(min = 180.dp)) {
                         CampsiteImage(campsite, Modifier.matchParentSize())
                         Column(
@@ -149,8 +149,8 @@ internal fun CampsiteDetailContent(
                 if (campsite.tags.isNotEmpty()) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         campsite.tags.forEach { tag ->
-                            Surface(shape = RoundedCornerShape(12.dp), color = Color.White, contentColor = TrailInk,
-                                border = BorderStroke(1.dp, TrailBorder)) {
+                            Surface(shape = RoundedCornerShape(12.dp), color = Color.White, contentColor = HeaderColor,
+                                border = BorderStroke(1.dp, BorderColor)) {
                                 Text(tag, Modifier.padding(horizontal = 12.dp, vertical = 8.dp))
                             }
                         }
@@ -179,7 +179,7 @@ internal fun CampsiteDetailContent(
                         },
                         modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White, contentColor = TrailInk),
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White, contentColor = HeaderColor),
                     ) {
                         Icon(Icons.Default.LocationOn, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
@@ -212,7 +212,7 @@ internal fun CampsiteLotteriesSection(
     onRetryEntry: (String) -> Unit = {},
     onLotteryUpdate: (Lottery) -> Unit = {},
 ) {
-    Surface(shape = RoundedCornerShape(14.dp), color = TrailSage, contentColor = TrailInk) {
+    Surface(shape = RoundedCornerShape(14.dp), color = FilterSelectColor, contentColor = HeaderColor) {
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
 
             Text(stringResource(R.string.campsite_lotteries), fontWeight = FontWeight.SemiBold,
@@ -276,8 +276,8 @@ internal fun CampsiteLotteriesSection(
 
 @Composable
 private fun DetailSection(title: String, value: String) {
-    Surface(shape = RoundedCornerShape(14.dp), color = Color.White, contentColor = TrailInk,
-        border = BorderStroke(1.dp, TrailBorder)) {
+    Surface(shape = RoundedCornerShape(14.dp), color = Color.White, contentColor = HeaderColor,
+        border = BorderStroke(1.dp, BorderColor)) {
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(title, fontWeight = FontWeight.SemiBold, modifier = Modifier.semantics { heading() })
             Text(value.ifBlank { stringResource(R.string.not_provided) })

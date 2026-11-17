@@ -57,7 +57,7 @@ class SearchController(
         endDate: LocalDate?
     ) {
         filteredCampsites = campsites.filter { campsite ->
-            val matchSearch = (searchQuery == "" || campsite.name.contains(searchQuery)) // Checks if the searchbar is empty, or if a campsite has part of its text
+            val matchSearch = (searchQuery == "" || campsite.name.lowercase().contains(searchQuery.lowercase())) // Checks if the searchbar is empty, or if a campsite has part of its text
             val matchesLocation = (selectedLocation == null || campsite.address == selectedLocation) // Checks if a campsite location matches the searched one
             val matchesGuests = (selectedGuestCount == null || selectedGuestCount <= campsite.maxOccupancy) // Checks if an inputted occupancy count is less than the campsite one
             val matchesDates = (startDate == null || endDate == null ||  (!campsite.availablePeriod.start.isAfter(startDate)) && (campsite.availablePeriod.end.isBefore(endDate)))

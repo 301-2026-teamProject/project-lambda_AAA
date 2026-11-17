@@ -41,10 +41,6 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.example.lambda_aaa.model.UserProfile
 
-private val Background = Color(0xFFF3F0E9) // Used for the background and Campsite icon. Bone-White color.
-private val HeaderColor = Color(0xFF242823) // Used for Headers. Muted Black.
-private val SubText = Color(0xFF6E716C) // Used for smaller text and Icons. Dark Gray.
-
 /**
  * Implements the Entrant Profile Screen according to the GUI mockup on GitHub.
  *
@@ -57,12 +53,12 @@ fun EntrantProfileView(
     user: UserProfile
 ) {
 
-    var name by remember { mutableStateOf(user.userName) }
-    var email by remember { mutableStateOf(user.userEmail) }
-    var phoneNumber by remember { mutableStateOf(user.userPhone) }
+    var name by remember { mutableStateOf(user.name) }
+    var email by remember { mutableStateOf(user.email) }
+    var phoneNumber by remember { mutableStateOf(user.phone) }
     var notify by remember { mutableStateOf(true) }
     var changeImage by remember { mutableStateOf(false) }
-    var currentImageUrl by remember { mutableStateOf(user.userPhoto) }
+    var currentImageUrl by remember { mutableStateOf(user.profilePhotoUrl) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -124,7 +120,7 @@ fun EntrantProfileView(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        AsyncImage(model = user.userPhoto,
+                        AsyncImage(model = user.profilePhotoUrl,
                             contentDescription = null,
                             modifier = Modifier.fillMaxWidth().height(200.dp).clickable(onClick = {
                                 changeImage = !changeImage

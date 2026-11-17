@@ -51,15 +51,15 @@ fun NotificationView(
         }
     }
     Scaffold(
-        containerColor = TrailCanvas,
-        contentColor = TrailInk,
+        containerColor = Background,
+        contentColor = HeaderColor,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Notifications", style = MaterialTheme.typography.titleMedium) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White, titleContentColor = TrailInk),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White, titleContentColor = HeaderColor),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = TrailInk)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = HeaderColor)
                     }
                 }
             )
@@ -111,7 +111,7 @@ private fun NotificationCard(
     onClick: () -> Unit
 ) {
     val isWinner = notification.type == NotificationType.WINNER
-    val cardColor = if (notification.isRead) Color.White else TrailSage
+    val cardColor = if (notification.isRead) Color.White else FilterSelectColor
 
     val isMessage = notification.type == NotificationType.OWNER_MESSAGE ||
                     notification.type == NotificationType.ENTRANT_MESSAGE
@@ -132,8 +132,8 @@ private fun NotificationCard(
         onClick = onClick,
         shape = RoundedCornerShape(14.dp),
         color = cardColor,
-        contentColor = TrailInk,
-        border = BorderStroke(1.dp, TrailBorder)
+        contentColor = HeaderColor,
+        border = BorderStroke(1.dp, BorderColor)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(14.dp),
@@ -143,7 +143,7 @@ private fun NotificationCard(
             Icon(
                 imageVector = Icons.Default.Notifications,
                 contentDescription = null,
-                tint = if (isWinner) Color(0xFF3D5A40) else TrailInk
+                tint = if (isWinner) Color(0xFF3D5A40) else HeaderColor
             )
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(

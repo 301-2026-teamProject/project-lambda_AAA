@@ -25,14 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-private val Background = Color(0xFFF3F0E9) // Used for the background and Campsite icon. Bone-White color.
-private val HeaderColor = Color(0xFF242823) // Used for Headers. Muted Black.
-private val SubText = Color(0xFF6E716C) // Used for smaller text and Icons. Dark Gray.
-private val BorderColor = Color(0xFFDEDCD4) // Used for borders. A muted equivalent of the Background color.
-private val FilterSelectColor = Color(0xFFE1EADF) // Color chosen for filter boxes. A darker version of the Background color.
-private val SelectColor = Color(0xFF526B5A) // Color chosen for other selected elements. A nice Green.
-private val AddGreen = Color(0xFF315E43) // The big green add button
-
 @Composable
 fun CampsiteOwnerView(
     uid: String,
@@ -119,7 +111,7 @@ fun CampsiteOwnerContent(
                     )
 
                     Text(
-                        text = "Good afternoon, (user)",
+                        text = "Good afternoon!",
                         fontSize = 16.sp,
                         color = HeaderColor,
                         fontWeight = FontWeight.SemiBold
@@ -167,7 +159,7 @@ fun CampsiteOwnerContent(
 
                 AttentionCard(
                     title = "New reservation",
-                    description = "May 14–16 · Jeremy Clarkson????",
+                    description = "May 14–16 · Nobody",
                     onClick = {} // onReservationClick
                 )
             }
@@ -322,11 +314,13 @@ private fun CampsiteCard(campsite: Campsite, onClick: () -> Unit) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(9.dp)
             ) {
-                Text(
-                    text = "1 active lottery",
-                    fontSize = 11.sp,
-                    color = SubText
-                )
+                if (campsite.lottery != null) {
+                    Text(
+                        text = "1 active lottery",
+                        fontSize = 11.sp,
+                        color = SubText
+                    )
+                }
 
                 Text(
                     text = "${campsite.maxOccupancy} reservations",
@@ -336,21 +330,24 @@ private fun CampsiteCard(campsite: Campsite, onClick: () -> Unit) {
             }
         }
     }
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        StatCard(
-            number = "(Number)", // Edit these later
-            label = "Waiting entrants",
-            modifier = Modifier.weight(1f)
-        )
-        StatCard(
-            number = "(Number)",
-            label = "Upcoming stays",
-            modifier = Modifier.weight(1f)
-        )
+    if (campsite.lottery != null) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            StatCard(
+                number = campsite.lottery!!.numWinners.toString(), // Edit these later
+                label = "Waiting entrants",
+                modifier = Modifier.weight(1f)
+            )
+            StatCard(
+                number = campsite.lottery!!.numWinners.toString(),
+                label = "Upcoming stays",
+                modifier = Modifier.weight(1f)
+            )
+        }
     }
+
 }
 
 @Composable
