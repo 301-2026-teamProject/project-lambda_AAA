@@ -15,5 +15,6 @@ enum class NotificationType {
     RESERVATION_CONFIRMED,
     CANCELLATION,
     OWNER_BROADCAST,
-    OWNER_MESSAGE
+    OWNER_MESSAGE,      // owner to entrant
+    ENTRANT_MESSAGE,    // entrant to owner
 }

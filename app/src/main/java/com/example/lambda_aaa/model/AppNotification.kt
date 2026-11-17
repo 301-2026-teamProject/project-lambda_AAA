@@ -12,7 +12,9 @@ data class AppNotification(
     var message: String = "",
     var type: NotificationType = NotificationType.WINNER,
     var isRead: Boolean = false,
-    @ServerTimestamp var timestamp: Timestamp? = null
+    var senderName: String = "",    // sender name, for entrant/owner messaging system
+    var lotteryName: String = "",   // related lottery, sample purpose as above
+    @ServerTimestamp var timestamp: Timestamp? = null,
 ) {
     /**
      * Serializes AppNotification into Map<String, Any?> so that it can be stored in Firestore
@@ -25,6 +27,8 @@ data class AppNotification(
         "message" to message,
         "type" to type.name,
         "isRead" to isRead,
-        "timestamp" to timestamp
+        "senderName" to senderName,
+        "lotteryName" to lotteryName,
+        "timestamp" to timestamp,
     )
 }
