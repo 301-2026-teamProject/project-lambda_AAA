@@ -72,8 +72,6 @@ import com.example.lambda_aaa.model.MessagingRepository
 import com.example.lambda_aaa.view.MessagingView
 import com.example.lambda_aaa.view.NotificationView
 
-
-
 private data class ScreenTabs(
     val id: String,
     val label: String,
