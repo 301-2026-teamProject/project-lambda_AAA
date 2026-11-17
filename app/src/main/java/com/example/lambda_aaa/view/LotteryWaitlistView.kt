@@ -384,7 +384,8 @@ fun LotteryWaitlistView(
  * @param name the name of the Entrant whose initials are to be extracted
  * @return the initials of the Entrant as a string of two capital characters
  */
-private fun ExtractInitials(name: String) : String {
+// removed private modifier otherwise it raises error
+fun ExtractInitials(name: String) : String {
     var cleanName = name.trim()
     val firstInitial = cleanName[0]
     var initials = ""

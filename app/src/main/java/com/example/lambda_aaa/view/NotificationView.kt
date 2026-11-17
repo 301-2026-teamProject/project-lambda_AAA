@@ -15,11 +15,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.lambda_aaa.R
 import com.example.lambda_aaa.controller.NotificationController
 import com.example.lambda_aaa.model.AppNotification
 import com.example.lambda_aaa.model.NotificationType
+import com.example.lambda_aaa.model.detail.NotificationDataSource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,8 +43,9 @@ fun NotificationView(
 
     LaunchedEffect(userId) {
         notificationController.loadNotifications(userId) { list ->
-            notifications = list.filter { 
-                it.type == NotificationType.WINNER || it.type == NotificationType.NOT_SELECTED 
+            notifications = list.filter {
+                // filter for all type of messages
+                it.type == NotificationType.WINNER || it.type == NotificationType.NOT_SELECTED || it.type == NotificationType.OWNER_MESSAGE || it.type == NotificationType.ENTRANT_MESSAGE
             }.sortedByDescending { it.timestamp?.toDate() }
             isLoading = false
         }
@@ -110,10 +113,20 @@ private fun NotificationCard(
     val isWinner = notification.type == NotificationType.WINNER
     val cardColor = if (notification.isRead) Color.White else TrailSage
 
-    val displayMessage = when (notification.type) {
+    val isMessage = notification.type == NotificationType.OWNER_MESSAGE ||
+                    notification.type == NotificationType.ENTRANT_MESSAGE
+
+    var displayMessage = when (notification.type) {
         NotificationType.WINNER -> "You were selected! Choose an available date before booking."
         NotificationType.NOT_SELECTED -> "You were not selected."
+        NotificationType.OWNER_MESSAGE, NotificationType.ENTRANT_MESSAGE -> notification.message
         else -> ""
+    }
+    // if notification belongs to message, also include information on sender and related lottery
+    if (isMessage) {
+        displayMessage = "Message from ${notification.senderName.ifBlank { "unknown" }}" +
+        (if (notification.lotteryName.isNotBlank()) " · ${notification.lotteryName}" else "") +
+        ": " + displayMessage
     }
     Surface(
         onClick = onClick,
