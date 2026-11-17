@@ -53,12 +53,12 @@ fun EntrantProfileView(
     user: UserProfile
 ) {
 
-    var name by remember { mutableStateOf(user.userName) }
-    var email by remember { mutableStateOf(user.userEmail) }
-    var phoneNumber by remember { mutableStateOf(user.userPhone) }
+    var name by remember { mutableStateOf(user.name) }
+    var email by remember { mutableStateOf(user.email) }
+    var phoneNumber by remember { mutableStateOf(user.phone) }
     var notify by remember { mutableStateOf(true) }
     var changeImage by remember { mutableStateOf(false) }
-    var currentImageUrl by remember { mutableStateOf(user.userPhoto) }
+    var currentImageUrl by remember { mutableStateOf(user.profilePhotoUrl) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -120,7 +120,7 @@ fun EntrantProfileView(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        AsyncImage(model = user.userPhoto,
+                        AsyncImage(model = user.profilePhotoUrl,
                             contentDescription = null,
                             modifier = Modifier.fillMaxWidth().height(200.dp).clickable(onClick = {
                                 changeImage = !changeImage
