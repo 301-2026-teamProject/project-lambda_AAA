@@ -75,7 +75,7 @@ import com.example.lambda_aaa.model.Campsite
  */
 @Composable
 fun LotteryWaitlistView(
-    lotteryWaitlistNavController: NavController
+    lotteryWaitlistNavController: NavController, lotteryId: String, ownerId: String
 ) {
     /* Backend dependence had some errors that weren't fixed in time
 
@@ -155,7 +155,7 @@ fun LotteryWaitlistView(
 
 
     var showNotifyDialog by remember { mutableStateOf(false) }
-    var notificationMessage by rememberSaveable{ mutableStateOf("")}
+    var notificationMessage by rememberSaveable { mutableStateOf("") }
 
     Scaffold(
         containerColor = Background,
@@ -385,40 +385,42 @@ fun LotteryWaitlistView(
 
         }
     }
-    if (showNotifyDialog){
+    if (showNotifyDialog) {
         AlertDialog(
             onDismissRequest = {
                 showNotifyDialog = false
             },
-            title = {Text ("Notify waitlist")},
+            title = { Text("Notify waitlist") },
             text = {
                 OutlinedTextField(
                     value = notificationMessage,
-                    onValueChange = { newText -> notificationMessage = newText},
+                    onValueChange = { newText -> notificationMessage = newText },
                     label = {
                         Text("Message")
                     }
                 )
             },
-            confirmButton =  {
+            confirmButton = {
                 TextButton(
                     onClick = {
 
                     },
                     enabled = notificationMessage.isNotBlank()
-                ) { Text("Send")
-            }
-    },
+                ) {
+                    Text("Send")
+                }
+            },
             dismissButton = {
                 TextButton(
-                    onClick = {showNotifyDialog = false}
-                ){
+                    onClick = { showNotifyDialog = false }
+                ) {
                     Text("Cancel")
                 }
             }
         )
-}
+    }
 
+}
 
 /**
  * Helper function to extract the Entrant's initials for display
@@ -426,7 +428,7 @@ fun LotteryWaitlistView(
  * @param name the name of the Entrant whose initials are to be extracted
  * @return the initials of the Entrant as a string of two capital characters
  */
-private fun ExtractInitials(name: String) : String {
+private fun ExtractInitials(name: String): String {
     var cleanName = name.trim()
     val firstInitial = cleanName[0]
     var initials = ""
@@ -439,4 +441,4 @@ private fun ExtractInitials(name: String) : String {
     }
 
     return initials
-}}
+}

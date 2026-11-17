@@ -23,6 +23,7 @@ import com.example.lambda_aaa.model.Lottery
 @Composable
 fun CampsiteReservationApp(
     uid: String,
+    onOpenWaitlist: (String) -> Unit
 ) {
     val navController = rememberNavController()
     val repo = remember { CampsiteRepository() }
