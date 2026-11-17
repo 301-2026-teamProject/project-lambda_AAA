@@ -1,6 +1,9 @@
 package com.example.lambda_aaa.model
 
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentId
+import com.google.firebase.firestore.PropertyName
+import com.google.firebase.firestore.ServerTimestamp
 
 /**
  * Holds information about users
@@ -21,58 +24,16 @@ import com.google.firebase.firestore.DocumentId
  */
 data class UserProfile(
     @DocumentId val uid: String = "",
-    private var deviceID: String = "",
-    private var name: String = "",
-    private var email: String = "",
-    private var phone: String = "",
-    private var profilePhotoUrl: String = "",
-    private var roles: ArrayList<Role> = arrayListOf(),
-    private var notificationsEnabled: Boolean = true,
-    private var isOwner: Boolean = false,
-    private val creationDate: String = ""
+    var deviceID: String = "",
+    var name: String = "",
+    var email: String = "",
+    var phone: String = "",
+    var profilePhotoUrl: String = "",
+    var roles: ArrayList<Role> = arrayListOf(),
+    var notificationsEnabled: Boolean = true,
+    var isOwner: Boolean = false,
+    @ServerTimestamp val creationDate: Timestamp? = null
 ) {
-
-    /**
-     * Gets the user's name
-     * @return the user's name
-     */
-    val userName : String
-        get() = name
-
-    /**
-     * Gets the user's email
-     * @return the user's email
-     */
-    val userEmail : String
-        get() = email
-
-    /**
-     * Gets the user's phone number
-     * @return the user's phone number
-     */
-    val userPhone : String
-        get() = phone
-
-    /**
-     * Gets the user's profile picture URL
-     * @return the user's profile picture URL
-     */
-    val userPhoto : String
-        get() = profilePhotoUrl
-
-    /**
-     * Gets the user's roles
-     * @return the user's roles
-     */
-    val userRole : Role
-        get() = roles[0]
-
-    /**
-     * Gets the user's device ID
-     * @return the user's device ID
-     */
-    val userDeviceID : String
-        get() = deviceID
 
     /**
      * Toggle on and off the user's ability to receive notifications
@@ -120,4 +81,6 @@ data class UserProfile(
     fun updateDeviceID(newDeviceID: String) : Unit {
         deviceID = newDeviceID
     }
+
+
 }
