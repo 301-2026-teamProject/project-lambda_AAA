@@ -68,8 +68,8 @@ fun MessagingView(
     val isOwner = controller.role == Role.OWNER
 
     Scaffold(
-        containerColor = Background,
-        contentColor = HeaderColor,
+        containerColor = TrailCanvas,
+        contentColor = TrailInk,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
@@ -81,11 +81,11 @@ fun MessagingView(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White,
-                    titleContentColor = HeaderColor
+                    titleContentColor = TrailInk
                 ),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = HeaderColor)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = TrailInk)
                     }
                 }
             )
@@ -109,7 +109,7 @@ fun MessagingView(
                 Text(
                     if (isOwner) "No entrants have joined your lotteries yet."
                     else "Join a lottery to message its campsite owner.",
-                    color = SubText
+                    color = TrailMuted
                 )
             }
 
@@ -146,15 +146,15 @@ private fun ContactCard(contact: MessageContact, onClick: () -> Unit) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
         color = Color.White,
-        contentColor = HeaderColor,
-        border = BorderStroke(1.dp, BorderColor),
+        contentColor = TrailInk,
+        border = BorderStroke(1.dp, TrailBorder),
     ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(contact.name, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-            Text("UID: ${contact.uid}", color = SubText, fontSize = 11.sp)
+            Text("UID: ${contact.uid}", color = TrailMuted, fontSize = 11.sp)
             val campsite = if (contact.campsiteName.isBlank()) "" else " · ${contact.campsiteName}"
             Text("Lottery: ${contact.lotteryName.ifBlank { "Unnamed lottery" }}$campsite",
-                color = SubText, fontSize = 12.sp)
+                color = TrailMuted, fontSize = 12.sp)
         }
     }
 }
