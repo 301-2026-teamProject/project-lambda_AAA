@@ -58,7 +58,10 @@ fun CampsiteReservationApp(
                 onClickRegister = { navController.navigate("registerScreen") },
                 onClickCampsite = { cid -> navController.navigate("detailScreen/$cid") },
                 editMessage = editMessage,
-                onEditMessageShown = { editMessage = null }
+                onEditMessageShown = { editMessage = null },
+                onMessagingClick = {
+                    navController.navigate("ownerMessages")
+                }
             )
         }
         composable("registerScreen") {

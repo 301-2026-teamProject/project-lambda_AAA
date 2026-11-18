@@ -29,10 +29,11 @@ import androidx.compose.ui.unit.sp
 fun CampsiteOwnerView(
     uid: String,
     controller: CampsiteOwnerController,
-    onClickRegister: () -> Unit,  // clicking register lead user to register page
-    onClickCampsite: (String) -> Unit,  // clicking an owned campsite lead user to edit page
-    editMessage: Pair<Boolean, String>?,
-    onEditMessageShown: () -> Unit
+    onClickRegister: () -> Unit,         // clicking register lead user to register page
+    onClickCampsite: (String) -> Unit,   // clicking an owned campsite lead user to edit page
+    editMessage: Pair<Boolean, String>?, // for campsite editing message
+    onEditMessageShown: () -> Unit,
+    onMessagingClick: () -> Unit,        // not to confuse with editMessage
 ) {
     val filteredCampsites = controller.campsites.filter { campsite ->
         val matchID = (campsite.ownerId == uid)
@@ -48,7 +49,8 @@ fun CampsiteOwnerView(
         campsites = filteredCampsites,
         errorMessage = controller.errorMessage,
         onClickRegister = onClickRegister,
-        onClickCampsite = onClickCampsite
+        onClickCampsite = onClickCampsite,
+        onMessagingClick = onMessagingClick,
     )
 }
 
@@ -61,7 +63,8 @@ fun CampsiteOwnerContent(
     campsites: List<Campsite>,
     errorMessage: String?,
     onClickRegister: () -> Unit,
-    onClickCampsite: (String) -> Unit
+    onClickCampsite: (String) -> Unit,
+    onMessagingClick: () -> Unit,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -161,6 +164,19 @@ fun CampsiteOwnerContent(
                     title = "New reservation",
                     description = "May 14–16 · Nobody",
                     onClick = {} // onReservationClick
+                )
+
+                Text(
+                    text = "Message your Lottery Entrants",
+                    fontSize = 15.sp,
+                    color = HeaderColor,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                AttentionCard(
+                    title = "Message",
+                    description = "Select your contact and write something to them...",
+                    onClick = onMessagingClick // jump to MessagingView
                 )
             }
         }

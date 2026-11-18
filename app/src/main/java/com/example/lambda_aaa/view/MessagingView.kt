@@ -47,7 +47,6 @@ import com.example.lambda_aaa.controller.MessagingController
 import com.example.lambda_aaa.model.MessageContact
 import com.example.lambda_aaa.model.Role
 import kotlinx.coroutines.launch
-import okhttp3.internal.http2.Header
 
 private const val MAX_MESSAGE_LENGTH = 500
 

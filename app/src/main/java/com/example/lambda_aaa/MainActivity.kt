@@ -127,7 +127,8 @@ fun CampsiteReservationApp(
             email = "alex@example.ca",
             phone = "780-555-0123",
             profilePhotoUrl = "https://picsum.photos/200",
-            roles = arrayListOf(Role.ENTRANT),
+            roles = arrayListOf(Role.ENTRANT, Role.OWNER),
+            isOwner = true,
         )
     } // A default user initialized for first time users
 
@@ -181,7 +182,7 @@ fun CampsiteReservationApp(
         val lotteryArg = navArgument("lotteryId"){
             type = NavType.StringType
         }
-        if (currentUser.roles.firstOrNull() == Role.OWNER) {
+        if (currentUser.isOwner) {
             selectedMenu = OwnerTabs
             selectedTab = "OwnerHome"
         }
