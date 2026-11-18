@@ -35,6 +35,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -42,7 +43,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -56,16 +56,16 @@ import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import com.example.lambda_aaa.model.Campsite
-
-
-// Colors used to color buttons, text, and background
+import com.example.lambda_aaa.model.LotteryRepository
 
 /**
  * Implements the UI from the GitHub GUI mockup of Lottery Waitlist Screen
@@ -75,83 +75,75 @@ import com.example.lambda_aaa.model.Campsite
  */
 @Composable
 fun LotteryWaitlistView(
-    lotteryWaitlistNavController: NavController, lotteryId: String, ownerId: String
+    lotteryWaitlistNavController: NavController,
+    lotteryId: String,
+    ownerId: String
 ) {
-    /* Backend dependence had some errors that weren't fixed in time
 
     var gotEntries by remember { mutableStateOf(true) }
-    val entries = remember { mutableStateListOf<LotteryEntry>() }
-    //val entrants = remember { mutableStateListOf<UserProfile>() }
-    var numEntries by remember { mutableIntStateOf(0) }
-    var numWinners by remember { mutableIntStateOf(0) }
-    var lotteryID by remember { mutableStateOf("") }
-     */
+    val entries = remember(lotteryId) { mutableStateListOf<LotteryEntry>() }
+    val entrants = remember(lotteryId) { mutableStateListOf<String>() }
+    val entriesStatus = remember(lotteryId) { mutableStateListOf<String>() }
+    var numEntries by remember(lotteryId) { mutableIntStateOf(0) }
+    var numWinners by remember(lotteryId) { mutableIntStateOf(0) }
+    val lotteryDB = remember { LotteryRepository() }
+    DisposableEffect(lotteryDB) {
+        onDispose { lotteryDB.close() }
+    }
 
-    /*
-    LaunchedEffect(Unit) {
+    LaunchedEffect(lotteryId) {
+        lotteryDB.getLottery(lotteryId) { success, lottery, msg ->
+            if (success) {
+                numWinners = lottery?.numWinners ?: 0
+            } else {
+                Log.e("Lottery Error", "Could not load lottery: $msg")
+            }
+        }
 
         // Search for entrants enrolled in lottery
-        Firebase.firestore.collection("campsites")
-            .get()
-            .addOnSuccessListener { waitlist ->
+        try {
 
-                // If there are entries, get a list of them
-                if (!waitlist.isEmpty) {
-                    numEntries = waitlist.count()
-                    val lotteryEntries = waitlist.toObjects(LotteryEntry::class.java)
-                    entries.addAll(lotteryEntries)
-                    lotteryID = entries[0].lotteryId
-                }
-
-            }
-            .addOnFailureListener { error ->
-                Log.e("LotteryWaitlist Entries Listener", "Error is", error)
-            }
-            .await()
-
-        /*
-        Firebase.firestore.collection("lotteries")
-            .document(lotteryID)
-            .get()
-            .addOnSuccessListener { activeLottery ->
-
-                // If lottery exists, get the number of winners
-                if (activeLottery.exists()) {
-                    val lottery = activeLottery.toObject(LotteryForm::class.java)
-                    numWinners = lottery?.numWinners ?: 0
-                }
-
-            }
-            .addOnFailureListener { error ->
-                Log.e("LotteryWaitlist Lotteries Listener", "Error is", error)
-            }
-            .await()
-
-        for (i in 0 until numEntries) {
-            Firebase.firestore.collection("users")
-                .document(entries[i].userId)
+            val waitlistSnapshot = Firebase.firestore.collection("lottery_entries")
+                .whereEqualTo("lotteryId", lotteryId)
                 .get()
-                .addOnSuccessListener { user ->
+                .await()
 
-                    // If there are entries, get a list of them
-                    if (user.exists()) {
-                        val foundUser = user.toObject(UserProfile::class.java)!!
-                        entrants.add(foundUser)
+            // If there were entries, put them into a list
+            if (!waitlistSnapshot.isEmpty) {
+                numEntries = waitlistSnapshot.count()
+                val lotteryEntries = waitlistSnapshot.toObjects(LotteryEntry::class.java)
+                entries.addAll(lotteryEntries)
+
+                // For each user in the waiting list, get their names and their status
+                for (i in 0..<numEntries) {
+                    try {
+
+                        val userSnapshot = Firebase.firestore.collection("users")
+                            .document(entries[i].userId)
+                            .get()
+                            .await()
+
+                        // If there were entries, put them into a list
+                        if (userSnapshot != null && userSnapshot.exists()) {
+                            val currentEntrant = userSnapshot.toObject(UserProfile::class.java)!!
+                            entrants.add(currentEntrant.name)
+                            entriesStatus.add(entries[i].status.toString())
+                        }
+
+                    } catch (e: Exception) {
+                        Log.e("Query Users Error", "Failed to fetch documents: ${e.message}", e)
                     }
 
                 }
-                .addOnFailureListener { error ->
-                    Log.e("LotteryWaitlist Find Loop Listener", "Error is", error)
-                }
-                .await()
+            }
 
+        } catch (e: Exception) {
+            Log.e("Query Lottery Entries Error", "Failed to fetch documents: ${e.message}", e)
         }
-        */
 
         gotEntries = !gotEntries
 
     }
-    */
 
 
     var showNotifyDialog by remember { mutableStateOf(false) }
@@ -244,7 +236,7 @@ fun LotteryWaitlistView(
                             )
 
                             Text(
-                                text = "17 entrants",
+                                text = "$numEntries entrants",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -257,7 +249,7 @@ fun LotteryWaitlistView(
                             modifier = Modifier.fillMaxWidth(0.3f),
                         ) {
                             Text(
-                                "5 winners",
+                                "$numWinners winners",
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 13.sp,
                                 modifier = Modifier.padding(4.dp)
@@ -319,8 +311,9 @@ fun LotteryWaitlistView(
                     }
                 }
 
-                // Hardcoded proof of concept until backend errors are resolved
-                item {
+                itemsIndexed(entrants) { index, user ->
+
+                    val userInitials = getInitials(user)
 
                     Surface(
                         shape = RoundedCornerShape(14.dp),
@@ -328,7 +321,10 @@ fun LotteryWaitlistView(
                         border = BorderStroke(1.dp, BorderColor),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Row(modifier = Modifier.padding(10.dp)) {
+                        Row(
+                            modifier = Modifier.padding(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Box(
                                 modifier = Modifier.background(
                                     color = FilterSelectColor,
@@ -336,22 +332,35 @@ fun LotteryWaitlistView(
                                 )
                             ) {
                                 Text(
-                                    "AC",
+                                    userInitials,
                                     fontSize = 16.sp,
                                     modifier = Modifier.padding(5.dp)
                                 )
                             }
 
-                            Text(
-                                "Alex Camper",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                                modifier = Modifier.padding(5.dp)
-                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Column() {
+
+                                Text(
+                                    user,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp
+                                )
+
+                                Text(
+                                    entriesStatus[index],
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.sp,
+                                    color = SubText,
+                                )
+
+                            }
                         }
 
                     }
                 }
+
 
                 item {
                     Surface(
@@ -385,6 +394,7 @@ fun LotteryWaitlistView(
 
         }
     }
+
     if (showNotifyDialog) {
         AlertDialog(
             onDismissRequest = {
@@ -419,16 +429,19 @@ fun LotteryWaitlistView(
             }
         )
     }
-
 }
+
 
 /**
  * Helper function to extract the Entrant's initials for display
  *
  * @param name the name of the Entrant whose initials are to be extracted
- * @return the initials of the Entrant as a string of two capital characters
+ * @return the initials of the Entrant as a string of capital characters
  */
-private fun ExtractInitials(name: String): String {
+// removed private modifier otherwise it raises error
+
+
+fun ExtractInitials(name: String) : String {
     var cleanName = name.trim()
     val firstInitial = cleanName[0]
     var initials = ""
@@ -440,5 +453,11 @@ private fun ExtractInitials(name: String): String {
         }
     }
 
+    return initials
+}
+
+fun getInitials(name: String) : String {
+    val cleanName = name.trim()
+    val initials = cleanName.filter { it.isUpperCase() }
     return initials
 }

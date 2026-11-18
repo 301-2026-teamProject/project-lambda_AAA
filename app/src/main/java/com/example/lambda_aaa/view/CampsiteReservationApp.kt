@@ -1,6 +1,6 @@
 package com.example.lambda_aaa.view
 
-import android.R.id.message
+import com.example.lambda_aaa.model.LotteryRepository
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -16,7 +16,10 @@ import androidx.navigation.NavType
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import com.example.lambda_aaa.controller.CampsiteDetailController
+import com.example.lambda_aaa.controller.MessagingController
 import com.example.lambda_aaa.model.Lottery
+import com.example.lambda_aaa.model.MessagingRepository
+import com.example.lambda_aaa.model.Role
 
 /**
  * Main app logic */
@@ -34,6 +37,10 @@ fun CampsiteReservationApp(
             repository = repo
         )
     }
+
+    val lotteryRepo = remember { LotteryRepository() }
+    DisposableEffect(lotteryRepo) { onDispose { lotteryRepo.close() } }
+    val messagingRepo = remember { MessagingRepository(repo, lotteryRepo) }
 
     var editMessage by remember { mutableStateOf<Pair<Boolean, String>?>(null) }
     var selectedLottery by remember {mutableStateOf<Lottery?>(null)}
@@ -77,7 +84,8 @@ fun CampsiteReservationApp(
                 onEdit = { navController.navigate("editScreen/$cid") },
                 onLotteryUpdate = { lottery ->
                     selectedLottery = lottery
-                    navController.navigate("lotteryEdit/$cid") }
+                    navController.navigate("lotteryEdit/$cid") },
+                onOpenWaitlist = onOpenWaitlist
             )
         }
         composable(
@@ -104,6 +112,17 @@ fun CampsiteReservationApp(
                     //selectedLottery = null
                 },
             )
+        }
+        composable("ownerMessages") {
+            val controller = remember { MessagingController(uid, Role.OWNER, messagingRepo) }
+            MessagingView(controller, onBack = { navController.popBackStack() })
+        }
+        composable("entrantMessages") {
+            val controller = remember { MessagingController(uid, Role.ENTRANT, messagingRepo) }
+            MessagingView(controller, onBack = { navController.popBackStack() })
+        }
+        composable("notifications") {
+            NotificationView(userId = uid, onBack = { navController.popBackStack() })
         }
     }
 }

@@ -50,10 +50,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.material3.Button
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.lambda_aaa.model.LotteryEntry
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import com.example.lambda_aaa.model.Role
@@ -64,6 +65,13 @@ import com.example.lambda_aaa.view.EntrantProfileView
 import com.example.lambda_aaa.view.LotteryWaitlistView
 import com.google.firebase.installations.FirebaseInstallations
 import kotlinx.coroutines.tasks.await
+import androidx.compose.runtime.key
+import com.example.lambda_aaa.model.LotteryRepository
+import androidx.compose.foundation.layout.statusBarsPadding
+import com.example.lambda_aaa.controller.MessagingController
+import com.example.lambda_aaa.model.MessagingRepository
+import com.example.lambda_aaa.view.MessagingView
+import com.example.lambda_aaa.view.NotificationView
 
 private data class ScreenTabs(
     val id: String,
@@ -111,7 +119,7 @@ fun CampsiteReservationApp(
     val repository = remember { CampsiteRepository() }
     DisposableEffect(repository) { onDispose { repository.close() } }
 
-    var installationID by remember {mutableStateOf("")}
+    var installationID by remember { mutableStateOf("")}
     var identifiedUser by remember { mutableStateOf(false) }
     var currentUser: UserProfile = remember {
         UserProfile(
@@ -120,7 +128,6 @@ fun CampsiteReservationApp(
             phone = "780-555-0123",
             profilePhotoUrl = "https://picsum.photos/200",
             roles = arrayListOf(Role.ENTRANT),
-            creationDate = "2026-10-28"
         )
     } // A default user initialized for first time users
 
@@ -129,39 +136,41 @@ fun CampsiteReservationApp(
         // installations and IDs"
         // https://firebase.google.com/docs/projects/manage-installations#kotlin_1
         // Retrieved 2026-10-30
-        // Changes: Changed one line and added two to do device based identification for users
-        FirebaseInstallations.getInstance().id.addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                installationID = task.result
-                Log.d("Installations", "Installation ID is: $installationID")
-            } else {
-                Log.e("Installations", "Unable to get Installation ID")
+        // Changes: Changed into a try-catch block due to asynchronous issues.
+        try {
+
+            installationID = FirebaseInstallations.getInstance().id.await()
+            Log.d("Installations", "Installation ID is: $installationID")
+
+        } catch (e: Exception) {
+            Log.e("Installations", "Unable to get Installation ID", e)
+        }
+
+        try {
+
+            val result =  Firebase.firestore.collection("users")
+                .whereEqualTo("deviceID", installationID)
+                .get()
+                .await()
+
+            // If user does not exist, put placeholder user information into database
+            if (result.isEmpty) {
+                currentUser.updateDeviceID(installationID)
+                Firebase.firestore.collection("users").add(currentUser)
             }
-        }.await()
 
-        // Search for user in database
-        Firebase.firestore.collection("users")
-            .whereEqualTo("userDeviceID", installationID)
-            .get()
-            .addOnSuccessListener { result ->
-
-                // If user does not exist, put placeholder user information into database
-                if (result.isEmpty) {
-                    currentUser.updateDeviceID(installationID)
-                    Firebase.firestore.collection("users")
-                        .add(currentUser)
-                }
-
-                // Otherwise get user information from database
-                else {
-                    currentUser = result.documents[0].toObject(UserProfile::class.java)!!
-                }
-
-                identifiedUser = !identifiedUser
+            // Otherwise get user information from database
+            else {
+                currentUser = result.documents[0].toObject(UserProfile::class.java)!!
             }
-            .addOnFailureListener { error ->
-                Log.w("MainActivity Listener", "Error is", error)
-            }
+
+            identifiedUser = !identifiedUser
+
+        } catch (e: Exception) {
+            Log.e("Identification Error", "Unable to identify user", e)
+        }
+
+
     }
 
     if (identifiedUser) {
@@ -172,7 +181,7 @@ fun CampsiteReservationApp(
         val lotteryArg = navArgument("lotteryId"){
             type = NavType.StringType
         }
-        if (currentUser.userRole == Role.OWNER) {
+        if (currentUser.roles.firstOrNull() == Role.OWNER) {
             selectedMenu = OwnerTabs
             selectedTab = "OwnerHome"
         }
@@ -327,10 +336,43 @@ private fun DrawBottomBar(
     }
 }
 
-@Preview(showBackground = true)
+private const val OWNER_ID = "1hQDbywHu0OqUQ0TGWwE"   // owner id
+private const val ALEX_ID = "605fNj3nF1gfaxP6cB9Z"    // Alex (entrant) id
+
+/** TEMPORARY: test messaging as the owner or as Alex without identification or navigation. */
 @Composable
-private fun CampsiteReservationAppPreview() {
-    CampsiteReservationTheme {
-        //CampsiteReservationApp()
+fun DebugApp() {
+    var uid by remember { mutableStateOf(OWNER_ID) }
+    var screen by remember { mutableStateOf("menu") }
+
+    val campsiteRepo = remember { CampsiteRepository() }
+    val lotteryRepo = remember { LotteryRepository() }
+    DisposableEffect(Unit) { onDispose { campsiteRepo.close(); lotteryRepo.close() } }
+    val messagingRepo = remember { MessagingRepository(campsiteRepo, lotteryRepo) }
+    val role = if (uid == OWNER_ID) Role.OWNER else Role.ENTRANT
+
+    Column(Modifier.fillMaxSize().statusBarsPadding()) {
+        Row(Modifier.padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = { uid = OWNER_ID; screen = "menu" }) { Text("As owner") }
+            Button(onClick = { uid = ALEX_ID; screen = "menu" }) { Text("As entrant") }
+        }
+        Text("Acting as: $uid ($role)", Modifier.padding(horizontal = 16.dp), fontSize = 12.sp)
+
+        // key() recreates the controllers whenever the identity or screen changes, so lists reload
+        key(uid, screen) {
+            when (screen) {
+                "messages" -> MessagingView(
+                    controller = remember { MessagingController(uid, role, messagingRepo) },
+                    onBack = { screen = "menu" }
+                )
+                "notifications" -> NotificationView(userId = uid, onBack = { screen = "menu" })
+                else -> Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = { screen = "messages" }) {
+                        Text(if (role == Role.OWNER) "Message entrants" else "Message owners")
+                    }
+                    Button(onClick = { screen = "notifications" }) { Text("Notifications") }
+                }
+            }
+        }
     }
 }
