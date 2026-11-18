@@ -26,6 +26,7 @@ import com.example.lambda_aaa.model.Role
 @Composable
 fun CampsiteReservationApp(
     uid: String,
+    onOpenWaitlist: (String) -> Unit
 ) {
     val navController = rememberNavController()
     val repo = remember { CampsiteRepository() }
@@ -83,7 +84,8 @@ fun CampsiteReservationApp(
                 onEdit = { navController.navigate("editScreen/$cid") },
                 onLotteryUpdate = { lottery ->
                     selectedLottery = lottery
-                    navController.navigate("lotteryEdit/$cid") }
+                    navController.navigate("lotteryEdit/$cid") },
+                onOpenWaitlist = onOpenWaitlist
             )
         }
         composable(

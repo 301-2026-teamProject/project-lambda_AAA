@@ -177,7 +177,11 @@ fun CampsiteReservationApp(
 
         var selectedMenu = EntrantTabs
         var selectedTab by remember { mutableStateOf(selectedMenu.first().id) }
-        if (currentUser.roles[0] == Role.OWNER) {
+        val waitlistRoute = "OwnerLotteryWaitlist/{lotteryId}"
+        val lotteryArg = navArgument("lotteryId"){
+            type = NavType.StringType
+        }
+        if (currentUser.roles.firstOrNull() == Role.OWNER) {
             selectedMenu = OwnerTabs
             selectedTab = "OwnerHome"
         }
@@ -218,12 +222,32 @@ fun CampsiteReservationApp(
                 composable("Profile") { EntrantProfileView(navController, currentUser) }
 
                 composable("OwnerHome") {
-                    // shortcut: placeholder user ID, replace when profile verification is connected.
-                    com.example.lambda_aaa.view.CampsiteReservationApp(uid = "123")
+                    //replaced with currentUser.uid, and added onOpenWaitlist arg to pass
+                    com.example.lambda_aaa.view.CampsiteReservationApp(
+                        uid = currentUser.uid,
+                        onOpenWaitlist = { selectedLotteryId ->
+                            navController.navigate("OwnerLotteryWaitlist/$selectedLotteryId")
+                        }
+                    )
                 }
                 composable("OwnerCampsites") { EntrantProfileView(navController, currentUser) }
                 composable("OwnerLottery") { EntrantProfileView(navController, currentUser) }
-                composable("OwnerLotteryWaitlist") { LotteryWaitlistView(navController) }
+                composable(
+                    route = waitlistRoute,
+                        arguments = listOf(lotteryArg)){
+                    entry->
+                        val selectedLotteryId = entry.arguments?.getString("lotteryId")
+
+                        if (selectedLotteryId != null){
+                            LotteryWaitlistView(
+                                lotteryWaitlistNavController = navController,
+                                lotteryId = selectedLotteryId,
+                                ownerId = currentUser.uid
+                            )
+                        }
+                }
+
+
                 //composable("admin") { AdminDashboardView(navController) }
 
             }
