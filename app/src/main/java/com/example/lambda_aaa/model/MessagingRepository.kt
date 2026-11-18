@@ -18,6 +18,13 @@ class MessagingRepository(
     private val entries: EntryRepository = EntryRepository(),
     private val users: UserRepository = UserRepository(),
 ) {
+    fun allowContact(entryStatus: EntryStatus): Boolean = when (entryStatus) {
+        EntryStatus.WITHDRAWN -> return false
+        EntryStatus.NOT_SELECTED -> return false
+        EntryStatus.DECLINED -> return false
+        else -> return true
+    }
+
     /** Display name of one user, or null if unknown. */
     fun displayName(uid: String, onResult: (String?) -> Unit) {
         users.getNames(setOf(uid)) { onResult(it[uid]) }
@@ -54,7 +61,7 @@ class MessagingRepository(
                     // obtain user and lottery pairs
                     val pairs = results.flatMap { (lottery, list) ->
                         // filter out withdrawn entrants
-                        list.filter { it.status != EntryStatus.WITHDRAWN && it.userId.isNotBlank() }
+                        list.filter { allowContact(it.status) && it.userId.isNotBlank() }
                             .map { lottery to it.userId }
                     }
                     users.getNames(pairs.map { it.second }.toSet()) { names ->
@@ -87,7 +94,7 @@ class MessagingRepository(
     ) {
         entries.getEntriesEntrant(entrantId) { _, list, _ ->
             val lotteryIds = list
-                .filter { it.status != EntryStatus.WITHDRAWN && it.lotteryId.isNotBlank() }
+                .filter { allowContact(it.status) && it.lotteryId.isNotBlank() }
                 .map { it.lotteryId }
                 .distinct()
             fanOut<String, Lottery?>(
