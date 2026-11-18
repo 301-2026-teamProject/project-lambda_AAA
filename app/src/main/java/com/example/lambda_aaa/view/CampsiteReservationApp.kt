@@ -52,13 +52,16 @@ fun CampsiteReservationApp(
 
     NavHost(navController, startDestination = "ownerHome") {
         composable("ownerHome") {
+            val messagingController = remember { MessagingController(uid, Role.OWNER, messagingRepo) }
             CampsiteOwnerView(
                 uid = uid,
-                controller = ownerController,
+                ownerController = ownerController,
                 onClickRegister = { navController.navigate("registerScreen") },
                 onClickCampsite = { cid -> navController.navigate("detailScreen/$cid") },
                 editMessage = editMessage,
-                onEditMessageShown = { editMessage = null }
+                onEditMessageShown = { editMessage = null },
+                messagingController = messagingController,
+                onClickMessage = { navController.navigate("ownerMessages") }
             )
         }
         composable("registerScreen") {

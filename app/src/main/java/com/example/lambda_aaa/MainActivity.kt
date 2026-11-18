@@ -73,6 +73,10 @@ import com.example.lambda_aaa.model.MessagingRepository
 import com.example.lambda_aaa.view.MessagingView
 import com.example.lambda_aaa.view.NotificationView
 
+// ids for testing before identification is fixed
+private const val OWNER_ID = "1hQDbywHu0OqUQ0TGWwE"   // owner id
+private const val ALEX_ID = "605fNj3nF1gfaxP6cB9Z"    // Alex (entrant) id
+
 private data class ScreenTabs(
     val id: String,
     val label: String,
@@ -123,11 +127,13 @@ fun CampsiteReservationApp(
     var identifiedUser by remember { mutableStateOf(false) }
     var currentUser: UserProfile = remember {
         UserProfile(
+            uid = OWNER_ID,
             name = "Alex Camper",
             email = "alex@example.ca",
             phone = "780-555-0123",
             profilePhotoUrl = "https://picsum.photos/200",
-            roles = arrayListOf(Role.ENTRANT),
+            roles = arrayListOf(Role.ENTRANT, Role.OWNER),
+            isOwner = false,
         )
     } // A default user initialized for first time users
 
@@ -181,7 +187,7 @@ fun CampsiteReservationApp(
         val lotteryArg = navArgument("lotteryId"){
             type = NavType.StringType
         }
-        if (currentUser.roles.firstOrNull() == Role.OWNER) {
+        if (currentUser.isOwner) {
             selectedMenu = OwnerTabs
             selectedTab = "OwnerHome"
         }
@@ -335,9 +341,6 @@ private fun DrawBottomBar(
         }
     }
 }
-
-private const val OWNER_ID = "1hQDbywHu0OqUQ0TGWwE"   // owner id
-private const val ALEX_ID = "605fNj3nF1gfaxP6cB9Z"    // Alex (entrant) id
 
 /** TEMPORARY: test messaging as the owner or as Alex without identification or navigation. */
 @Composable
