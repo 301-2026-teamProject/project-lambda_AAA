@@ -186,7 +186,7 @@ fun CampsiteOwnerContent(
 
                 AttentionCard(
                     title = "Message",
-                    description = "${contactNumber} contacts",  // placeholder, later will show amount of contact
+                    description = "$contactNumber contacts",  // placeholder, later will show amount of contact
                     onClick = onClickMessage // onClickMessage
                 )
             }
