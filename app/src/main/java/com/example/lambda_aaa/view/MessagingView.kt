@@ -75,7 +75,7 @@ fun MessagingView(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        if (isOwner) "Message entrants" else "Message campsite owners",
+                        if (isOwner) "Message your Entrants" else "Message Campsite Owners",
                         style = MaterialTheme.typography.titleMedium
                     )
                 },
