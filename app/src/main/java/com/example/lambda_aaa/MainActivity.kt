@@ -68,6 +68,8 @@ import kotlinx.coroutines.tasks.await
 import androidx.compose.runtime.key
 import com.example.lambda_aaa.model.LotteryRepository
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Message
 import com.example.lambda_aaa.controller.MessagingController
 import com.example.lambda_aaa.model.MessagingRepository
 import com.example.lambda_aaa.view.MessagingView
@@ -86,12 +88,14 @@ private data class ScreenTabs(
 private val EntrantTabs = listOf(
     ScreenTabs("EntrantExplore", "Explore", Icons.Filled.Explore),
     ScreenTabs("EntrantLottery", "Lotteries", Icons.Filled.ConfirmationNumber),
+    ScreenTabs("EntrantMessage", "Message", Icons.Filled.Email),
     ScreenTabs("EntrantTrips", "Trips", Icons.Filled.EventAvailable),
     ScreenTabs("Profile", "Profile", Icons.Filled.PersonOutline),
 )
 private val OwnerTabs = listOf(
     ScreenTabs("OwnerHome", "Home", Icons.Outlined.Dashboard),
     ScreenTabs("OwnerCampsites", "Campsites", Icons.Outlined.Forest),
+    ScreenTabs("EntrantMessage", "Message", Icons.Filled.Email),    // owner can also message other owners as entrant
     ScreenTabs("OwnerLottery", "Lotteries", Icons.Filled.ConfirmationNumber),
     ScreenTabs("Profile", "Profile", Icons.Filled.PersonOutline),
 )
@@ -120,14 +124,17 @@ class MainActivity : ComponentActivity() {
 fun CampsiteReservationApp(
 ) {
     val navController = rememberNavController()
-    val repository = remember { CampsiteRepository() }
-    DisposableEffect(repository) { onDispose { repository.close() } }
+    val campsiteRepo = remember { CampsiteRepository() }
+    DisposableEffect(campsiteRepo) { onDispose { campsiteRepo.close() } }
+    val lotteryRepo = remember { LotteryRepository() }
+    DisposableEffect(lotteryRepo) { onDispose { lotteryRepo.close() } }
+    val messagingRepo = remember { MessagingRepository(campsiteRepo, lotteryRepo) }
 
     var installationID by remember { mutableStateOf("")}
     var identifiedUser by remember { mutableStateOf(false) }
     var currentUser: UserProfile = remember {
         UserProfile(
-            uid = OWNER_ID,
+            uid = ALEX_ID,
             name = "Alex Camper",
             email = "alex@example.ca",
             phone = "780-555-0123",
@@ -220,12 +227,16 @@ fun CampsiteReservationApp(
                 }
                 composable("campsite/{cid}", arguments = listOf(navArgument("cid") { type = NavType.StringType })) { entry ->
                     val cid = entry.arguments?.getString("cid") ?: return@composable
-                    val controller = remember(cid, repository) { CampsiteDetailController(cid, repository) }
+                    val controller = remember(cid, campsiteRepo) { CampsiteDetailController(cid, campsiteRepo) }
                     CampsiteDetailView(controller, onBack = { navController.popBackStack() })
                 }
                 composable("EntrantLottery") { EntrantProfileView(navController, currentUser) }
                 composable("EntrantTrips") { EntrantProfileView(navController, currentUser) }
                 composable("Profile") { EntrantProfileView(navController, currentUser) }
+                composable("EntrantMessage") {
+                    val messagingController = remember { MessagingController(currentUser.uid, Role.ENTRANT, messagingRepo) }
+                    MessagingView(messagingController, onBack = { navController.navigate("EntrantExplore") })
+                }
 
                 composable("OwnerHome") {
                     //replaced with currentUser.uid, and added onOpenWaitlist arg to pass
@@ -240,19 +251,17 @@ fun CampsiteReservationApp(
                 composable("OwnerLottery") { EntrantProfileView(navController, currentUser) }
                 composable(
                     route = waitlistRoute,
-                        arguments = listOf(lotteryArg)){
-                    entry->
-                        val selectedLotteryId = entry.arguments?.getString("lotteryId")
+                        arguments = listOf(lotteryArg)) { entry ->
+                    val selectedLotteryId = entry.arguments?.getString("lotteryId")
 
-                        if (selectedLotteryId != null){
-                            LotteryWaitlistView(
-                                lotteryWaitlistNavController = navController,
-                                lotteryId = selectedLotteryId,
-                                ownerId = currentUser.uid
-                            )
-                        }
+                    if (selectedLotteryId != null) {
+                        LotteryWaitlistView(
+                            lotteryWaitlistNavController = navController,
+                            lotteryId = selectedLotteryId,
+                            ownerId = currentUser.uid
+                        )
+                    }
                 }
-
 
                 //composable("admin") { AdminDashboardView(navController) }
 
