@@ -120,10 +120,6 @@ fun CampsiteReservationApp(
             val controller = remember { MessagingController(uid, Role.OWNER, messagingRepo) }
             MessagingView(controller, onBack = { navController.popBackStack() })
         }
-        composable("entrantMessages") {
-            val controller = remember { MessagingController(uid, Role.ENTRANT, messagingRepo) }
-            MessagingView(controller, onBack = { navController.popBackStack() })
-        }
         composable("notifications") {
             NotificationView(userId = uid, onBack = { navController.popBackStack() })
         }
