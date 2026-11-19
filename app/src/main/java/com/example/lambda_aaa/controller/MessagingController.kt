@@ -78,6 +78,9 @@ class MessagingController(
             message = body,
             type = if (role == Role.OWNER) NotificationType.OWNER_MESSAGE else NotificationType.ENTRANT_MESSAGE,
             senderName = senderName.ifBlank { if (role == Role.OWNER) "Campsite owner" else "Entrant" },
+            senderUid = uid,
+            sendeeName = contact.name,
+            sendeeUid = contact.uid,
             lotteryName = contact.lotteryName,
         ) { success, error ->
             isSending = false

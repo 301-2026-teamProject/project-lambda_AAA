@@ -13,6 +13,9 @@ data class AppNotification(
     var type: NotificationType = NotificationType.WINNER,
     var isRead: Boolean = false,
     var senderName: String = "",    // sender name, for entrant/owner messaging system
+    var senderUid: String = "",
+    var sendeeName: String = "",    // sendee name, for admin message log
+    var sendeeUid: String = "",
     var lotteryName: String = "",   // related lottery, sample purpose as above
     @ServerTimestamp var timestamp: Timestamp? = null,
 ) {
@@ -28,6 +31,9 @@ data class AppNotification(
         "type" to type.name,
         "isRead" to isRead,
         "senderName" to senderName,
+        "senderUid" to senderUid,
+        "sendeeName" to sendeeName,
+        "sendeeUid" to sendeeUid,
         "lotteryName" to lotteryName,
         "timestamp" to timestamp,
     )

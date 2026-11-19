@@ -108,7 +108,7 @@ private fun NotificationCard(
     }
     // if notification belongs to message, also include information on sender and related lottery
     if (isMessage) {
-        displayMessage = "Message from ${notification.senderName.ifBlank { "unknown" }}" +
+        displayMessage = "Message from ${notification.senderName.ifBlank { "unknown" }} (ID: ${notification.senderUid.ifBlank { "unknown sender uid" }}) to ${notification.sendeeName.ifBlank { "unknown" }} (ID: ${notification.sendeeUid.ifBlank { "unknown sendee uid" }})" +
                 (if (notification.lotteryName.isNotBlank()) " · ${notification.lotteryName}" else "") +
                 ": " + displayMessage
     }
@@ -133,6 +133,8 @@ private fun NotificationCard(
                     text = when (notification.type) {
                         NotificationType.WINNER -> "WINNER"
                         NotificationType.NOT_SELECTED -> "RESULT"
+                        NotificationType.OWNER_MESSAGE -> "Owner to Entrant Message"
+                        NotificationType.ENTRANT_MESSAGE -> "Entrant to Owner Message"
                         else -> "Notification"
                     },
                     fontWeight = FontWeight.Bold,
