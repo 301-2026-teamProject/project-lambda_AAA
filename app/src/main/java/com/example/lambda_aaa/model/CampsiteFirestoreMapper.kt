@@ -15,7 +15,7 @@ internal object CampsiteFirestoreMapper {
         "ratingCount" to c.ratingCount,
         "availablePeriod" to mapOf("start" to c.availablePeriod.start.toString(), "end" to c.availablePeriod.end.toString()),
         "lottery" to c.lottery?.let {
-            require(it.campsiteID == c.cid) { "Lottery belongs to a different campsite." }
+            require(it.campsiteIDs.contains(c.cid)) { "Lottery belongs to a different campsite." }
             it.toMap() + ("id" to it.id)
         },
         "creationDate" to c.creationDate, "lastUpdatedDate" to c.lastUpdatedDate,

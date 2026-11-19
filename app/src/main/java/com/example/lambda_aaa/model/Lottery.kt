@@ -8,7 +8,7 @@ import java.util.UUID
 // all fields except campsite id and name are nullable as lottery should not exist without a campsite
 
 class Lottery(
-    val campsiteID : String,
+    val campsiteIDs : List<String>,
     val name: String,
     var bookingPeriod: DateRange? = null,
     var registrationPeriod: DateRange? = null,
@@ -18,7 +18,7 @@ class Lottery(
 ) {
     fun toMap(): Map<String, Any?> = mapOf(
         "id" to id,
-        "campsiteID" to campsiteID,
+        "campsiteIDs" to campsiteIDs,
         "name" to name,
         "bookingPeriodStart" to bookingPeriod?.start?.toString(),
         "bookingPeriodEnd" to bookingPeriod?.end?.toString(),
@@ -55,7 +55,7 @@ class Lottery(
             }
 
             return Lottery(
-                campsiteID = fields["campsiteID"] as? String
+                campsiteIDs = fields["campsiteIDs"] as? List<String>
                     ?: throw IllegalArgumentException("Missing campsiteID"),
                 name = fields["name"] as? String ?: "",
                 bookingPeriod = range("bookingPeriod"),
@@ -72,7 +72,7 @@ class Lottery(
 // ensures periods start dates are before end dates
 // ensures none of the fields are null
 data class LotteryForm(
-    val campsiteID: String? = null,
+    val campsiteIDs: List<String> = emptyList(),
     val name: String = "",
     val regStart: LocalDate? = null,
     val regEnd: LocalDate? = null,
@@ -88,10 +88,7 @@ data class LotteryForm(
         val winners = numWinners
         val capacity = waitlistCapacity
 
-        if (campsiteID == null || name.isBlank() ||
-            regStart == null || regEnd == null ||
-            bookStart == null || bookEnd == null ||
-            winners == null || capacity == null
+        if (name.isBlank() || regStart == null || regEnd == null || bookStart == null || bookEnd == null || winners == null || capacity == null
         ) return null
 
         if (!regStart.isBefore(regEnd)) return null
@@ -100,7 +97,7 @@ data class LotteryForm(
         if (winners >= capacity) return null
 
         return Lottery(
-            campsiteID = campsiteID,
+            campsiteIDs = campsiteIDs,
             name = name.trim(),
             registrationPeriod = DateRange(regStart, regEnd),
             bookingPeriod = DateRange(bookStart, bookEnd),

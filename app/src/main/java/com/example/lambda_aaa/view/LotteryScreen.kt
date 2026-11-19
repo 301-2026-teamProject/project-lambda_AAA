@@ -99,9 +99,13 @@ fun CreateLotteryScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            val selectedCampsite = campsites.find { it.cid == form.campsiteID }
-            CampsiteDropdown(campsites, selectedCampsite) { picked ->
-                form = form.copy(campsiteID = picked.cid)
+            val selectedCampsites = campsites.filter { it.cid in form.campsiteIDs }
+            CampsiteDropdown(campsites, selectedCampsites) { picked ->
+                val ids = form.campsiteIDs
+                form = form.copy(
+                    campsiteIDs = if (picked.cid in ids) ids - picked.cid else ids + picked.cid
+                    )
+
             }
             OutlinedTextField(
                 value = form.name,
