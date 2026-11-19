@@ -42,6 +42,8 @@ dependencies {
     implementation(libs.firebase.firestore)
 
     testImplementation(libs.junit)
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("io.mockk:mockk:1.13.12")
 
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

@@ -5,6 +5,12 @@ import com.google.firebase.firestore.firestore
 class EntryRepository {
     private val db = Firebase.firestore
     private val entriesRef = db.collection("lottery_entries")
+
+    /**
+     * Allows an entrant (userId) to join a lottery waitlist (lotteryId)
+     * Checks if user has already joined, and if they are WITHDRAWN to keep entrants under maxCapacity
+     * Collaborators: EntryStatus, LotteryEntry, Firestore
+     */
     fun joinWaitlist(
         lotteryId: String,
         userId: String,
@@ -54,6 +60,12 @@ class EntryRepository {
                 }
             }
     }
+
+    /**
+     * Allows a user (userId) to leave a waitlist (lotteryId)
+     * Checks if user has already joined a lottery in which the status will be changed to WITHDRAWN
+     * Collaborators: EntryStatus, Firestore
+     */
     fun leaveWaitlist(
         lotteryId: String,
         userId: String,
@@ -75,6 +87,11 @@ class EntryRepository {
                 }
             }
     }
+
+    /**
+     * Fetches an entrants records for a lottery including if they are WAITING, SELECTED, or WITHDRAWN
+     * Collaborators: LotteryEntry, EntryStatus, Firestore
+     */
     fun getEntry(
         lotteryId: String,
         userId: String,
@@ -104,6 +121,11 @@ class EntryRepository {
                 }
             }
     }
+
+    /**
+     * Fetches all entrant records associated with a specific lottery including if they are WAITING, SELECTED, or WITHDRAWN
+     * Collaborators: LotteryEntry, EntryStatus, Firestore
+     */
     fun getEntriesLottery(
         lotteryId: String,
         onResult: (Boolean, List<LotteryEntry>, String?) -> Unit
@@ -128,6 +150,11 @@ class EntryRepository {
                 onResult(true, list, null)
             }
     }
+
+    /**
+     * Fetches all lottery entries for a specific entrant across all lotteries
+     * Collaborators: LotteryEntry, EntryStatus, Firestore
+     */
     fun getEntriesEntrant(
         userId: String,
         onResult: (Boolean, List<LotteryEntry>, String?) -> Unit
@@ -152,6 +179,11 @@ class EntryRepository {
                 onResult(true, list, null)
             }
     }
+
+    /**
+     * Updates the status of a list of lottery entries at the same time
+     * Collaborators: LotteryEntry, Firestore
+     */
     fun updateStatus(entries: List<LotteryEntry>, onResult: (Boolean, String?) -> Unit) {
         if (entries.isEmpty()) {
             onResult(true, null)

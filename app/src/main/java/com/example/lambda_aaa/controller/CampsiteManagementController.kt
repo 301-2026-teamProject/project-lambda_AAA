@@ -7,8 +7,15 @@ import com.example.lambda_aaa.model.Campsite
 import com.example.lambda_aaa.model.CampsiteRepository
 
 /**
- * Controller: loads the campsite by cid, and pushes the edited values
+ * loads the campsite by cid, and pushes the edited values
  * back through CampsiteRepository. The view never touches the repository.
+ *
+ * @property cid campsite id
+ * @property uid user id; used to compared with updated campsite's ownerId
+ * @property isNew true if the campsite is being created, false otherwise
+ * @property repository contain reference to CampsiteRepository
+ * @property campsite stores campsite data
+ * @property errorMessage stores error message if error occurs; null otherwise
  */
 class CampsiteManagementController(
     private val cid: String,
@@ -44,7 +51,17 @@ class CampsiteManagementController(
         }
     }
 
-    /** Called by the view when the user taps Save. */
+    /** Called by the view when the user taps Save.
+     *
+     * @param name campsite name
+     * @param address campsite address
+     * @param description campsite description
+     * @param rulesAndPolicy campsite rules and policy
+     * @param cancellationPolicy campsite cancellation policies
+     * @param tags campsite tags
+     * @param maxOccupancy max occupancy for each campsite
+     * @param onSave trigger app to return to main screen after saving
+     */
     fun save(
         name: String,
         address: String,
@@ -89,14 +106,18 @@ class CampsiteManagementController(
                 }
             }
         } else {
-            repository.updateCampsite(
-                campsite = c
-            ) { success, msg ->
-                if (success) {
-                    onSave(true, "Changes applied!")
-                } else {
-                    onSave(false, "Failed to apply changes: $msg")
+            if (c.ownerId == uid) {
+                repository.updateCampsite(
+                    campsite = c
+                ) { success, msg ->
+                    if (success) {
+                        onSave(true, "Changes applied!")
+                    } else {
+                        onSave(false, "Failed to apply changes: $msg")
+                    }
                 }
+            } else {
+                onSave(false, "Error: You are not the owner of that campsite.")
             }
         }
     }

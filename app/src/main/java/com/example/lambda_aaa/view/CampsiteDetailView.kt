@@ -39,6 +39,8 @@ fun CampsiteDetailView(
     campsiteDetailController: CampsiteDetailController,
     onBack: () -> Unit,
     onEdit: (() -> Unit)? = null,
+    onLotteryUpdate: ((Lottery) -> Unit)? = null,
+    onOpenWaitlist: ((String) -> Unit)? = null
 ) {
     LaunchedEffect(campsiteDetailController, onEdit == null) {
         campsiteDetailController.fetchCampsiteAndLottery()
@@ -69,6 +71,8 @@ fun CampsiteDetailView(
         onJoin = campsiteDetailController::joinLottery,
         onLeave = campsiteDetailController::leaveLottery,
         onRetryEntry = campsiteDetailController::refreshEntry,
+        onLotteryUpdate = onLotteryUpdate,
+        onOpenWaitlist = onOpenWaitlist
     )
 }
 
@@ -93,18 +97,20 @@ internal fun CampsiteDetailContent(
     onJoin: (String) -> Unit = {},
     onLeave: (String) -> Unit = {},
     onRetryEntry: (String) -> Unit = {},
+    onLotteryUpdate: ((Lottery) -> Unit)? = {},
+    onOpenWaitlist: ((String) -> Unit)? = null
 ) {
     val context = LocalContext.current
     Scaffold(
-        containerColor = TrailCanvas,
-        contentColor = TrailInk,
+        containerColor = Background,
+        contentColor = HeaderColor,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.campsite_details), style = MaterialTheme.typography.titleMedium) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White, titleContentColor = TrailInk),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White, titleContentColor = HeaderColor),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = TrailInk)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = HeaderColor)
                     }
                 },
             )
@@ -126,7 +132,7 @@ internal fun CampsiteDetailContent(
                 Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                Surface(shape = RoundedCornerShape(18.dp), color = TrailThumb) {
+                Surface(shape = RoundedCornerShape(18.dp), color = Background) {
                     Box(Modifier.fillMaxWidth().heightIn(min = 180.dp)) {
                         CampsiteImage(campsite, Modifier.matchParentSize())
                         Column(
@@ -146,8 +152,8 @@ internal fun CampsiteDetailContent(
                 if (campsite.tags.isNotEmpty()) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         campsite.tags.forEach { tag ->
-                            Surface(shape = RoundedCornerShape(12.dp), color = Color.White, contentColor = TrailInk,
-                                border = BorderStroke(1.dp, TrailBorder)) {
+                            Surface(shape = RoundedCornerShape(12.dp), color = Color.White, contentColor = HeaderColor,
+                                border = BorderStroke(1.dp, BorderColor)) {
                                 Text(tag, Modifier.padding(horizontal = 12.dp, vertical = 8.dp))
                             }
                         }
@@ -159,7 +165,8 @@ internal fun CampsiteDetailContent(
                 CampsiteLotteriesSection(
                     lotteries, lotteriesLoading, lotteriesFailed, onRetryLotteries,
                     showJoinActions, joinStates, identityLoading, identityFailed,
-                    onRetryIdentity, onJoin, onLeave, onRetryEntry,
+                    onRetryIdentity, onJoin, onLeave, onRetryEntry, onLotteryUpdate = { lottery ->
+                        onLotteryUpdate?.invoke(lottery)},onOpenWaitlist = onOpenWaitlist
                 )
                 campsite.mapLocation?.let { point ->
                     OutlinedButton(
@@ -174,7 +181,7 @@ internal fun CampsiteDetailContent(
                         },
                         modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White, contentColor = TrailInk),
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White, contentColor = HeaderColor),
                     ) {
                         Icon(Icons.Default.LocationOn, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
@@ -205,9 +212,12 @@ internal fun CampsiteLotteriesSection(
     onJoin: (String) -> Unit = {},
     onLeave: (String) -> Unit = {},
     onRetryEntry: (String) -> Unit = {},
+    onLotteryUpdate: (Lottery) -> Unit = {},
+    onOpenWaitlist: ((String) -> Unit)? = null
 ) {
-    Surface(shape = RoundedCornerShape(14.dp), color = TrailSage, contentColor = TrailInk) {
+    Surface(shape = RoundedCornerShape(14.dp), color = FilterSelectColor, contentColor = HeaderColor) {
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+
             Text(stringResource(R.string.campsite_lotteries), fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.semantics { heading() })
             when {
@@ -246,6 +256,24 @@ internal fun CampsiteLotteriesSection(
                                     onLeave = { onLeave(lottery.id) },
                                 )
                             }
+                        } else {
+                            when {
+                                identityLoading -> Text(stringResource(R.string.lottery_identifying))
+                                identityFailed -> {
+                                    Text(stringResource(R.string.lottery_identity_failed))
+                                    TextButton(onClick = onRetryIdentity) { Text(stringResource(R.string.retry)) }
+                                }
+
+                                else -> {
+                                    Button(onClick = {onLotteryUpdate(lottery) } ) {
+                                        Text("Edit Lottery")
+                                    }
+
+                                    if (onOpenWaitlist != null) {
+                                        Button(onClick = { onOpenWaitlist(lottery.id) }) { Text("View waitlist") }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -256,8 +284,8 @@ internal fun CampsiteLotteriesSection(
 
 @Composable
 private fun DetailSection(title: String, value: String) {
-    Surface(shape = RoundedCornerShape(14.dp), color = Color.White, contentColor = TrailInk,
-        border = BorderStroke(1.dp, TrailBorder)) {
+    Surface(shape = RoundedCornerShape(14.dp), color = Color.White, contentColor = HeaderColor,
+        border = BorderStroke(1.dp, BorderColor)) {
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(title, fontWeight = FontWeight.SemiBold, modifier = Modifier.semantics { heading() })
             Text(value.ifBlank { stringResource(R.string.not_provided) })

@@ -15,14 +15,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.lambda_aaa.R
 import com.example.lambda_aaa.controller.NotificationController
 import com.example.lambda_aaa.model.AppNotification
 import com.example.lambda_aaa.model.NotificationType
+import com.example.lambda_aaa.model.detail.NotificationDataSource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+        /**
+         * Displays entrants notification inbox
+         * Loads notifications for the user on start
+         * Filters for lottery updates
+         * Handles marking notifications as read
+         * Collaborators: NotificationController, AppNotification, NotificationCard
+         */
 fun NotificationView(
     userId: String,
     notificationController: NotificationController = remember { NotificationController() },
@@ -34,22 +43,23 @@ fun NotificationView(
 
     LaunchedEffect(userId) {
         notificationController.loadNotifications(userId) { list ->
-            notifications = list.filter { 
-                it.type == NotificationType.WINNER || it.type == NotificationType.NOT_SELECTED 
+            notifications = list.filter {
+                // filter for all type of messages
+                it.type == NotificationType.WINNER || it.type == NotificationType.NOT_SELECTED || it.type == NotificationType.OWNER_MESSAGE || it.type == NotificationType.ENTRANT_MESSAGE
             }.sortedByDescending { it.timestamp?.toDate() }
             isLoading = false
         }
     }
     Scaffold(
-        containerColor = TrailCanvas,
-        contentColor = TrailInk,
+        containerColor = Background,
+        contentColor = HeaderColor,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Notifications", style = MaterialTheme.typography.titleMedium) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White, titleContentColor = TrailInk),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White, titleContentColor = HeaderColor),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = TrailInk)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = HeaderColor)
                     }
                 }
             )
@@ -89,25 +99,41 @@ fun NotificationView(
         }
     }
 }
+
+/**
+ * Displays individual notifications in the inbox
+ * Changes header based on read and win or non-selection
+ * Collaborators: AppNotification, NotificationType
+ */
 @Composable
 private fun NotificationCard(
     notification: AppNotification,
     onClick: () -> Unit
 ) {
     val isWinner = notification.type == NotificationType.WINNER
-    val cardColor = if (notification.isRead) Color.White else TrailSage
+    val cardColor = if (notification.isRead) Color.White else FilterSelectColor
 
-    val displayMessage = when (notification.type) {
+    val isMessage = notification.type == NotificationType.OWNER_MESSAGE ||
+                    notification.type == NotificationType.ENTRANT_MESSAGE
+
+    var displayMessage = when (notification.type) {
         NotificationType.WINNER -> "You were selected! Choose an available date before booking."
         NotificationType.NOT_SELECTED -> "You were not selected."
+        NotificationType.OWNER_MESSAGE, NotificationType.ENTRANT_MESSAGE -> notification.message
         else -> ""
+    }
+    // if notification belongs to message, also include information on sender and related lottery
+    if (isMessage) {
+        displayMessage = "Message from ${notification.senderName.ifBlank { "unknown" }} (ID: ${notification.senderUid.ifBlank { "unknown uid" }})" +
+        (if (notification.lotteryName.isNotBlank()) " · ${notification.lotteryName}" else "") +
+        ": " + displayMessage
     }
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(14.dp),
         color = cardColor,
-        contentColor = TrailInk,
-        border = BorderStroke(1.dp, TrailBorder)
+        contentColor = HeaderColor,
+        border = BorderStroke(1.dp, BorderColor)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(14.dp),
@@ -117,7 +143,7 @@ private fun NotificationCard(
             Icon(
                 imageVector = Icons.Default.Notifications,
                 contentDescription = null,
-                tint = if (isWinner) Color(0xFF3D5A40) else TrailInk
+                tint = if (isWinner) Color(0xFF3D5A40) else HeaderColor
             )
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(

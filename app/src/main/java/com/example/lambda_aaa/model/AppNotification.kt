@@ -12,8 +12,17 @@ data class AppNotification(
     var message: String = "",
     var type: NotificationType = NotificationType.WINNER,
     var isRead: Boolean = false,
-    @ServerTimestamp var timestamp: Timestamp? = null
+    var senderName: String = "",    // sender name, for entrant/owner messaging system
+    var senderUid: String = "",     // for admin
+    var sendeeName: String = "",    // sendee name, for admin message log
+    var sendeeUid: String = "",     // for admin
+    var lotteryName: String = "",   // for message
+    @ServerTimestamp var timestamp: Timestamp? = null,
 ) {
+    /**
+     * Serializes AppNotification into Map<String, Any?> so that it can be stored in Firestore
+     * Collaborators: NotificationType, Timestamp, Firestore
+     */
     fun toMap(): Map<String, Any?> = mapOf(
         "recipientId" to recipientId,
         "senderId" to senderId,
@@ -21,6 +30,11 @@ data class AppNotification(
         "message" to message,
         "type" to type.name,
         "isRead" to isRead,
-        "timestamp" to timestamp
+        "senderName" to senderName,
+        "senderUid" to senderUid,
+        "sendeeName" to sendeeName,
+        "sendeeUid" to sendeeUid,
+        "lotteryName" to lotteryName,
+        "timestamp" to timestamp,
     )
 }

@@ -15,6 +15,7 @@ import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,39 +25,42 @@ import com.example.lambda_aaa.controller.CampsiteOwnerController
 import androidx.compose.runtime.remember
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-
-private val Background = Color(0xFFF3F0E9) // Used for the background and Campsite icon. Bone-White color.
-private val HeaderColor = Color(0xFF242823) // Used for Headers. Muted Black.
-private val SubText = Color(0xFF6E716C) // Used for smaller text and Icons. Dark Gray.
-private val BorderColor = Color(0xFFDEDCD4) // Used for borders. A muted equivalent of the Background color.
-private val FilterSelectColor = Color(0xFFE1EADF) // Color chosen for filter boxes. A darker version of the Background color.
-private val SelectColor = Color(0xFF526B5A) // Color chosen for other selected elements. A nice Green.
-private val AddGreen = Color(0xFF315E43) // The big green add button
+import com.example.lambda_aaa.controller.MessagingController
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
 
 @Composable
 fun CampsiteOwnerView(
     uid: String,
-    controller: CampsiteOwnerController,
+    ownerController: CampsiteOwnerController,
     onClickRegister: () -> Unit,  // clicking register lead user to register page
     onClickCampsite: (String) -> Unit,  // clicking an owned campsite lead user to edit page
     editMessage: Pair<Boolean, String>?,
-    onEditMessageShown: () -> Unit
+    onEditMessageShown: () -> Unit,
+    messagingController: MessagingController,
+    onClickMessage: () -> Unit,
 ) {
-    val filteredCampsites = controller.campsites.filter { campsite ->
+    LaunchedEffect(Unit) {
+        ownerController.refresh()
+        messagingController.refresh()
+    }
+    val filteredCampsites = ownerController.campsites.filter { campsite ->
         val matchID = (campsite.ownerId == uid)
         matchID
     }
-    LaunchedEffect(Unit) {
-        controller.refresh()
-    }
+    val contactNumber = messagingController.contacts.size
+
     CampsiteOwnerContent(
         campsiteEditMessage = editMessage,
         onMessageShown = onEditMessageShown,
-        isLoading = controller.isLoading,
+        isLoading = ownerController.isLoading,
         campsites = filteredCampsites,
-        errorMessage = controller.errorMessage,
+        errorMessage = ownerController.errorMessage,
         onClickRegister = onClickRegister,
-        onClickCampsite = onClickCampsite
+        onClickCampsite = onClickCampsite,
+        contactNumber = contactNumber,
+        onClickMessage = onClickMessage,
     )
 }
 
@@ -69,7 +73,9 @@ fun CampsiteOwnerContent(
     campsites: List<Campsite>,
     errorMessage: String?,
     onClickRegister: () -> Unit,
-    onClickCampsite: (String) -> Unit
+    onClickCampsite: (String) -> Unit,
+    contactNumber: Int,
+    onClickMessage: () -> Unit,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -119,7 +125,7 @@ fun CampsiteOwnerContent(
                     )
 
                     Text(
-                        text = "Good afternoon, (user)",
+                        text = "Good afternoon!",
                         fontSize = 16.sp,
                         color = HeaderColor,
                         fontWeight = FontWeight.SemiBold
@@ -167,8 +173,21 @@ fun CampsiteOwnerContent(
 
                 AttentionCard(
                     title = "New reservation",
-                    description = "May 14–16 · Jeremy Clarkson????",
+                    description = "May 14–16 · Nobody",
                     onClick = {} // onReservationClick
+                )
+
+                Text(
+                    text = "Message your Lottery Entrants",
+                    fontSize = 15.sp,
+                    color = HeaderColor,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                AttentionCard(
+                    title = "Message",
+                    description = "$contactNumber contacts",  // placeholder, later will show amount of contact
+                    onClick = onClickMessage // onClickMessage
                 )
             }
         }
@@ -322,11 +341,13 @@ private fun CampsiteCard(campsite: Campsite, onClick: () -> Unit) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(9.dp)
             ) {
-                Text(
-                    text = "1 active lottery",
-                    fontSize = 11.sp,
-                    color = SubText
-                )
+                if (campsite.lottery != null) {
+                    Text(
+                        text = "1 active lottery",
+                        fontSize = 11.sp,
+                        color = SubText
+                    )
+                }
 
                 Text(
                     text = "${campsite.maxOccupancy} reservations",
@@ -336,21 +357,24 @@ private fun CampsiteCard(campsite: Campsite, onClick: () -> Unit) {
             }
         }
     }
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        StatCard(
-            number = "(Number)", // Edit these later
-            label = "Waiting entrants",
-            modifier = Modifier.weight(1f)
-        )
-        StatCard(
-            number = "(Number)",
-            label = "Upcoming stays",
-            modifier = Modifier.weight(1f)
-        )
+    if (campsite.lottery != null) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            StatCard(
+                number = campsite.lottery!!.numWinners.toString(), // Edit these later
+                label = "Waiting entrants",
+                modifier = Modifier.weight(1f)
+            )
+            StatCard(
+                number = campsite.lottery!!.numWinners.toString(),
+                label = "Upcoming stays",
+                modifier = Modifier.weight(1f)
+            )
+        }
     }
+
 }
 
 @Composable

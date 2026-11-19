@@ -4,6 +4,7 @@
 
 package com.example.lambda_aaa.view
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -25,29 +26,46 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardBackspace
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.MoreHoriz
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-
-// Colors used to color buttons, text, and background
-private val Background = Color(0xFFF3F0E9) // Used for the background and Campsite icon. Bone-White color.
-private val BorderColor = Color(0xFFDEDCD4) // Used for borders. A muted equivalent of the Background color.
-private val HeaderColor = Color(0xFF242823) // Used for Headers. Muted Black.
-private val SubText = Color(0xFF6E716C) // Used for smaller text and Icons. Dark Gray.
-private val AddGreen = Color(0xFF315E43) // The big green add button
+import com.example.lambda_aaa.model.LotteryEntry
+import com.example.lambda_aaa.model.LotteryForm
+import com.example.lambda_aaa.model.UserProfile
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.tasks.await
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import com.example.lambda_aaa.model.Campsite
+import com.example.lambda_aaa.model.LotteryRepository
 
 /**
  * Implements the UI from the GitHub GUI mockup of Lottery Waitlist Screen
@@ -57,8 +75,79 @@ private val AddGreen = Color(0xFF315E43) // The big green add button
  */
 @Composable
 fun LotteryWaitlistView(
-    lotteryWaitlistNavController: NavController
+    lotteryWaitlistNavController: NavController,
+    lotteryId: String,
+    ownerId: String
 ) {
+
+    var gotEntries by remember { mutableStateOf(true) }
+    val entries = remember(lotteryId) { mutableStateListOf<LotteryEntry>() }
+    val entrants = remember(lotteryId) { mutableStateListOf<String>() }
+    val entriesStatus = remember(lotteryId) { mutableStateListOf<String>() }
+    var numEntries by remember(lotteryId) { mutableIntStateOf(0) }
+    var numWinners by remember(lotteryId) { mutableIntStateOf(0) }
+    val lotteryDB = remember { LotteryRepository() }
+    DisposableEffect(lotteryDB) {
+        onDispose { lotteryDB.close() }
+    }
+
+    LaunchedEffect(lotteryId) {
+        lotteryDB.getLottery(lotteryId) { success, lottery, msg ->
+            if (success) {
+                numWinners = lottery?.numWinners ?: 0
+            } else {
+                Log.e("Lottery Error", "Could not load lottery: $msg")
+            }
+        }
+
+        // Search for entrants enrolled in lottery
+        try {
+
+            val waitlistSnapshot = Firebase.firestore.collection("lottery_entries")
+                .whereEqualTo("lotteryId", lotteryId)
+                .get()
+                .await()
+
+            // If there were entries, put them into a list
+            if (!waitlistSnapshot.isEmpty) {
+                numEntries = waitlistSnapshot.count()
+                val lotteryEntries = waitlistSnapshot.toObjects(LotteryEntry::class.java)
+                entries.addAll(lotteryEntries)
+
+                // For each user in the waiting list, get their names and their status
+                for (i in 0..<numEntries) {
+                    try {
+
+                        val userSnapshot = Firebase.firestore.collection("users")
+                            .document(entries[i].userId)
+                            .get()
+                            .await()
+
+                        // If there were entries, put them into a list
+                        if (userSnapshot != null && userSnapshot.exists()) {
+                            val currentEntrant = userSnapshot.toObject(UserProfile::class.java)!!
+                            entrants.add(currentEntrant.name)
+                            entriesStatus.add(entries[i].status.toString())
+                        }
+
+                    } catch (e: Exception) {
+                        Log.e("Query Users Error", "Failed to fetch documents: ${e.message}", e)
+                    }
+
+                }
+            }
+
+        } catch (e: Exception) {
+            Log.e("Query Lottery Entries Error", "Failed to fetch documents: ${e.message}", e)
+        }
+
+        gotEntries = !gotEntries
+
+    }
+
+
+    var showNotifyDialog by remember { mutableStateOf(false) }
+    var notificationMessage by rememberSaveable { mutableStateOf("") }
 
     Scaffold(
         containerColor = Background,
@@ -124,136 +213,234 @@ fun LotteryWaitlistView(
                 }
             }
 
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp)
                     .padding(top = 20.dp, bottom = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Text(
-                            text = "REGISTRATION ENDED",
-                            fontSize = 13.sp,
-                            color = SubText,
-                            fontWeight = FontWeight.Medium
-                        )
-
-                        Text(
-                            text = "17 entrants",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    Surface(
-                        shape = RoundedCornerShape(14.dp),
-                        color = TrailSage,
-                        contentColor = TrailInk,
-                        modifier = Modifier.fillMaxWidth(0.3f),
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(
-                            "5 winners",
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 13.sp,
-                            modifier = Modifier.padding(4.dp)
-                        )
+                        Column {
+                            Text(
+                                text = "REGISTRATION ENDED",
+                                fontSize = 13.sp,
+                                color = SubText,
+                                fontWeight = FontWeight.Medium
+                            )
+
+                            Text(
+                                text = "$numEntries entrants",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = FilterSelectColor,
+                            contentColor = HeaderColor,
+                            modifier = Modifier.fillMaxWidth(0.3f),
+                        ) {
+                            Text(
+                                "$numWinners winners",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 13.sp,
+                                modifier = Modifier.padding(4.dp)
+                            )
+                        }
                     }
                 }
 
-                Spacer(modifier = Modifier.width(10.dp))
+                item { Spacer(modifier = Modifier.width(10.dp)) }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = AddGreen,
+                            border = BorderStroke(1.dp, BorderColor),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Button(
+                                onClick = {},
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color.Transparent,
+                                    contentColor = Color.White
+                                )
+                            ) { Text("Draw winners") }
+                        }
+                    }
+                }
+
+
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Entrants",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 16.sp
+                        )
+
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color.White,
+                            border = BorderStroke(1.dp, BorderColor),
+                            modifier = Modifier.fillMaxWidth(0.28f),
+                        ) {
+                            Text(
+                                "All statuses",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 13.sp,
+                                modifier = Modifier.padding(5.dp)
+                            )
+                        }
+                    }
+                }
+
+                itemsIndexed(entrants) { index, user ->
+
+                    val userInitials = getInitials(user)
+
                     Surface(
                         shape = RoundedCornerShape(14.dp),
-                        color = AddGreen,
+                        color = Color.White,
                         border = BorderStroke(1.dp, BorderColor),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Button(
-                            onClick = {},
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.Transparent,
-                                contentColor = Color.White
-                            )
-                        ) { Text("Draw winners") }
+                        Row(
+                            modifier = Modifier.padding(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier.background(
+                                    color = FilterSelectColor,
+                                    shape = CircleShape
+                                )
+                            ) {
+                                Text(
+                                    userInitials,
+                                    fontSize = 16.sp,
+                                    modifier = Modifier.padding(5.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Column() {
+
+                                Text(
+                                    user,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp
+                                )
+
+                                Text(
+                                    entriesStatus[index],
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.sp,
+                                    color = SubText,
+                                )
+
+                            }
+                        }
+
                     }
                 }
 
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        "Entrants",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 16.sp
-                    )
-
+                item {
                     Surface(
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(14.dp),
                         color = Color.White,
                         border = BorderStroke(1.dp, BorderColor),
-                        modifier = Modifier.fillMaxWidth(0.28f),
+                        modifier = Modifier.fillMaxWidth(1f)
                     ) {
-                        Text(
-                            "All statuses",
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 13.sp,
-                            modifier = Modifier.padding(5.dp)
-                        )
-                    }
-                }
+                        Button(
+                            onClick = { showNotifyDialog = true },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent,
+                                contentColor = Color.Black
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Send,
+                                contentDescription = null,
+                                modifier = Modifier.size(ButtonDefaults.IconSize)
+                            )
 
-                Surface(
-                    shape = RoundedCornerShape(14.dp),
-                    color = Color.White,
-                    border = BorderStroke(1.dp, BorderColor),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Button(
-                        onClick = {},
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Transparent,
-                            contentColor = Color.Black
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Send,
-                            contentDescription = null,
-                            modifier = Modifier.size(ButtonDefaults.IconSize)
-                        )
+                            Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
 
-                        Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
-
-                        Text("Notify waitlist")
+                            Text("Notify waitlist")
+                        }
                     }
                 }
 
             }
 
+
         }
     }
+
+    if (showNotifyDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showNotifyDialog = false
+            },
+            title = { Text("Notify waitlist") },
+            text = {
+                OutlinedTextField(
+                    value = notificationMessage,
+                    onValueChange = { newText -> notificationMessage = newText },
+                    label = {
+                        Text("Message")
+                    }
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+
+                    },
+                    enabled = notificationMessage.isNotBlank()
+                ) {
+                    Text("Send")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showNotifyDialog = false }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
+
 
 /**
  * Helper function to extract the Entrant's initials for display
  *
  * @param name the name of the Entrant whose initials are to be extracted
- * @return the initials of the Entrant as a string of two capital characters
+ * @return the initials of the Entrant as a string of capital characters
  */
+// removed private modifier otherwise it raises error
+
+
 fun ExtractInitials(name: String) : String {
     var cleanName = name.trim()
     val firstInitial = cleanName[0]
@@ -266,5 +453,11 @@ fun ExtractInitials(name: String) : String {
         }
     }
 
+    return initials
+}
+
+fun getInitials(name: String) : String {
+    val cleanName = name.trim()
+    val initials = cleanName.filter { it.isUpperCase() }
     return initials
 }
