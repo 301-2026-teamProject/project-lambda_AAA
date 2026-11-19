@@ -18,6 +18,9 @@ class NotificationController(
         message: String,
         type: NotificationType,
         senderName: String = "",
+        senderUid: String = "",
+        sendeeName: String = "",
+        sendeeUid: String = "",
         lotteryName: String = "",
         onResult: (Boolean, String?) -> Unit
     ) {
@@ -29,6 +32,9 @@ class NotificationController(
             type = type,
             isRead = false,
             senderName = senderName,
+            senderUid = senderUid,
+            sendeeName = sendeeName,
+            sendeeUid = sendeeUid,
             lotteryName = lotteryName,
         )
         notificationDataSource.saveNotification(notification, onResult)

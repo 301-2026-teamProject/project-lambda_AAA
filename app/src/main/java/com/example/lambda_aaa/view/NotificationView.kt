@@ -124,7 +124,7 @@ private fun NotificationCard(
     }
     // if notification belongs to message, also include information on sender and related lottery
     if (isMessage) {
-        displayMessage = "Message from ${notification.senderName.ifBlank { "unknown" }}" +
+        displayMessage = "Message from ${notification.senderName.ifBlank { "unknown" }} (ID: ${notification.senderUid.ifBlank { "unknown uid" }})" +
         (if (notification.lotteryName.isNotBlank()) " · ${notification.lotteryName}" else "") +
         ": " + displayMessage
     }

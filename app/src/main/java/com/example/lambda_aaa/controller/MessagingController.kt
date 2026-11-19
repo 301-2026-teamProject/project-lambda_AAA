@@ -48,12 +48,12 @@ class MessagingController(
     fun refresh() {
         isLoading = true
         errorMessage = null
-        val handle: (Boolean, List<MessageContact>, String?) -> Unit = { success, list, msg ->
+        val onResult: (Boolean, List<MessageContact>, String?) -> Unit = { success, list, msg ->
             if (success) contacts = list else errorMessage = "Failed to load contacts: $msg"
             isLoading = false
         }
-        if (role == Role.OWNER) repository.ownerContacts(uid, handle)
-        else repository.entrantContacts(uid, handle)
+        if (role == Role.OWNER) repository.ownerContacts(uid, onResult)
+        else repository.entrantContacts(uid, onResult)
     }
 
     /**
@@ -78,6 +78,9 @@ class MessagingController(
             message = body,
             type = if (role == Role.OWNER) NotificationType.OWNER_MESSAGE else NotificationType.ENTRANT_MESSAGE,
             senderName = senderName.ifBlank { if (role == Role.OWNER) "Campsite owner" else "Entrant" },
+            senderUid = uid,
+            sendeeName = contact.name,
+            sendeeUid = contact.uid,
             lotteryName = contact.lotteryName,
         ) { success, error ->
             isSending = false

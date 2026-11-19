@@ -69,11 +69,13 @@ import androidx.compose.runtime.key
 import com.example.lambda_aaa.model.LotteryRepository
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Message
+import com.example.lambda_aaa.controller.AdminNotificationController
 import com.example.lambda_aaa.controller.MessagingController
 import com.example.lambda_aaa.model.MessagingRepository
+import com.example.lambda_aaa.view.AdminNotificationView
 import com.example.lambda_aaa.view.MessagingView
 import com.example.lambda_aaa.view.NotificationView
+import com.example.lambda_aaa.model.NotificationRepository
 
 // ids for testing before identification is fixed
 private const val OWNER_ID = "1hQDbywHu0OqUQ0TGWwE"   // owner id
@@ -129,6 +131,7 @@ fun CampsiteReservationApp(
     val lotteryRepo = remember { LotteryRepository() }
     DisposableEffect(lotteryRepo) { onDispose { lotteryRepo.close() } }
     val messagingRepo = remember { MessagingRepository(campsiteRepo, lotteryRepo) }
+    val notificationRepo = remember { NotificationRepository() }
 
     var installationID by remember { mutableStateOf("")}
     var identifiedUser by remember { mutableStateOf(false) }
@@ -188,15 +191,11 @@ fun CampsiteReservationApp(
 
     if (identifiedUser) {
 
-        var selectedMenu = EntrantTabs
+        val selectedMenu = if (currentUser.isOwner) OwnerTabs else EntrantTabs
         var selectedTab by remember { mutableStateOf(selectedMenu.first().id) }
         val waitlistRoute = "OwnerLotteryWaitlist/{lotteryId}"
         val lotteryArg = navArgument("lotteryId"){
             type = NavType.StringType
-        }
-        if (currentUser.isOwner) {
-            selectedMenu = OwnerTabs
-            selectedTab = "OwnerHome"
         }
 
         Scaffold(
@@ -235,7 +234,10 @@ fun CampsiteReservationApp(
                 composable("Profile") { EntrantProfileView(navController, currentUser) }
                 composable("EntrantMessage") {
                     val messagingController = remember { MessagingController(currentUser.uid, Role.ENTRANT, messagingRepo) }
-                    MessagingView(messagingController, onBack = { navController.navigate("EntrantExplore") })
+                    MessagingView(messagingController, onBack = {
+                        navController.navigate("EntrantExplore")
+                        selectedTab = selectedMenu.first().id
+                    })
                 }
 
                 composable("OwnerHome") {
@@ -264,7 +266,10 @@ fun CampsiteReservationApp(
                 }
 
                 //composable("admin") { AdminDashboardView(navController) }
-
+                composable("AdminNotificationLogs") { AdminNotificationView(
+                    adminNotificationController = AdminNotificationController(notificationRepo)
+                ) { navController.popBackStack() }
+                }
             }
         }
     }

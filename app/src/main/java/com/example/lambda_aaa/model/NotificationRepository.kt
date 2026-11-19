@@ -1,7 +1,9 @@
 package com.example.lambda_aaa.model
+
 import com.example.lambda_aaa.model.detail.NotificationDataSource
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
+import com.google.firebase.firestore.toObjects
 
 class NotificationRepository : NotificationDataSource {
     private val db = Firebase.firestore
@@ -40,5 +42,16 @@ class NotificationRepository : NotificationDataSource {
         notificationsRef.document(notificationId).update("isRead", true)
             .addOnSuccessListener { onResult(true, null) }
             .addOnFailureListener { e -> onResult(false, e.message) }
+    }
+
+    /**
+     * Retrieve every notification log
+     */
+    override fun getAllNotifications(onResult: (Boolean, List<AppNotification>, String?) -> Unit) {
+        notificationsRef.get()
+            .addOnSuccessListener { documentSnapshots ->
+                onResult(true, documentSnapshots.toObjects<AppNotification>(), null)
+            }
+            .addOnFailureListener { e -> onResult(false, listOf(), e.message) }
     }
 }
