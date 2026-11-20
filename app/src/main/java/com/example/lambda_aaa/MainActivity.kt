@@ -54,6 +54,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.lambda_aaa.controller.ProfileController
 import com.example.lambda_aaa.model.LotteryEntry
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
@@ -112,17 +113,19 @@ fun CampsiteReservationApp(
     val repository = remember { CampsiteRepository() }
     DisposableEffect(repository) { onDispose { repository.close() } }
 
-    var installationID by remember {mutableStateOf("")}
+    var installationId by remember {mutableStateOf("")}
     var identifiedUser by remember { mutableStateOf(false) }
     var currentUser: UserProfile = remember {
         UserProfile(
-            name = "Alex Camper",
-            email = "alex@example.ca",
+            name = "Alex Campers",
+            email = "alex@example.ca12",
             phone = "780-555-0123",
             profilePhotoUrl = "https://picsum.photos/200",
             roles = arrayListOf(Role.ENTRANT),
         )
     } // A default user initialized for first time users
+
+    val profileController = ProfileController()
 
     LaunchedEffect(Unit) {
         // Adapted from Google for Developers Firebase Documentation, Fundamentals: "Manage Firebase
@@ -132,8 +135,8 @@ fun CampsiteReservationApp(
         // Changes: Changed into a try-catch block due to asynchronous issues.
         try {
 
-            installationID = FirebaseInstallations.getInstance().id.await()
-            Log.d("Installations", "Installation ID is: $installationID")
+            installationId = FirebaseInstallations.getInstance().id.await()
+            Log.d("Installations", "Installation ID is: $installationId")
 
         } catch (e: Exception) {
             Log.e("Installations", "Unable to get Installation ID", e)
@@ -142,13 +145,13 @@ fun CampsiteReservationApp(
         try {
 
             val result =  Firebase.firestore.collection("users")
-                .whereEqualTo("deviceID", installationID)
+                .whereEqualTo("deviceId", installationId)
                 .get()
                 .await()
 
             // If user does not exist, put placeholder user information into database
             if (result.isEmpty) {
-                currentUser.updateDeviceID(installationID)
+                currentUser.updateDeviceId(installationId)
                 Firebase.firestore.collection("users").add(currentUser)
             }
 
@@ -192,6 +195,7 @@ fun CampsiteReservationApp(
             NavHost(
                 navController = navController,
                 startDestination = selectedMenu.first().id,
+                //startDestination = "OwnerLotteryWaitlist",
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
@@ -206,16 +210,16 @@ fun CampsiteReservationApp(
                     val controller = remember(cid, repository) { CampsiteDetailController(cid, repository) }
                     CampsiteDetailView(controller, onBack = { navController.popBackStack() })
                 }
-                composable("EntrantLottery") { EntrantProfileView(navController, currentUser) }
-                composable("EntrantTrips") { EntrantProfileView(navController, currentUser) }
-                composable("Profile") { EntrantProfileView(navController, currentUser) }
+                composable("EntrantLottery") { EntrantProfileView(navController, profileController, currentUser) }
+                composable("EntrantTrips") { EntrantProfileView(navController, profileController, currentUser) }
+                composable("Profile") { EntrantProfileView(navController, profileController, currentUser) }
 
                 composable("OwnerHome") {
                     // shortcut: placeholder user ID, replace when profile verification is connected.
                     com.example.lambda_aaa.view.CampsiteReservationApp(uid = "123")
                 }
-                composable("OwnerCampsites") { EntrantProfileView(navController, currentUser) }
-                composable("OwnerLottery") { EntrantProfileView(navController, currentUser) }
+                composable("OwnerCampsites") { EntrantProfileView(navController, profileController, currentUser) }
+                composable("OwnerLottery") { EntrantProfileView(navController, profileController, currentUser) }
                 composable("OwnerLotteryWaitlist") { LotteryWaitlistView(navController) }
                 //composable("admin") { AdminDashboardView(navController) }
 
