@@ -131,11 +131,11 @@ private fun NotificationCard(
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = when (notification.type) {
-                        NotificationType.WINNER -> "WINNER"
-                        NotificationType.NOT_SELECTED -> "RESULT"
-                        NotificationType.OWNER_MESSAGE -> "Owner to Entrant Message"
-                        NotificationType.ENTRANT_MESSAGE -> "Entrant to Owner Message"
-                        else -> "Notification"
+                        NotificationType.WINNER -> "${notification.timestamp}: WINNER"
+                        NotificationType.NOT_SELECTED -> "${notification.timestamp}: RESULT"
+                        NotificationType.OWNER_MESSAGE -> "${notification.timestamp}: Owner to Entrant Message"
+                        NotificationType.ENTRANT_MESSAGE -> "${notification.timestamp}: Entrant to Owner Message"
+                        else -> "${notification.timestamp}: Notification"
                     },
                     fontWeight = FontWeight.Bold,
                     fontSize = MaterialTheme.typography.bodyMedium.fontSize
