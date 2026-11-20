@@ -17,6 +17,11 @@ class NotificationController(
         lotteryId: String,
         message: String,
         type: NotificationType,
+        senderName: String = "",
+        senderUid: String = "",
+        sendeeName: String = "",
+        sendeeUid: String = "",
+        lotteryName: String = "",
         onResult: (Boolean, String?) -> Unit
     ) {
         val notification = AppNotification(
@@ -25,7 +30,12 @@ class NotificationController(
             lotteryId = lotteryId,
             message = message,
             type = type,
-            isRead = false
+            isRead = false,
+            senderName = senderName,
+            senderUid = senderUid,
+            sendeeName = sendeeName,
+            sendeeUid = sendeeUid,
+            lotteryName = lotteryName,
         )
         notificationDataSource.saveNotification(notification, onResult)
     }

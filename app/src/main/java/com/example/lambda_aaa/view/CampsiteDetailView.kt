@@ -40,6 +40,7 @@ fun CampsiteDetailView(
     onBack: () -> Unit,
     onEdit: (() -> Unit)? = null,
     onLotteryUpdate: ((Lottery) -> Unit)? = null,
+    onOpenWaitlist: ((String) -> Unit)? = null
 ) {
     LaunchedEffect(campsiteDetailController, onEdit == null) {
         campsiteDetailController.fetchCampsiteAndLottery()
@@ -71,6 +72,7 @@ fun CampsiteDetailView(
         onLeave = campsiteDetailController::leaveLottery,
         onRetryEntry = campsiteDetailController::refreshEntry,
         onLotteryUpdate = onLotteryUpdate,
+        onOpenWaitlist = onOpenWaitlist
     )
 }
 
@@ -96,6 +98,7 @@ internal fun CampsiteDetailContent(
     onLeave: (String) -> Unit = {},
     onRetryEntry: (String) -> Unit = {},
     onLotteryUpdate: ((Lottery) -> Unit)? = {},
+    onOpenWaitlist: ((String) -> Unit)? = null
 ) {
     val context = LocalContext.current
     Scaffold(
@@ -163,8 +166,7 @@ internal fun CampsiteDetailContent(
                     lotteries, lotteriesLoading, lotteriesFailed, onRetryLotteries,
                     showJoinActions, joinStates, identityLoading, identityFailed,
                     onRetryIdentity, onJoin, onLeave, onRetryEntry, onLotteryUpdate = { lottery ->
-                        onLotteryUpdate?.invoke(lottery)
-                    }
+                        onLotteryUpdate?.invoke(lottery)},onOpenWaitlist = onOpenWaitlist
                 )
                 campsite.mapLocation?.let { point ->
                     OutlinedButton(
@@ -211,6 +213,7 @@ internal fun CampsiteLotteriesSection(
     onLeave: (String) -> Unit = {},
     onRetryEntry: (String) -> Unit = {},
     onLotteryUpdate: (Lottery) -> Unit = {},
+    onOpenWaitlist: ((String) -> Unit)? = null
 ) {
     Surface(shape = RoundedCornerShape(14.dp), color = FilterSelectColor, contentColor = HeaderColor) {
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -260,9 +263,14 @@ internal fun CampsiteLotteriesSection(
                                     Text(stringResource(R.string.lottery_identity_failed))
                                     TextButton(onClick = onRetryIdentity) { Text(stringResource(R.string.retry)) }
                                 }
+
                                 else -> {
                                     Button(onClick = {onLotteryUpdate(lottery) } ) {
                                         Text("Edit Lottery")
+                                    }
+
+                                    if (onOpenWaitlist != null) {
+                                        Button(onClick = { onOpenWaitlist(lottery.id) }) { Text("View waitlist") }
                                     }
                                 }
                             }

@@ -20,4 +20,9 @@ interface NotificationDataSource {
      * Collaborators: NotificationDataSource, NotificationRepository
      */
     fun markAsRead(notificationId: String, onResult: (Boolean, String?) -> Unit)
+
+    /**
+     * Fetch every single notification log for admin.
+     */
+    fun getAllNotifications(onResult: (Boolean, List<AppNotification>, String?) -> Unit)
 }

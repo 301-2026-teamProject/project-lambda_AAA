@@ -35,6 +35,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -74,24 +75,36 @@ import com.example.lambda_aaa.model.LotteryRepository
  */
 @Composable
 fun LotteryWaitlistView(
-    lotteryWaitlistNavController: NavController
+    lotteryWaitlistNavController: NavController,
+    lotteryId: String,
+    ownerId: String
 ) {
 
     var gotEntries by remember { mutableStateOf(true) }
-    val entries = remember { mutableStateListOf<LotteryEntry>() }
-    val entrants = remember { mutableStateListOf<String>() }
-    val entriesStatus = remember { mutableStateListOf<String>() }
-    var numEntries by remember { mutableIntStateOf(0) }
-    var numWinners by remember { mutableIntStateOf(0) }
-    var lotteryID by remember { mutableStateOf("") }
+    val entries = remember(lotteryId) { mutableStateListOf<LotteryEntry>() }
+    val entrants = remember(lotteryId) { mutableStateListOf<String>() }
+    val entriesStatus = remember(lotteryId) { mutableStateListOf<String>() }
+    var numEntries by remember(lotteryId) { mutableIntStateOf(0) }
+    var numWinners by remember(lotteryId) { mutableIntStateOf(0) }
+    val lotteryDB = remember { LotteryRepository() }
+    DisposableEffect(lotteryDB) {
+        onDispose { lotteryDB.close() }
+    }
 
-
-    LaunchedEffect(Unit) {
+    LaunchedEffect(lotteryId) {
+        lotteryDB.getLottery(lotteryId) { success, lottery, msg ->
+            if (success) {
+                numWinners = lottery?.numWinners ?: 0
+            } else {
+                Log.e("Lottery Error", "Could not load lottery: $msg")
+            }
+        }
 
         // Search for entrants enrolled in lottery
         try {
 
             val waitlistSnapshot = Firebase.firestore.collection("lottery_entries")
+                .whereEqualTo("lotteryId", lotteryId)
                 .get()
                 .await()
 
@@ -100,17 +113,6 @@ fun LotteryWaitlistView(
                 numEntries = waitlistSnapshot.count()
                 val lotteryEntries = waitlistSnapshot.toObjects(LotteryEntry::class.java)
                 entries.addAll(lotteryEntries)
-                lotteryID = entries[0].lotteryId
-
-                // Look up the number of winners in the lottery
-                val lotteryDB = LotteryRepository()
-                lotteryDB.getLottery(lotteryID, onResult = { success, lottery, msg ->
-                    if (success) {
-                        numWinners = lottery?.numWinners ?: 0
-                    } else {
-                        Log.e("Lottery Error", "No matching lottery found: $msg")
-                    }
-                })
 
                 // For each user in the waiting list, get their names and their status
                 for (i in 0..<numEntries) {
@@ -436,6 +438,24 @@ fun LotteryWaitlistView(
  * @param name the name of the Entrant whose initials are to be extracted
  * @return the initials of the Entrant as a string of capital characters
  */
+// removed private modifier otherwise it raises error
+
+
+fun ExtractInitials(name: String) : String {
+    var cleanName = name.trim()
+    val firstInitial = cleanName[0]
+    var initials = ""
+    cleanName = cleanName.substring(1)
+
+    for (char in cleanName) {
+        if (char.isUpperCase()) {
+            initials = "$firstInitial$char"
+        }
+    }
+
+    return initials
+}
+
 fun getInitials(name: String) : String {
     val cleanName = name.trim()
     val initials = cleanName.filter { it.isUpperCase() }

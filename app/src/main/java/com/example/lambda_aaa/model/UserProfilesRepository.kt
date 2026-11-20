@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateListOf
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 
-class UserRepository {
+class UserProfilesRepository {
 
     private val userProfiles = mutableStateListOf<UserProfile>()
     private val db = Firebase.firestore

@@ -1,6 +1,6 @@
 package com.example.lambda_aaa.view
 
-import android.R.id.message
+import com.example.lambda_aaa.model.LotteryRepository
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -16,13 +16,17 @@ import androidx.navigation.NavType
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import com.example.lambda_aaa.controller.CampsiteDetailController
+import com.example.lambda_aaa.controller.MessagingController
 import com.example.lambda_aaa.model.Lottery
+import com.example.lambda_aaa.model.MessagingRepository
+import com.example.lambda_aaa.model.Role
 
 /**
  * Main app logic */
 @Composable
 fun CampsiteReservationApp(
     uid: String,
+    onOpenWaitlist: (String) -> Unit
 ) {
     val navController = rememberNavController()
     val repo = remember { CampsiteRepository() }
@@ -34,6 +38,10 @@ fun CampsiteReservationApp(
         )
     }
 
+    val lotteryRepo = remember { LotteryRepository() }
+    DisposableEffect(lotteryRepo) { onDispose { lotteryRepo.close() } }
+    val messagingRepo = remember { MessagingRepository(repo, lotteryRepo) }
+
     var editMessage by remember { mutableStateOf<Pair<Boolean, String>?>(null) }
     var selectedLottery by remember {mutableStateOf<Lottery?>(null)}
 
@@ -44,13 +52,16 @@ fun CampsiteReservationApp(
 
     NavHost(navController, startDestination = "ownerHome") {
         composable("ownerHome") {
+            val messagingController = remember { MessagingController(uid, Role.OWNER, messagingRepo) }
             CampsiteOwnerView(
                 uid = uid,
-                controller = ownerController,
+                ownerController = ownerController,
                 onClickRegister = { navController.navigate("registerScreen") },
                 onClickCampsite = { cid -> navController.navigate("detailScreen/$cid") },
                 editMessage = editMessage,
-                onEditMessageShown = { editMessage = null }
+                onEditMessageShown = { editMessage = null },
+                messagingController = messagingController,
+                onClickMessage = { navController.navigate("ownerMessages") }
             )
         }
         composable("registerScreen") {
@@ -76,7 +87,8 @@ fun CampsiteReservationApp(
                 onEdit = { navController.navigate("editScreen/$cid") },
                 onLotteryUpdate = { lottery ->
                     selectedLottery = lottery
-                    navController.navigate("lotteryEdit/$cid") }
+                    navController.navigate("lotteryEdit/$cid") },
+                onOpenWaitlist = onOpenWaitlist
             )
         }
         composable(
@@ -103,6 +115,13 @@ fun CampsiteReservationApp(
                     //selectedLottery = null
                 },
             )
+        }
+        composable("ownerMessages") {
+            val controller = remember { MessagingController(uid, Role.OWNER, messagingRepo) }
+            MessagingView(controller, onBack = { navController.popBackStack() })
+        }
+        composable("notifications") {
+            NotificationView(userId = uid, onBack = { navController.popBackStack() })
         }
     }
 }
