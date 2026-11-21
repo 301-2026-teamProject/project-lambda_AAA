@@ -55,7 +55,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.lambda_aaa.controller.ProfileController
-import com.example.lambda_aaa.model.LotteryEntry
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import com.example.lambda_aaa.model.Role
@@ -76,7 +75,13 @@ import com.example.lambda_aaa.model.MessagingRepository
 import com.example.lambda_aaa.view.AdminNotificationView
 import com.example.lambda_aaa.view.MessagingView
 import com.example.lambda_aaa.view.NotificationView
+import com.example.lambda_aaa.view.Background
+import com.example.lambda_aaa.view.HeaderColor
+import com.example.lambda_aaa.view.SubText
+import com.example.lambda_aaa.view.BorderColor
 import com.example.lambda_aaa.model.NotificationRepository
+import com.example.lambda_aaa.view.AdminDashboardView
+import com.example.lambda_aaa.view.ModerationView
 
 // ids for testing before identification is fixed
 private const val OWNER_ID = "1hQDbywHu0OqUQ0TGWwE"   // owner id
@@ -103,10 +108,10 @@ private val OwnerTabs = listOf(
     ScreenTabs("Profile", "Profile", Icons.Filled.PersonOutline),
 )
 
-private val Background = Color(0xFFF3F0E9) // Used for the background and Campsite icon. Bone-White color.
-private val HeaderColor = Color(0xFF242823) // Used for Headers. Muted Black.
-private val SubText = Color(0xFF6E716C) // Used for smaller text and Icons. Dark Gray.
-private val BorderColor = Color(0xFFDEDCD4) // Used for borders. A muted equivalent of the Background color.
+private val AdminTabs = listOf(
+    ScreenTabs("AdminDashboard", "Home", Icons.Outlined.Dashboard),
+    ScreenTabs("Profile", "Profile", Icons.Filled.PersonOutline),
+)
 
 /** Hosts the Compose user interface. */
 class MainActivity : ComponentActivity() {
@@ -143,7 +148,7 @@ fun CampsiteReservationApp(
             email = "alex@example.ca",
             phone = "780-555-0123",
             profilePhotoUrl = "https://picsum.photos/200",
-            roles = arrayListOf(Role.ENTRANT, Role.OWNER),
+            roles = arrayListOf(Role.ENTRANT, Role.ADMIN),
             isOwner = false,
         )
     } // A default user initialized for first time users
@@ -194,7 +199,7 @@ fun CampsiteReservationApp(
 
     if (identifiedUser) {
 
-        val selectedMenu = if (currentUser.isOwner) OwnerTabs else EntrantTabs
+        val selectedMenu = if (currentUser.roles.contains(Role.ADMIN)) AdminTabs else if (currentUser.roles.contains(Role.OWNER)) OwnerTabs else EntrantTabs
         var selectedTab by remember { mutableStateOf(selectedMenu.first().id) }
         val waitlistRoute = "OwnerLotteryWaitlist/{lotteryId}"
         val lotteryArg = navArgument("lotteryId"){
@@ -269,7 +274,14 @@ fun CampsiteReservationApp(
                     }
                 }
 
-                //composable("admin") { AdminDashboardView(navController) }
+                composable("AdminDashboard") { AdminDashboardView(navController,
+                    onOpenCampsites = { navController.navigate("ModerationView") },
+                    onOpenProfiles =  { navController.navigate("ModerationView") },
+                    onOpenImages =  { navController.navigate("ModerationView") },
+                    )
+                }
+                composable("ModerationView") { ModerationView(navController)
+                }
                 composable("AdminNotificationLogs") { AdminNotificationView(
                     adminNotificationController = AdminNotificationController(notificationRepo)
                 ) { navController.popBackStack() }
