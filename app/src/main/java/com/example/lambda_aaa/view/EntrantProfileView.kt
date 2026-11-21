@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import com.example.lambda_aaa.controller.ProfileController
 import com.example.lambda_aaa.model.UserProfile
 
 /**
@@ -50,6 +51,7 @@ import com.example.lambda_aaa.model.UserProfile
 @Composable
 fun EntrantProfileView(
     entrantProfileNavController: NavController,
+    profileControl : ProfileController,
     user: UserProfile
 ) {
 
@@ -146,8 +148,9 @@ fun EntrantProfileView(
 
                             Button(
                                 onClick = {
-                                    user.updatePhoto(currentImageUrl)
-                                    changeImage = !changeImage },
+                                    profileControl.updateProfilePhoto(currentImageUrl, user.deviceId)
+                                    changeImage = !changeImage
+                                },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color(0xFF06402B), contentColor = Color.White),
                                 shape = RectangleShape
@@ -229,9 +232,13 @@ fun EntrantProfileView(
                         // Saves what is currently in the text fields as the user's new profile information
                         Button(
                             onClick = {
+                                profileControl.updateBasicInfo(name, email, phoneNumber, user.deviceId)
+                                /*
                                 user.updateName(name)
                                 user.updateEmail(email)
                                 user.updatePhone(phoneNumber)
+
+                                 */
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFF06402B), contentColor = Color.White),
