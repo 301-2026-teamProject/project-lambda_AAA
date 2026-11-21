@@ -15,6 +15,7 @@ import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,33 +25,42 @@ import com.example.lambda_aaa.controller.CampsiteOwnerController
 import androidx.compose.runtime.remember
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.example.lambda_aaa.controller.MessagingController
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
 
 @Composable
 fun CampsiteOwnerView(
     uid: String,
-    controller: CampsiteOwnerController,
-    onClickRegister: () -> Unit,         // clicking register lead user to register page
-    onClickCampsite: (String) -> Unit,   // clicking an owned campsite lead user to edit page
-    editMessage: Pair<Boolean, String>?, // for campsite editing message
+    ownerController: CampsiteOwnerController,
+    onClickRegister: () -> Unit,  // clicking register lead user to register page
+    onClickCampsite: (String) -> Unit,  // clicking an owned campsite lead user to edit page
+    editMessage: Pair<Boolean, String>?,
     onEditMessageShown: () -> Unit,
-    onMessagingClick: () -> Unit,        // not to confuse with editMessage
+    messagingController: MessagingController,
+    onClickMessage: () -> Unit,
 ) {
-    val filteredCampsites = controller.campsites.filter { campsite ->
+    LaunchedEffect(Unit) {
+        ownerController.refresh()
+        messagingController.refresh()
+    }
+    val filteredCampsites = ownerController.campsites.filter { campsite ->
         val matchID = (campsite.ownerId == uid)
         matchID
     }
-    LaunchedEffect(Unit) {
-        controller.refresh()
-    }
+    val contactNumber = messagingController.contacts.size
+
     CampsiteOwnerContent(
         campsiteEditMessage = editMessage,
         onMessageShown = onEditMessageShown,
-        isLoading = controller.isLoading,
+        isLoading = ownerController.isLoading,
         campsites = filteredCampsites,
-        errorMessage = controller.errorMessage,
+        errorMessage = ownerController.errorMessage,
         onClickRegister = onClickRegister,
         onClickCampsite = onClickCampsite,
-        onMessagingClick = onMessagingClick,
+        contactNumber = contactNumber,
+        onClickMessage = onClickMessage,
     )
 }
 
@@ -64,7 +74,8 @@ fun CampsiteOwnerContent(
     errorMessage: String?,
     onClickRegister: () -> Unit,
     onClickCampsite: (String) -> Unit,
-    onMessagingClick: () -> Unit,
+    contactNumber: Int,
+    onClickMessage: () -> Unit,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -175,8 +186,8 @@ fun CampsiteOwnerContent(
 
                 AttentionCard(
                     title = "Message",
-                    description = "Select your contact and write something to them...",
-                    onClick = onMessagingClick // jump to MessagingView
+                    description = "$contactNumber contacts",  // placeholder, later will show amount of contact
+                    onClick = onClickMessage // onClickMessage
                 )
             }
         }

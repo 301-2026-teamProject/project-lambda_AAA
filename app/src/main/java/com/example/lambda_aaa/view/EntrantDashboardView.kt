@@ -18,6 +18,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
@@ -74,10 +75,10 @@ import java.time.LocalDate
 @Composable
 fun EntrantDashboardView(
     navController: NavController,
+    repo: SearchController,
     onCampsiteClick: (String) -> Unit = {},
     ) {
 
-    val repo = remember { SearchController( CampsiteRepository() ) } // Database
     val campsiteList = repo.campsites
     val filteredCampsites = repo.filteredCampsites
     val locations = campsiteList.map{ it.address }.distinct() // Gets SPECIFICALLY the general location of a campsite, like Jasper or Banff
@@ -107,7 +108,7 @@ fun EntrantDashboardView(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .verticalScroll(rememberScrollState()),
             ) {
                 Column(

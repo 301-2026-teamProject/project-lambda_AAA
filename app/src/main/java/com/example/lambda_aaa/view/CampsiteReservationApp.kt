@@ -52,16 +52,16 @@ fun CampsiteReservationApp(
 
     NavHost(navController, startDestination = "ownerHome") {
         composable("ownerHome") {
+            val messagingController = remember { MessagingController(uid, Role.OWNER, messagingRepo) }
             CampsiteOwnerView(
                 uid = uid,
-                controller = ownerController,
+                ownerController = ownerController,
                 onClickRegister = { navController.navigate("registerScreen") },
                 onClickCampsite = { cid -> navController.navigate("detailScreen/$cid") },
                 editMessage = editMessage,
                 onEditMessageShown = { editMessage = null },
-                onMessagingClick = {
-                    navController.navigate("ownerMessages")
-                }
+                messagingController = messagingController,
+                onClickMessage = { navController.navigate("ownerMessages") }
             )
         }
         composable("registerScreen") {
@@ -118,10 +118,6 @@ fun CampsiteReservationApp(
         }
         composable("ownerMessages") {
             val controller = remember { MessagingController(uid, Role.OWNER, messagingRepo) }
-            MessagingView(controller, onBack = { navController.popBackStack() })
-        }
-        composable("entrantMessages") {
-            val controller = remember { MessagingController(uid, Role.ENTRANT, messagingRepo) }
             MessagingView(controller, onBack = { navController.popBackStack() })
         }
         composable("notifications") {
