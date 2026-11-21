@@ -5,7 +5,7 @@ package com.example.lambda_aaa.model
  * WINNER: won the lottery
  * NOT_SELECTED: did not win the lottery
  * RESERVATION_CONFIRMED: booked a campsite after winning a lottery
- * CANCELLATION: cancelled a campsite booking
+ * CANCELLATION: canceled a campsite booking
  * OWNER_BROADCAST: broadcast from the campsite owner
  * OWNER_MESSAGE: message from the campsite owner
  */
@@ -15,5 +15,6 @@ enum class NotificationType {
     RESERVATION_CONFIRMED,
     CANCELLATION,
     OWNER_BROADCAST,
-    OWNER_MESSAGE
+    OWNER_MESSAGE,      // owner to entrant
+    ENTRANT_MESSAGE,    // entrant to owner
 }
