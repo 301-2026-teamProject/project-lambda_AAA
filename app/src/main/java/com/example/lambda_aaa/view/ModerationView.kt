@@ -1,8 +1,8 @@
 package com.example.lambda_aaa.view
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,7 +20,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material3.DropdownMenu
@@ -31,6 +30,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -44,26 +44,28 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.lambda_aaa.controller.SearchController
-import com.example.lambda_aaa.helper.formatDateRangeLabel
 import com.example.lambda_aaa.model.CampsiteRepository
-import java.time.LocalDate
+import com.example.lambda_aaa.model.UserProfile
 
 @Composable
 fun ModerationView (
     navController: NavController,
-    browseOption: String? = null,
+    repo: SearchController,
+    browseStartOption: String = "Campsites",
     onBack: () -> Unit = {},
     onCampsiteClick: (String) -> Unit = {},
 ) {
 
-    val repo = remember { SearchController( CampsiteRepository() ) } // Database
     val filteredCampsites = repo.filteredCampsites
+    val listedProfiles = repo.profiles
+    val filteredProfiles = repo.filteredProfiles
+    var browseOption by remember { mutableStateOf(browseStartOption) }
+    var listSizeDisplay by remember { mutableIntStateOf(0) }
     var searchQuery by remember { mutableStateOf("") }
-    var selectedLocation by remember {mutableStateOf<String?>(null)}
-    var timeStartDate by remember { mutableStateOf<LocalDate?>(null) }
-    var timeEndDate by remember { mutableStateOf<LocalDate?>(null) }
-    var selectedGuestCount by remember { mutableStateOf<Int?>(null) }
-    repo.filterCampsite(searchQuery, selectedLocation, selectedGuestCount, timeStartDate, timeEndDate) // Runs every time the values change, letting us dynamically filter things
+    var selectedFilter by remember { mutableStateOf("All") }
+    repo.filterCampsite(searchQuery, null, null, null, null) // Runs every time the values change, letting us dynamically filter things
+    repo.filterProfiles(searchQuery) // Runs every time the values change, letting us dynamically filter things
+
 
     Column(
         modifier = Modifier
@@ -73,7 +75,10 @@ fun ModerationView (
     ) {
         TopBar(
             onBack = onBack,
-            onFilterClick = onBack
+            browseOption,
+            onApply = { choice ->
+                browseOption = choice
+            }
         )
         HorizontalDivider(color = BorderColor, thickness = 1.dp)
 
@@ -91,15 +96,7 @@ fun ModerationView (
                     .padding(horizontal = 16.dp),
             ) {
                 Text(
-                    text = "ENTRANT · DISCOVER",
-                    color = SubText,
-                    fontSize = 10.sp,
-                    letterSpacing = 0.75.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(top = 20.dp),
-                )
-                Text(
-                    text = "Find your next campsite",
+                    text = "Find Active $browseOption",
                     color = HeaderColor,
                     fontSize = 16.sp,
                     lineHeight = 21.sp,
@@ -116,60 +113,47 @@ fun ModerationView (
                         .padding(top = 14.dp),
                 )
 
-                // Displays all the filters (to be fixed soon)
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Filter buttons
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 14.dp),
-                    horizontalArrangement = Arrangement.spacedBy(7.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
 
-                    // Displays all the filter tabs
-                    Row(
-                        modifier = Modifier
-                            .weight(1f)
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(7.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        // Prints the Location Filter
-                        if (selectedLocation != null) {
-                            FilterBox(
-                                label = selectedLocation!!,
-                                onRemove = { selectedLocation = null },
-                            )
+                    FilterCard(
+                        text = "All",
+                        selected = selectedFilter == "All",
+                        onClick = {
+                            selectedFilter = "All"
                         }
-                        // Prints the Date Filter
-                        if (timeStartDate != null && timeEndDate != null) {
-                            FilterBox(
-                                label = formatDateRangeLabel(timeStartDate!!, timeEndDate!!),
-                                onRemove = {
-                                    timeStartDate = null
-                                    timeEndDate = null
-                                },
-                            )
+                    )
+
+                    FilterCard(
+                        text = "Flagged",
+                        selected = selectedFilter == "Flagged",
+                        onClick = {
+                            selectedFilter = "Flagged"
                         }
-                        // Prints the Guest Filter
-                        if (selectedGuestCount != null) {
-                            val count = selectedGuestCount!!
-                            FilterBox(
-                                label = "$count ${if (count == 1) "guest" else "guests"}",
-                                onRemove = { selectedGuestCount = null },
-                            )
+                    )
+
+                    FilterCard(
+                        text = "Removed",
+                        selected = selectedFilter == "Removed",
+                        onClick = {
+                            selectedFilter = "Removed"
                         }
-                    }
+                    )
                 }
 
                 // Row that displays the number of campsites (and the 'Best match' text)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 17.dp, bottom = 13.dp),
+                        .padding(top = 12.dp, bottom = 13.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "${filteredCampsites.size} campsites",
+                        text = "$listSizeDisplay $browseOption",
                         color = HeaderColor,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -185,11 +169,30 @@ fun ModerationView (
                 // List of all filtered campsites
                 // Not LazyColumn because the screen is already scrollable
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    filteredCampsites.forEach { campsite ->
-                        CampsiteCard(
-                            campsite = campsite, // just sends the entire object which might not be efficient, but it works
-                            onClick = { onCampsiteClick(campsite.cid) },
-                        )
+                    when (browseOption) {
+                        "Campsites" -> {
+                            listSizeDisplay = filteredCampsites.size
+                            filteredCampsites.forEach { campsite ->
+                                val idMatch: UserProfile? = listedProfiles.firstOrNull { it.uid == campsite.ownerId }
+                                AdminCampsiteCard(
+                                    campsite = campsite, // just sends the entire object which might not be efficient, but it works
+                                    ownerName = idMatch?.name,
+                                    onClick = { onCampsiteClick(campsite.cid) },
+                                )
+                            }
+                        }
+                        "Profiles" -> {
+                            listSizeDisplay = filteredProfiles.size
+                            listedProfiles.forEach { profile ->
+                                AdminProfileCard(
+                                    profile = profile, // just sends the entire object which might not be efficient, but it works
+                                    onClick = { },
+                                )
+                            }
+                        }
+                        "Images" -> {
+                            listSizeDisplay = 0
+                        }
                     }
                 }
 
@@ -210,8 +213,10 @@ fun ModerationView (
 @Composable
 private fun TopBar(
     onBack: () -> Unit,
-    onFilterClick: () -> Unit
+    browseOption: String,
+    onApply: (filterChoice: String) -> Unit
 ) {
+    var expanded by remember { mutableStateOf(false) }
     Column {
         Box(
             modifier = Modifier
@@ -242,10 +247,9 @@ private fun TopBar(
                 }
             }
 
-
             // Centered title
             Text(
-                text = "Campsites",
+                text = browseOption,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = HeaderColor,
@@ -253,25 +257,47 @@ private fun TopBar(
             )
 
 
-            // Filter button
-            Surface(
-                onClick = onFilterClick,
-                modifier = Modifier
-                    .size(40.dp)
-                    .align(Alignment.CenterEnd),
-                shape = RoundedCornerShape(14.dp),
-                color = Color.White,
-                border = BorderStroke(1.dp, BorderColor)
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center
+            // Dropdown menu for searchable results
+            Box(modifier = Modifier.align(Alignment.CenterEnd) ) {
+                // This part is just the textbox that you click to open the list of options
+                Surface(
+                    onClick = { expanded = true },
+                    modifier = Modifier.size(40.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color.White,
+                    border = BorderStroke(1.dp, BorderColor)
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.FilterList,
-                        contentDescription = "Filter",
-                        tint = HeaderColor,
-                        modifier = Modifier.size(19.dp)
-                    )
+                    Box(
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.FilterList,
+                            contentDescription = "Filter",
+                            tint = HeaderColor,
+                            modifier = Modifier.size(19.dp)
+                        )
+                    }
+                }
+
+                // Adapted from Android Developers, "DropdownMenu" API reference.
+                // https://developer.android.com/reference/kotlin/androidx/compose/material3/DropdownMenu.composable
+                // Retrieved 2026-10-24.
+                // Changes: Adapted the Kotlin Code to turn it into a selection menu
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    modifier = Modifier.background(Color.White),
+                ) {
+                    // Goes through our list of 'options' (a list) and makes a selectable box for each
+                    listOf("Campsites", "Profiles", "Images").distinct().forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(option, fontSize = 13.sp) },
+                            onClick = {
+                                onApply(option) // Selects the options pressed
+                                expanded = false
+                            },
+                        )
+                    }
                 }
             }
         }
@@ -347,114 +373,46 @@ private fun TrailDrawSearchBar(
     }
 }
 
-/**
- * Creates a visibly applied filter for the listed campsites.
- *
- * The filter highlights what kind of filter it is (either location, time, or occupancy),
- * and can be removed by clicking on the filter.
- *
- * @param onRemove the function to run when a filter is clicked (used to remove it)
- * @return nothing
- */
 @Composable
-private fun FilterBox(
-    label: String,
-    onRemove: () -> Unit,
+private fun FilterCard(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit
 ) {
+
     Surface(
-        onClick = onRemove, // Click to remove
+        onClick = onClick,
         shape = RoundedCornerShape(13.dp),
-        color = FilterSelectColor,
-        contentColor = HeaderColor,
-        border = BorderStroke(1.dp, SelectColor.copy(alpha = 0.65f)), // I use a different color to make it more distinct
-        modifier = Modifier.height(48.dp),
+        color = if (selected) {
+            SelectColor
+        } else {
+            Color.White
+        },
+        border = BorderStroke(
+            1.dp,
+            if (selected) SelectColor else BorderColor
+        )
     ) {
-        // Used to highlight the Text and 'x' icon
-        Row(
-            modifier = Modifier.padding(horizontal = 11.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
+
+        Box(
+            modifier = Modifier.padding(
+                horizontal = 12.dp,
+                vertical = 8.dp
+            ),
+            contentAlignment = Alignment.Center
         ) {
+
             Text(
-                text = label,
-                color = HeaderColor,
-                fontSize = 11.sp,
-                maxLines = 1,
-                softWrap = false,
-            )
-            Icon(
-                imageVector = Icons.Filled.Close,
-                contentDescription = "Remove $label filter",
-                tint = SelectColor,
-                modifier = Modifier.size(13.dp),
+                text = text,
+                fontSize = 12.sp,
+                fontWeight = if (selected) {
+                    FontWeight.Medium
+                } else {
+                    FontWeight.Normal
+                },
+                color = HeaderColor
             )
         }
     }
 }
 
-/**
- * Creates dropdown selection menu.
- *
- * Starts in an un-expanded state by default.
- * Once pressed, all the options of the options are then revealed.
- * A user can press one of the options to be selected, which in turn, closes the menu.
- *
- * @param value the text shown on the textbox (i.e. the current selection)
- * @param options a list of all possible options that can be selected from
- * @param onSelected the function to run when an option is selected (returns to previous function)
- * @return nothing
- */
-@Composable
-private fun DropdownSelector(
-    value: String,
-    options: List<String>,
-    onSelected: (String) -> Unit,
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Box(modifier = Modifier.fillMaxWidth()) {
-        // This part is just the textbox that you click to open the list of options
-        Surface(
-            onClick = { expanded = true }, // Shows the options when clicked :)
-            shape = RoundedCornerShape(12.dp),
-            color = Color.White,
-            border = BorderStroke(1.dp, BorderColor),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 13.dp, vertical = 13.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = value,
-                    color = HeaderColor,
-                    fontSize = 13.sp,
-                    modifier = Modifier.weight(1f),
-                )
-                // Listen I'll avoid using Icons when necessary
-                // I can get away with ASCII here so I might as well
-                Text(text = "▾", color = SubText, fontSize = 16.sp)
-            }
-        }
-        // Adapted from Android Developers, "DropdownMenu" API reference.
-        // https://developer.android.com/reference/kotlin/androidx/compose/material3/DropdownMenu.composable
-        // Retrieved 2026-10-24.
-        // Changes: Adapted the Kotlin Code to turn it into a selection menu
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.background(Color.White),
-        ) {
-            // Goes through our list of 'options' (a list) and makes a selectable box for each
-            options.distinct().forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(option, fontSize = 13.sp) },
-                    onClick = {
-                        onSelected(option) // Selects the options pressed
-                        expanded = false
-                    },
-                )
-            }
-        }
-    }
-}

@@ -71,6 +71,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.filled.Email
 import com.example.lambda_aaa.controller.AdminNotificationController
 import com.example.lambda_aaa.controller.MessagingController
+import com.example.lambda_aaa.controller.SearchController
 import com.example.lambda_aaa.model.MessagingRepository
 import com.example.lambda_aaa.view.AdminNotificationView
 import com.example.lambda_aaa.view.MessagingView
@@ -80,6 +81,7 @@ import com.example.lambda_aaa.view.HeaderColor
 import com.example.lambda_aaa.view.SubText
 import com.example.lambda_aaa.view.BorderColor
 import com.example.lambda_aaa.model.NotificationRepository
+import com.example.lambda_aaa.model.UserRepository
 import com.example.lambda_aaa.view.AdminDashboardView
 import com.example.lambda_aaa.view.ModerationView
 
@@ -136,6 +138,9 @@ fun CampsiteReservationApp(
     DisposableEffect(campsiteRepo) { onDispose { campsiteRepo.close() } }
     val lotteryRepo = remember { LotteryRepository() }
     DisposableEffect(lotteryRepo) { onDispose { lotteryRepo.close() } }
+    val userRepo = remember { UserRepository() }
+    DisposableEffect(userRepo) { onDispose { userRepo.close() } }
+    val searchRepo = remember { SearchController( campsiteRepo, userRepo ) }
     val messagingRepo = remember { MessagingRepository(campsiteRepo, lotteryRepo) }
     val notificationRepo = remember { NotificationRepository() }
 
@@ -231,6 +236,7 @@ fun CampsiteReservationApp(
 
                 composable("EntrantExplore") {
                     EntrantDashboardView(navController,
+                        repo = searchRepo,
                         onCampsiteClick = { navController.navigate("campsite/${Uri.encode(it)}") })
                 }
                 composable("campsite/{cid}", arguments = listOf(navArgument("cid") { type = NavType.StringType })) { entry ->
@@ -275,12 +281,16 @@ fun CampsiteReservationApp(
                 }
 
                 composable("AdminDashboard") { AdminDashboardView(navController,
+                    repo = searchRepo,
                     onOpenCampsites = { navController.navigate("ModerationView") },
                     onOpenProfiles =  { navController.navigate("ModerationView") },
                     onOpenImages =  { navController.navigate("ModerationView") },
                     )
                 }
-                composable("ModerationView") { ModerationView(navController)
+                composable("ModerationView") { ModerationView(navController,
+                    repo = searchRepo,
+                    onBack = { navController.navigate("AdminDashboard") },
+                    )
                 }
                 composable("AdminNotificationLogs") { AdminNotificationView(
                     adminNotificationController = AdminNotificationController(notificationRepo)

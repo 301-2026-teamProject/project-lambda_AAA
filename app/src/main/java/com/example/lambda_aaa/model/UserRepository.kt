@@ -46,6 +46,7 @@ class UserRepository {
         }
     }
 
+    fun close() { listener?.remove() }
     fun getAllProfiles(onResult: (Boolean, List<UserProfile>, String?) -> Unit) {
         usersRef.get()
             .addOnSuccessListener { snapshot ->
@@ -57,7 +58,7 @@ class UserRepository {
     }
 
     private fun decode(snapshot: DocumentSnapshot): UserProfile? =
-        snapshot.data?.let { ProfileFirestoreMapper.decode( it) }
+        snapshot.data?.let { ProfileFirestoreMapper.decode( snapshot.id, it) }
 
     private fun deliverList(snapshot: QuerySnapshot, onResult: (Boolean, List<UserProfile>, String?) -> Unit) {
         val profiles = try {
