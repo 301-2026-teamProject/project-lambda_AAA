@@ -15,8 +15,9 @@ internal object ProfileFirestoreMapper {
         "creationDate" to p.creationDate
     )
 
-    fun decode(fields: Map<String, Any?>): UserProfile {
+    fun decode(id: String, fields: Map<String, Any?>): UserProfile {
         val p = UserProfile(
+            uid = id,
             deviceId = fields["deviceId"] as? String ?: "",
             name = fields["name"] as? String ?: "",
             email = fields["email"] as? String ?: "",

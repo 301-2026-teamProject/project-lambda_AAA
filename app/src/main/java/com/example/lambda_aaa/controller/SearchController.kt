@@ -30,9 +30,10 @@ class SearchController(
     fun refresh() {
         fetchCampsites()
         filteredCampsites = campsites
-        if (userRepository != null) {
-            fetchProfiles()
-        }
+
+        fetchProfiles()
+        filteredProfiles = profiles
+
         //fetchLotteries()
     }
 
@@ -81,7 +82,7 @@ class SearchController(
     }
     */
     fun filterCampsite(
-        searchQuery: String,
+        searchQuery: String = "",
         selectedLocation: String?,
         selectedGuestCount: Int?,
         startDate: LocalDate?,
@@ -97,7 +98,7 @@ class SearchController(
     }
 
     fun filterProfiles(
-        searchQuery: String,
+        searchQuery: String = "",
     ) {
         filteredProfiles = profiles.filter { profile ->
             val matchSearch = (searchQuery == "" || profile.name.lowercase().contains(searchQuery.lowercase())) // Checks if the searchbar is empty, or if a profile has part of its text

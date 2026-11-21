@@ -41,14 +41,12 @@ import com.example.lambda_aaa.model.UserRepository
 @Composable
 fun AdminDashboardView (
     navController: NavController,
+    repo: SearchController,
     onSwitchRole: () -> Unit = {},
     onOpenCampsites: () -> Unit = {},
     onOpenProfiles: () -> Unit = {},
     onOpenImages: () -> Unit = {}
 ) {
-
-    val repo = remember { SearchController( CampsiteRepository(), UserRepository()) } // Database
-    //val campsiteList = repo.campsites
 
     Column(
         modifier = Modifier
