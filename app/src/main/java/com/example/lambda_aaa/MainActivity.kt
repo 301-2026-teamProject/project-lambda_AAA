@@ -153,10 +153,8 @@ fun CampsiteReservationApp(
             email = "alex@example.ca",
             phone = "780-555-0123",
             profilePhotoUrl = "https://picsum.photos/200",
-            roles = arrayListOf(Role.ENTRANT, Role.OWNER),
+            roles = arrayListOf(Role.ENTRANT, Role.OWNER, Role.ADMIN),
             isOwner = true,
-            roles = arrayListOf(Role.ENTRANT, Role.ADMIN),
-            isOwner = false,
         )
     } // A default user initialized for first time users
 
@@ -285,8 +283,9 @@ fun CampsiteReservationApp(
                 composable("AdminDashboard") { AdminDashboardView(navController,
                     repo = searchRepo,
                     onOpenCampsites = { navController.navigate("ModerationView") },
-                    onOpenProfiles =  { navController.navigate("ModerationView") },
-                    onOpenImages =  { navController.navigate("ModerationView") },
+                    onOpenProfiles = { navController.navigate("ModerationView") },
+                    onOpenImages = { navController.navigate("ModerationView") },
+                    onOpenLogs = { navController.navigate("AdminNotificationLogs") }
                     )
                 }
                 composable("ModerationView") { ModerationView(navController,

@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Landscape
 import androidx.compose.material.icons.outlined.People
@@ -45,7 +46,8 @@ fun AdminDashboardView (
     onSwitchRole: () -> Unit = {},
     onOpenCampsites: () -> Unit = {},
     onOpenProfiles: () -> Unit = {},
-    onOpenImages: () -> Unit = {}
+    onOpenImages: () -> Unit = {},
+    onOpenLogs: () -> Unit = {},
 ) {
 
     Column(
@@ -184,6 +186,31 @@ fun AdminDashboardView (
             )
 
             Spacer(modifier = Modifier.height(16.dp))
+
+            // Browse notification
+            Text(
+                text = "View History Notifications and Messages",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = HeaderColor
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Browse cards
+            AdminBrowseCard(
+                title = "Logs",
+                description = "View History Notifications and Messages",
+                icon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Email,
+                        contentDescription = null,
+                        tint = HeaderColor,
+                        modifier = Modifier.size(19.dp)
+                    )
+                },
+                onClick = onOpenLogs
+            )
         }
     }
 }
