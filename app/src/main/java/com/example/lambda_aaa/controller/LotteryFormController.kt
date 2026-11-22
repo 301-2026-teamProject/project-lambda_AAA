@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Checkbox
 
 // CampsiteDropdown creates a dropdown menu of the provided campsite list
 // CapacityCheck displays a box that changes color depending on the relation between numWinners and
@@ -29,14 +30,14 @@ import androidx.compose.foundation.layout.padding
 @Composable
 fun CampsiteDropdown(
     campsites: List<Campsite>,
-    selected: Campsite?,
-    onSelect: (Campsite) -> Unit
+    selected: List<Campsite>,
+    onToggle: (Campsite) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
         OutlinedTextField(
-            value = selected?.name ?: "",
+            value = selected.joinToString(", ") { it.name },
             onValueChange = {},
             readOnly = true,
             label = { Text("Campsite") },
@@ -49,10 +50,10 @@ fun CampsiteDropdown(
             campsites.forEach { campsite ->
                 DropdownMenuItem(
                     text = { Text(campsite.name) },
-                    onClick = {
-                        onSelect(campsite)
-                        expanded = false
-                    }
+                    leadingIcon = {
+                        Checkbox(checked = campsite in selected, onCheckedChange = null)
+                    },
+                    onClick = { onToggle(campsite) }
                 )
             }
         }

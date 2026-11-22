@@ -51,7 +51,7 @@ class MessagingRepository(
                     return@getAllLotteries
                 }
                 // filter out unrelated lotteries
-                val mine = all.filter { it.campsiteID in campsiteById }
+                val mine = all.filter { lottery -> lottery.campsiteIDs.any { it in campsiteById } }
                 fanOut<Lottery, Pair<Lottery, List<LotteryEntry>>>(
                     mine,
                     { lottery, done ->
@@ -72,7 +72,10 @@ class MessagingRepository(
                                     name = names[uid] ?: "Unnamed entrant",
                                     lotteryId = lottery.id,
                                     lotteryName = lottery.name,
-                                    campsiteName = campsiteById[lottery.campsiteID]?.name.orEmpty(),
+                                    campsiteName = lottery.campsiteIDs
+                                        .mapNotNull { campsiteById[it]?.name }
+                                        .joinToString(", "),
+                                    // maps the lottery's campsites to the ones in campsiteById's name and joins them
                                 )
                             }
                             .distinctBy { it.uid to it.lotteryId }
@@ -103,14 +106,15 @@ class MessagingRepository(
             ) { found ->
                 val joined = found.filterNotNull()
                 fanOut<String, Campsite?>(
-                    joined.map { it.campsiteID }.distinct(),
+                    joined.flatMap { it.campsiteIDs }.distinct(), //flatMap prevents list of list of campsite ids
                     { cid, done -> campsites.getCampsite(cid) { _, campsite, _ -> done(campsite) } }
                 ) { loaded ->
                     val campsiteById = loaded.filterNotNull().associateBy { it.cid }
                     val ownerIds = campsiteById.values.map { it.ownerId }.filter { it.isNotBlank() }.toSet()
                     users.getNames(ownerIds) { names ->
                         val contacts = joined.mapNotNull { lottery ->
-                            val campsite = campsiteById[lottery.campsiteID] ?: return@mapNotNull null
+                            val campsite = campsiteById[lottery.campsiteIDs[0]] ?: return@mapNotNull null
+                            // TEMPORARY FIX SINCE campsiteIDs IS AN ARRAY NOW
                             if (campsite.ownerId.isBlank()) return@mapNotNull null
                             MessageContact(
                                 uid = campsite.ownerId,

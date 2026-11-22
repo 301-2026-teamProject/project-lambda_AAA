@@ -92,9 +92,13 @@ fun CreateLotteryScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            val selectedCampsite = campsites.find { it.cid == form.campsiteID }
-            CampsiteDropdown(campsites, selectedCampsite) { picked ->
-                form = form.copy(campsiteID = picked.cid)
+            val selectedCampsites = campsites.filter { it.cid in form.campsiteIDs }
+            CampsiteDropdown(campsites, selectedCampsites) { picked ->
+                val ids = form.campsiteIDs
+                form = form.copy(
+                    campsiteIDs = if (picked.cid in ids) ids - picked.cid else ids + picked.cid
+                    )
+
             }
             OutlinedTextField(
                 value = form.name,
@@ -173,7 +177,7 @@ fun EditLotteryScreen(
     onClose: () -> Unit,
     viewModel: LotteryViewModel = viewModel()
 ) {
-    var form by remember { mutableStateOf(LotteryForm(campsiteID = lottery.campsiteID, name = lottery.name, lottery.registrationPeriod!!.start, lottery.registrationPeriod!!.end, lottery.bookingPeriod!!.start, lottery.bookingPeriod!!.end, lottery.numWinners.toString(), lottery.waitlistCapacity.toString())) }
+    var form by remember { mutableStateOf(LotteryForm(campsiteIDs = lottery.campsiteIDs, name = lottery.name, lottery.registrationPeriod!!.start, lottery.registrationPeriod!!.end, lottery.bookingPeriod!!.start, lottery.bookingPeriod!!.end, lottery.numWinners.toString(), lottery.waitlistCapacity.toString())) }
     val updatedLottery = form.toLotteryOrNull() // Basically the format of a lottery
     var isSaving by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
