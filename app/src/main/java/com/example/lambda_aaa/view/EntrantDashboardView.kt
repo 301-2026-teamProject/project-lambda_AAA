@@ -75,10 +75,10 @@ import java.time.LocalDate
 @Composable
 fun EntrantDashboardView(
     navController: NavController,
+    repo: SearchController,
     onCampsiteClick: (String) -> Unit = {},
     ) {
 
-    val repo = remember { SearchController( CampsiteRepository() ) } // Database
     val campsiteList = repo.campsites
     val filteredCampsites = repo.filteredCampsites
     val locations = campsiteList.map{ it.address }.distinct() // Gets SPECIFICALLY the general location of a campsite, like Jasper or Banff

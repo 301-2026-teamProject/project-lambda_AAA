@@ -2,7 +2,6 @@ package com.example.lambda_aaa.model
 
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentId
-import com.google.firebase.firestore.PropertyName
 import com.google.firebase.firestore.ServerTimestamp
 
 /**
@@ -12,7 +11,7 @@ import com.google.firebase.firestore.ServerTimestamp
  * information about the user needed by other methods or functions.
  *
  * @property uid the unique ID corresponding to the user determined by Firestore
- * @property deviceID the second unique ID corresponding to the specific installation on the user's device
+ * @property deviceId the second unique ID corresponding to the specific installation on the user's device
  * @property name the name of the user
  * @property email the email of the user
  * @property phone the phone number of the user
@@ -24,7 +23,7 @@ import com.google.firebase.firestore.ServerTimestamp
  */
 data class UserProfile(
     @DocumentId val uid: String = "",
-    var deviceID: String = "",
+    var deviceId: String = "",
     var name: String = "",
     var email: String = "",
     var phone: String = "",
@@ -76,10 +75,10 @@ data class UserProfile(
 
     /**
      * Update the user's device ID
-     * @param newDeviceID the new device ID that will replace the old device ID
+     * @param newDeviceId the new device ID that will replace the old device ID
      */
-    fun updateDeviceID(newDeviceID: String) : Unit {
-        deviceID = newDeviceID
+    fun updateDeviceId(newDeviceId: String) : Unit {
+        deviceId = newDeviceId
     }
 
 
