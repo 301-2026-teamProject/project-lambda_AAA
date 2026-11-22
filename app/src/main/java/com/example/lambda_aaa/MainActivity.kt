@@ -146,7 +146,7 @@ fun CampsiteReservationApp(
 
     var installationId by remember {mutableStateOf("")}
     var identifiedUser by remember { mutableStateOf(false) }
-    var currentUser: UserProfile = remember {
+    var currentUser by remember {mutableStateOf(
         UserProfile(
             uid = ALEX_ID,
             name = "Alex Camper",
@@ -156,9 +156,8 @@ fun CampsiteReservationApp(
             roles = arrayListOf(Role.ENTRANT, Role.ADMIN),
             isOwner = false,
         )
-    } // A default user initialized for first time users
+    )} // A default user initialized for first time users
 
-    val profileController = ProfileController()
 
     LaunchedEffect(Unit) {
         // Adapted from Google for Developers Firebase Documentation, Fundamentals: "Manage Firebase
@@ -204,6 +203,7 @@ fun CampsiteReservationApp(
 
     if (identifiedUser) {
 
+        val profileController = ProfileController(currentUser)
         val selectedMenu = if (currentUser.roles.contains(Role.ADMIN)) AdminTabs else if (currentUser.roles.contains(Role.OWNER)) OwnerTabs else EntrantTabs
         var selectedTab by remember { mutableStateOf(selectedMenu.first().id) }
         val waitlistRoute = "OwnerLotteryWaitlist/{lotteryId}"
@@ -244,9 +244,9 @@ fun CampsiteReservationApp(
                     val controller = remember(cid, campsiteRepo) { CampsiteDetailController(cid, campsiteRepo) }
                     CampsiteDetailView(controller, onBack = { navController.popBackStack() })
                 }
-                composable("EntrantLottery") { EntrantProfileView(navController, profileController, currentUser) }
-                composable("EntrantTrips") { EntrantProfileView(navController, profileController, currentUser) }
-                composable("Profile") { EntrantProfileView(navController, profileController, currentUser) }
+                composable("EntrantLottery") { EntrantProfileView(navController, profileController) }
+                composable("EntrantTrips") { EntrantProfileView(navController, profileController) }
+                composable("Profile") { EntrantProfileView(navController, profileController) }
                 composable("EntrantMessage") {
                     val messagingController = remember { MessagingController(currentUser.uid, Role.ENTRANT, messagingRepo) }
                     MessagingView(messagingController, onBack = {
@@ -264,8 +264,8 @@ fun CampsiteReservationApp(
                         }
                     )
                 }
-                composable("OwnerCampsites") { EntrantProfileView(navController, profileController, currentUser) }
-                composable("OwnerLottery") { EntrantProfileView(navController, profileController, currentUser) }
+                composable("OwnerCampsites") { EntrantProfileView(navController, profileController) }
+                composable("OwnerLottery") { EntrantProfileView(navController, profileController) }
                 composable(
                     route = waitlistRoute,
                         arguments = listOf(lotteryArg)) { entry ->

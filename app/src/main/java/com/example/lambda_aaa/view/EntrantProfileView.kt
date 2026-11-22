@@ -47,20 +47,21 @@ import com.example.lambda_aaa.model.UserProfile
  *
  * @param entrantProfileNavController the nav controller that handles navigation into and out of
  * EntrantProfileView
+ * @param profileControl the profile controller that manages the current user profile
  */
 @Composable
 fun EntrantProfileView(
     entrantProfileNavController: NavController,
-    profileControl : ProfileController,
-    user: UserProfile
+    profileControl : ProfileController
 ) {
 
-    var name by remember { mutableStateOf(user.name) }
-    var email by remember { mutableStateOf(user.email) }
-    var phoneNumber by remember { mutableStateOf(user.phone) }
+    var name by remember { mutableStateOf(profileControl.getUserName()) }
+    var email by remember { mutableStateOf(profileControl.getUserEmail()) }
+    var phoneNumber by remember { mutableStateOf(profileControl.getUserPhone()) }
+    var currentImageUrl by remember { mutableStateOf(profileControl.getUserPhoto()) }
     var notify by remember { mutableStateOf(true) }
     var changeImage by remember { mutableStateOf(false) }
-    var currentImageUrl by remember { mutableStateOf(user.profilePhotoUrl) }
+
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -122,7 +123,7 @@ fun EntrantProfileView(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        AsyncImage(model = user.profilePhotoUrl,
+                        AsyncImage(model = profileControl.getUserPhoto(),
                             contentDescription = null,
                             modifier = Modifier.fillMaxWidth().height(200.dp).clickable(onClick = {
                                 changeImage = !changeImage
@@ -148,7 +149,7 @@ fun EntrantProfileView(
 
                             Button(
                                 onClick = {
-                                    profileControl.updateProfilePhoto(currentImageUrl, user.deviceId)
+                                    profileControl.updateProfilePhoto(currentImageUrl)
                                     changeImage = !changeImage
                                 },
                                 colors = ButtonDefaults.buttonColors(
@@ -204,7 +205,7 @@ fun EntrantProfileView(
                         if (notify) {
                             Button(
                                 onClick = {
-                                    user.toggleNotifications()
+                                    profileControl.toggleUserNotifications()
                                     notify = !notify
                                 },
                                 colors = ButtonDefaults.buttonColors(
@@ -215,7 +216,7 @@ fun EntrantProfileView(
                         else {
                             Button(
                                 onClick = {
-                                    user.toggleNotifications()
+                                    profileControl.toggleUserNotifications()
                                     notify = !notify
                                 },
                                 colors = ButtonDefaults.buttonColors(
@@ -232,13 +233,7 @@ fun EntrantProfileView(
                         // Saves what is currently in the text fields as the user's new profile information
                         Button(
                             onClick = {
-                                profileControl.updateBasicInfo(name, email, phoneNumber, user.deviceId)
-                                /*
-                                user.updateName(name)
-                                user.updateEmail(email)
-                                user.updatePhone(phoneNumber)
-
-                                 */
+                                profileControl.updateBasicInfo(name, email, phoneNumber)
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFF06402B), contentColor = Color.White),
