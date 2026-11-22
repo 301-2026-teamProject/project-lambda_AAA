@@ -177,7 +177,7 @@ fun EditLotteryScreen(
     onClose: () -> Unit,
     viewModel: LotteryViewModel = viewModel()
 ) {
-    var form by remember { mutableStateOf(LotteryForm(campsiteID = lottery.campsiteID, name = lottery.name, lottery.registrationPeriod!!.start, lottery.registrationPeriod!!.end, lottery.bookingPeriod!!.start, lottery.bookingPeriod!!.end, lottery.numWinners.toString(), lottery.waitlistCapacity.toString())) }
+    var form by remember { mutableStateOf(LotteryForm(campsiteIDs = lottery.campsiteIDs, name = lottery.name, lottery.registrationPeriod!!.start, lottery.registrationPeriod!!.end, lottery.bookingPeriod!!.start, lottery.bookingPeriod!!.end, lottery.numWinners.toString(), lottery.waitlistCapacity.toString())) }
     val updatedLottery = form.toLotteryOrNull() // Basically the format of a lottery
     var isSaving by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
