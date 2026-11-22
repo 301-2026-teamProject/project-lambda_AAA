@@ -6,6 +6,7 @@ package com.example.lambda_aaa.view
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,12 +18,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -40,7 +46,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.example.lambda_aaa.controller.ProfileController
-import com.example.lambda_aaa.model.UserProfile
 
 /**
  * Implements the Entrant Profile Screen according to the GUI mockup on GitHub.
@@ -49,6 +54,7 @@ import com.example.lambda_aaa.model.UserProfile
  * EntrantProfileView
  * @param profileControl the profile controller that manages the current user profile
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EntrantProfileView(
     entrantProfileNavController: NavController,
@@ -61,6 +67,7 @@ fun EntrantProfileView(
     var currentImageUrl by remember { mutableStateOf(profileControl.getUserPhoto()) }
     var notify by remember { mutableStateOf(true) }
     var changeImage by remember { mutableStateOf(false) }
+    var confirmDelete by remember { mutableStateOf(false) }
 
 
     Scaffold(
@@ -242,7 +249,7 @@ fun EntrantProfileView(
 
                         Button(
                             onClick = {
-                                // After halfway point
+                                confirmDelete = !confirmDelete
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color.Transparent, contentColor = Color.Red),
@@ -265,6 +272,36 @@ fun EntrantProfileView(
                 }
             }
         }
+    }
+
+    if (confirmDelete) {
+
+        val closePrompt = {confirmDelete = false}
+
+        AlertDialog(
+            onDismissRequest = { closePrompt() },
+            title = { Text("Confirm Delete Profile") },
+            text = { Text("Are you sure you want to delete your profile?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        closePrompt()
+                    },
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        closePrompt()
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+
     }
 
 }

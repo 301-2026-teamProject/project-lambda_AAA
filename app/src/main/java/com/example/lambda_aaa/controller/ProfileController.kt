@@ -28,6 +28,22 @@ class ProfileController (private val user: UserProfile) {
 
     fun toggleUserNotifications() {
         user.toggleNotifications()
+
+        val newInfo = mapOf(
+            "notificationsEnabled" to user.notificationsEnabled,
+        )
+
+        usersCollection.whereEqualTo("deviceId", user.deviceId).limit(1)
+            .get()
+            .addOnSuccessListener { profileRef ->
+
+                if (!profileRef.isEmpty) {
+                    profileRef.documents[0].reference.update(newInfo)
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("Profile Basic Info Update Error", "Failed to update basic info", e)
+            }
     }
 
     fun updateBasicInfo(newName: String, newEmail: String, newPhone: String) {
