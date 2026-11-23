@@ -15,7 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.lambda_aaa.model.OwnerLotteriesViewModel
-import com.example.lambda_aaa.model.OwnerLotteryItem
+import com.example.lambda_aaa.model.LotteryItem
 import androidx.compose.material.icons.filled.Edit
 
 @Composable
@@ -101,9 +101,9 @@ fun OwnerLotteryView(
 
 @Composable
 fun LotteryCard(
-    item: OwnerLotteryItem,
+    item: LotteryItem,
     onClick: () -> Unit,
-    onEdit: () -> Unit
+    onEdit: (() -> Unit)? = null
 ) {
     Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -119,8 +119,10 @@ fun LotteryCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            IconButton(onClick = onEdit) {
-                Icon(Icons.Default.Edit, contentDescription = "Edit lottery")
+            if (onEdit != null) {
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, contentDescription = "Edit lottery")
+                }
             }
         }
     }

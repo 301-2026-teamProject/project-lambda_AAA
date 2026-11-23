@@ -83,6 +83,7 @@ import com.example.lambda_aaa.view.BorderColor
 import com.example.lambda_aaa.model.NotificationRepository
 import com.example.lambda_aaa.model.UserRepository
 import com.example.lambda_aaa.view.AdminDashboardView
+import com.example.lambda_aaa.view.EntrantLotteryView
 import com.example.lambda_aaa.view.ModerationView
 import com.example.lambda_aaa.view.OwnerLotteryView
 
@@ -245,7 +246,7 @@ fun CampsiteReservationApp(
                     val controller = remember(cid, campsiteRepo) { CampsiteDetailController(cid, campsiteRepo) }
                     CampsiteDetailView(controller, onBack = { navController.popBackStack() })
                 }
-                composable("EntrantLottery") { EntrantProfileView(navController, profileController, currentUser) }
+                composable("EntrantLottery") { EntrantLotteryView() }
                 composable("EntrantTrips") { EntrantProfileView(navController, profileController, currentUser) }
                 composable("Profile") { EntrantProfileView(navController, profileController, currentUser) }
                 composable("EntrantMessage") {

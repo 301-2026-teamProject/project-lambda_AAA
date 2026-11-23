@@ -2,14 +2,14 @@ package com.example.lambda_aaa.model
 
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
-data class OwnerLotteryItem(
+data class LotteryItem(
     val lottery: Lottery,
     val campsiteNames: String
 )
 
 data class OwnerLotteriesUiState(
     val isLoading: Boolean = true,
-    val lotteries: List<OwnerLotteryItem> = emptyList(),
+    val lotteries: List<LotteryItem> = emptyList(),
     val ownedCampsites: List<Campsite> = emptyList(),
     val error: String? = null
 )
@@ -44,7 +44,7 @@ class OwnerLotteriesViewModel(
                                 lottery.campsiteIDs.all { it in campsiteById }
                     }
                     .map { lottery ->
-                        OwnerLotteryItem(
+                        LotteryItem(
                             lottery = lottery,
                             campsiteNames = lottery.campsiteIDs
                                 .mapNotNull { campsiteById[it]?.name }
