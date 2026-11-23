@@ -84,6 +84,7 @@ import com.example.lambda_aaa.model.NotificationRepository
 import com.example.lambda_aaa.model.UserRepository
 import com.example.lambda_aaa.view.AdminDashboardView
 import com.example.lambda_aaa.view.ModerationView
+import com.example.lambda_aaa.view.OwnerLotteryView
 
 // ids for testing before identification is fixed
 private const val OWNER_ID = "1hQDbywHu0OqUQ0TGWwE"   // owner id
@@ -265,7 +266,12 @@ fun CampsiteReservationApp(
                     )
                 }
                 composable("OwnerCampsites") { EntrantProfileView(navController, profileController, currentUser) }
-                composable("OwnerLottery") { EntrantProfileView(navController, profileController, currentUser) }
+                composable("OwnerLottery") { OwnerLotteryView(
+                    ownerId = currentUser.uid,
+                    onOpenWaitlist = { lotteryId ->
+                        navController.navigate("OwnerLotteryWaitlist/$lotteryId")
+                    }
+                ) }
                 composable(
                     route = waitlistRoute,
                         arguments = listOf(lotteryArg)) { entry ->
