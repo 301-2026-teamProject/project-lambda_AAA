@@ -17,16 +17,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import com.example.lambda_aaa.controller.CampsiteDetailController
 import com.example.lambda_aaa.controller.MessagingController
+import com.example.lambda_aaa.model.EntryRepository
 import com.example.lambda_aaa.model.Lottery
 import com.example.lambda_aaa.model.MessagingRepository
 import com.example.lambda_aaa.model.Role
+import com.example.lambda_aaa.model.UserRepository
 
 /**
  * Main app logic */
 @Composable
 fun CampsiteReservationApp(
     uid: String,
-    onOpenWaitlist: (String) -> Unit
+    onOpenWaitlist: (String) -> Unit,
+    isAdmin: Boolean,
+    onSwitchRole: () -> Unit,
 ) {
     val navController = rememberNavController()
     val repo = remember { CampsiteRepository() }
@@ -40,7 +44,15 @@ fun CampsiteReservationApp(
 
     val lotteryRepo = remember { LotteryRepository() }
     DisposableEffect(lotteryRepo) { onDispose { lotteryRepo.close() } }
-    val messagingRepo = remember { MessagingRepository(repo, lotteryRepo) }
+    val entryRepo = remember { EntryRepository() }
+    val userRepo = remember { UserRepository() }
+    val messagingRepo = remember {
+        MessagingRepository(
+            campsites = repo,
+            lotteries = lotteryRepo,
+            entries = entryRepo,
+            userRepo,
+        ) }
 
     var editMessage by remember { mutableStateOf<Pair<Boolean, String>?>(null) }
     var selectedLottery by remember {mutableStateOf<Lottery?>(null)}
@@ -61,7 +73,9 @@ fun CampsiteReservationApp(
                 editMessage = editMessage,
                 onEditMessageShown = { editMessage = null },
                 messagingController = messagingController,
-                onClickMessage = { navController.navigate("ownerMessages") }
+                onClickMessage = { navController.navigate("ownerMessages") },
+                isAdmin = isAdmin,
+                onSwitchRole = onSwitchRole,
             )
         }
         composable("registerScreen") {

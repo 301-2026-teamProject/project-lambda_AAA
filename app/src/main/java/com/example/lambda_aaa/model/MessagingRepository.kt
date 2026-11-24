@@ -15,8 +15,8 @@ package com.example.lambda_aaa.model
 class MessagingRepository(
     private val campsites: CampsiteRepository,
     private val lotteries: LotteryRepository,
-    private val entries: EntryRepository = EntryRepository(),
-    private val users: UserRepository = UserRepository(),
+    private val entries: EntryRepository,
+    private val users: UserRepository,
 ) {
     fun allowContact(entryStatus: EntryStatus): Boolean = when (entryStatus) {
         EntryStatus.WITHDRAWN -> return false
@@ -51,7 +51,7 @@ class MessagingRepository(
                     return@getAllLotteries
                 }
                 // filter out unrelated lotteries
-                val mine = all.filter { lottery -> lottery.campsiteIDs.any { it in campsiteById } }
+                val mine = all.filter { it.campsiteIDs.any { campsiteID -> campsiteID in campsiteById } }
                 fanOut<Lottery, Pair<Lottery, List<LotteryEntry>>>(
                     mine,
                     { lottery, done ->
