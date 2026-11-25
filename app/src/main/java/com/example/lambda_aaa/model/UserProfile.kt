@@ -19,7 +19,7 @@ import com.google.firebase.firestore.ServerTimestamp
  * @property roles the roles that the user has that is recognized by the app
  * @property notificationsEnabled the identifier that determines if the user receives notifications
  * @property isOwner the identifier if the user is registered as the owner
- * @property creationDate the date when the user is first created
+ * @property creationDate the date when the user profile is first created
  */
 data class UserProfile(
     @DocumentId val uid: String = "",

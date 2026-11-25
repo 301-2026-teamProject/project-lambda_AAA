@@ -68,6 +68,7 @@ fun EntrantProfileView(
     var notify by remember { mutableStateOf(true) }
     var changeImage by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
+    var showPolicies by remember { mutableStateOf(false) }
 
 
     Scaffold(
@@ -156,7 +157,7 @@ fun EntrantProfileView(
 
                             Button(
                                 onClick = {
-                                    profileControl.updateProfilePhoto(currentImageUrl)
+                                    profileControl.updateProfile(newPhoto = currentImageUrl)
                                     changeImage = !changeImage
                                 },
                                 colors = ButtonDefaults.buttonColors(
@@ -233,14 +234,36 @@ fun EntrantProfileView(
                         }
                     }
 
-                    Text("Policy and Guidelines >", fontSize = 12.sp)
+                    TextButton(onClick = {showPolicies = !showPolicies}) {
+                        Text(
+                            "Policies and guidelines",
+                            modifier = Modifier
+                        )
+                    }
+
+                    if (showPolicies) {
+
+                        HorizontalDivider(color = BorderColor, thickness = 2.dp)
+                        Spacer(modifier = Modifier.height(5.dp))
+
+                        Text(
+                            "This is the app's policies and guidelines.",
+                            modifier = Modifier
+                        )
+
+                        Spacer(modifier = Modifier.height(5.dp))
+                        HorizontalDivider(color = BorderColor, thickness = 2.dp)
+
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     Row {
 
                         // Saves what is currently in the text fields as the user's new profile information
                         Button(
                             onClick = {
-                                profileControl.updateBasicInfo(name, email, phoneNumber)
+                                profileControl.updateProfile(name, email, phoneNumber)
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFF06402B), contentColor = Color.White),
@@ -285,6 +308,7 @@ fun EntrantProfileView(
             confirmButton = {
                 TextButton(
                     onClick = {
+                        profileControl.deleteProfile()
                         closePrompt()
                     },
                 ) {

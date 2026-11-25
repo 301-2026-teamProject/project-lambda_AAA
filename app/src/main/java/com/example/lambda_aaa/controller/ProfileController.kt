@@ -27,6 +27,7 @@ class ProfileController (private val user: UserProfile) {
     }
 
     fun toggleUserNotifications() {
+
         user.toggleNotifications()
 
         val newInfo = mapOf(
@@ -42,56 +43,60 @@ class ProfileController (private val user: UserProfile) {
                 }
             }
             .addOnFailureListener { e ->
-                Log.e("Profile Basic Info Update Error", "Failed to update basic info", e)
+                Log.e("Profile Toggle Notifications Error", "Failed to update notifications", e)
             }
     }
 
-    fun updateBasicInfo(newName: String, newEmail: String, newPhone: String) {
+    fun updateProfile(
+        newName: String = user.name,
+        newEmail: String = user.email,
+        newPhone: String = user.phone,
+        newPhoto: String = user.profilePhotoUrl
+    ) {
 
         user.updateName(newName)
         user.updateEmail(newEmail)
         user.updatePhone(newPhone)
+        user.updatePhoto(newPhoto)
 
         val newInfo = mapOf(
             "name" to newName,
             "email" to newEmail,
-            "phone" to newPhone
-        )
-
-        usersCollection.whereEqualTo("deviceId", user.deviceId).limit(1)
-            .get()
-            .addOnSuccessListener { profileRef ->
-
-                if (!profileRef.isEmpty) {
-                    profileRef.documents[0].reference.update(newInfo)
-                }
-            }
-            .addOnFailureListener { e ->
-                Log.e("Profile Basic Info Update Error", "Failed to update basic info", e)
-            }
-
-    }
-
-    fun updateProfilePhoto(newPhoto: String) {
-
-        user.updatePhoto(newPhoto)
-
-        val newInfo = mapOf(
+            "phone" to newPhone,
             "profilePhotoUrl" to newPhoto
         )
 
         usersCollection.whereEqualTo("deviceId", user.deviceId).limit(1)
             .get()
-            .addOnSuccessListener { profileRef ->
+            .addOnSuccessListener { match ->
 
-                if (!profileRef.isEmpty) {
-                    profileRef.documents[0].reference.update(newInfo)
+                if (!match.isEmpty) {
+                    match.documents[0].reference.update(newInfo)
+                }
+                else {
+                    usersCollection.add(user)
                 }
             }
             .addOnFailureListener { e ->
-                Log.e("Profile Photo Update Error", "Failed to update photo", e)
+                Log.e("Profile Update Error", "Failed to update profile", e)
             }
 
+    }
+
+    fun deleteProfile() {
+
+        usersCollection.whereEqualTo("deviceId", user.deviceId).limit(1)
+            .get()
+            .addOnSuccessListener { match ->
+
+                if (!match.isEmpty) {
+                    match.documents[0].reference.delete()
+                }
+
+            }
+            .addOnFailureListener { e ->
+                Log.e("Profile Deletion Error", "Failed to delete profile", e)
+            }
     }
 
 }
