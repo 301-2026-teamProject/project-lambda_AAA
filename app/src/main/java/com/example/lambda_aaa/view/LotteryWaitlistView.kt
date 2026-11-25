@@ -5,6 +5,11 @@
 package com.example.lambda_aaa.view
 
 import android.util.Log
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
+import java.util.UUID
+import com.example.lambda_aaa.model.NotificationRepository
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -146,7 +151,13 @@ fun LotteryWaitlistView(
     }
 
 
-    var showNotifyDialog by remember { mutableStateOf(false) }
+    var showNotifyDialog by rememberSaveable { mutableStateOf(false) }
+    val notificationRepo = remember { NotificationRepository() }
+    val scope = rememberCoroutineScope()
+    var broadcastId by rememberSaveable(lotteryId) { mutableStateOf("") }
+    var sending by remember { mutableStateOf(false) }
+    var sendError by rememberSaveable { mutableStateOf("") }
+    var feedback by rememberSaveable { mutableStateOf("") }
     var notificationMessage by rememberSaveable { mutableStateOf("") }
 
     Scaffold(
@@ -362,6 +373,7 @@ fun LotteryWaitlistView(
                 }
 
 
+                if (feedback.isNotEmpty()) item { Text(feedback) }
                 item {
                     Surface(
                         shape = RoundedCornerShape(14.dp),
@@ -397,35 +409,59 @@ fun LotteryWaitlistView(
 
     if (showNotifyDialog) {
         AlertDialog(
-            onDismissRequest = {
-                showNotifyDialog = false
-            },
-            title = { Text("Notify waitlist") },
+            onDismissRequest = { if (!sending) showNotifyDialog = false },
+            title = { Text(if (broadcastId.isEmpty()) "Notify waitlist" else "Confirm notification") },
             text = {
-                OutlinedTextField(
-                    value = notificationMessage,
-                    onValueChange = { newText -> notificationMessage = newText },
-                    label = {
-                        Text("Message")
+                Column {
+                    Text("Recipients: entrants currently waiting for this lottery with notifications enabled.")
+                    if (broadcastId.isEmpty()) {
+                        OutlinedTextField(value = notificationMessage,
+                            onValueChange = { notificationMessage = it }, label = { Text("Message") })
+                    } else {
+                        Text(notificationMessage.trim())
                     }
-                )
+                    if (sendError.isNotEmpty()) Text(sendError)
+                }
             },
             confirmButton = {
-                TextButton(
-                    onClick = {
-
-                    },
-                    enabled = notificationMessage.isNotBlank()
-                ) {
-                    Text("Send")
+                TextButton(enabled = !sending && notificationMessage.isNotBlank(), onClick = {
+                    if (broadcastId.isEmpty()) {
+                        broadcastId = UUID.randomUUID().toString()
+                    } else {
+                        sending = true
+                        sendError = ""
+                        scope.launch {
+                            try {
+                                val count = notificationRepo.sendWaitlistBroadcast(
+                                    ownerId, lotteryId, notificationMessage, broadcastId)
+                                feedback = if (count == 0) "No eligible waitlist entrants."
+                                    else "Notification sent to $count waitlist entrant(s)."
+                                showNotifyDialog = false
+                                notificationMessage = ""
+                                broadcastId = ""
+                            } catch (cancelled: CancellationException) {
+                                throw cancelled
+                            } catch (e: Exception) {
+                                sendError = e.localizedMessage ?: "Could not finish sending."
+                            } finally {
+                                sending = false
+                            }
+                        }
+                    }
+                }) {
+                    Text(when {
+                        sending -> "Sending…"
+                        broadcastId.isEmpty() -> "Preview"
+                        sendError.isNotEmpty() -> "Retry"
+                        else -> "Send"
+                    })
                 }
             },
             dismissButton = {
-                TextButton(
-                    onClick = { showNotifyDialog = false }
-                ) {
-                    Text("Cancel")
-                }
+                TextButton(enabled = !sending, onClick = {
+                    if (broadcastId.isNotEmpty() && sendError.isEmpty()) broadcastId = ""
+                    else showNotifyDialog = false
+                }) { Text(if (broadcastId.isNotEmpty() && sendError.isEmpty()) "Edit" else "Close") }
             }
         )
     }
@@ -439,23 +475,6 @@ fun LotteryWaitlistView(
  * @return the initials of the Entrant as a string of capital characters
  */
 // removed private modifier otherwise it raises error
-
-
-fun ExtractInitials(name: String) : String {
-    var cleanName = name.trim()
-    val firstInitial = cleanName[0]
-    var initials = ""
-    cleanName = cleanName.substring(1)
-
-    for (char in cleanName) {
-        if (char.isUpperCase()) {
-            initials = "$firstInitial$char"
-        }
-    }
-
-    return initials
-}
-
 fun getInitials(name: String) : String {
     val cleanName = name.trim()
     val initials = cleanName.filter { it.isUpperCase() }
