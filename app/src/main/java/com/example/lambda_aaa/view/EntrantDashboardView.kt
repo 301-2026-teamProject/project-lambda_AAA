@@ -76,6 +76,8 @@ import java.time.LocalDate
 fun EntrantDashboardView(
     navController: NavController,
     repo: SearchController,
+    isAdmin: Boolean,
+    onSwitchRole: () -> Unit,
     onCampsiteClick: (String) -> Unit = {},
     ) {
 
@@ -100,7 +102,10 @@ fun EntrantDashboardView(
                 .background(Background)
                 .padding(innerPadding),
         ) {
-            TopBar()
+            TopBar(
+                isAdmin = isAdmin,
+                onSwitchRole = onSwitchRole,
+            )
             HorizontalDivider(color = BorderColor, thickness = 1.dp)
 
             // This Column encapsulates the rest of the Screen
@@ -258,7 +263,10 @@ fun EntrantDashboardView(
  * @return nothing
  */
 @Composable
-private fun TopBar() {
+private fun TopBar(
+    isAdmin: Boolean,
+    onSwitchRole: () -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -284,6 +292,25 @@ private fun TopBar() {
             )
         }
         Spacer(modifier = Modifier.weight(1f))
+
+        if (isAdmin) {
+            Surface(
+                onClick = onSwitchRole,
+                shape = RoundedCornerShape(14.dp),
+                color = Color.White,
+                border = BorderStroke(1.dp, BorderColor)
+            ) {
+                Text(
+                    text = "Switch role",
+                    modifier = Modifier.padding(
+                        horizontal = 13.dp,
+                        vertical = 8.dp
+                    ),
+                    fontSize = 12.sp,
+                    color = HeaderColor
+                )
+            }
+        }
 
         // The notification button
         Surface(
