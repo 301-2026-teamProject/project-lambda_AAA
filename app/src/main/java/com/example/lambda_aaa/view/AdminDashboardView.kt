@@ -27,7 +27,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,14 +35,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.lambda_aaa.controller.SearchController
-import com.example.lambda_aaa.model.CampsiteRepository
-import com.example.lambda_aaa.model.UserRepository
 
 @Composable
 fun AdminDashboardView (
     navController: NavController,
     repo: SearchController,
     onSwitchRole: () -> Unit = {},
+    onOpenCard: (String) -> Unit = {},
     onOpenCampsites: () -> Unit = {},
     onOpenProfiles: () -> Unit = {},
     onOpenImages: () -> Unit = {},
@@ -150,7 +148,7 @@ fun AdminDashboardView (
                         modifier = Modifier.size(19.dp)
                     )
                 },
-                onClick = onOpenCampsites
+                onClick = { onOpenCard("Campsites") }
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -166,7 +164,7 @@ fun AdminDashboardView (
                         modifier = Modifier.size(19.dp)
                     )
                 },
-                onClick = onOpenProfiles
+                onClick = { onOpenCard("Profiles") }
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -182,7 +180,7 @@ fun AdminDashboardView (
                         modifier = Modifier.size(19.dp)
                     )
                 },
-                onClick = onOpenImages
+                onClick = { onOpenCard("Images") }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -362,7 +360,6 @@ private fun AdminBrowseCard(
                 )
             }
 
-            // Right chevron
             Icon(
                 imageVector = Icons.Outlined.ChevronRight,
                 contentDescription = "Open $title",
