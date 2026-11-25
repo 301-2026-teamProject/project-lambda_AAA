@@ -83,6 +83,7 @@ import com.example.lambda_aaa.view.BorderColor
 import com.example.lambda_aaa.model.NotificationRepository
 import com.example.lambda_aaa.model.UserRepository
 import com.example.lambda_aaa.view.AdminDashboardView
+import com.example.lambda_aaa.view.ConfirmationView
 import com.example.lambda_aaa.view.ModerationView
 
 // ids for testing before identification is fixed
@@ -282,16 +283,25 @@ fun CampsiteReservationApp(
 
                 composable("AdminDashboard") { AdminDashboardView(navController,
                     repo = searchRepo,
-                    onOpenCampsites = { navController.navigate("ModerationView") },
-                    onOpenProfiles =  { navController.navigate("ModerationView") },
-                    onOpenImages =  { navController.navigate("ModerationView") },
+                    onOpenCard = { navController.navigate("ModerationView_${Uri.encode(it)}") },
                     )
                 }
-                composable("ModerationView") { ModerationView(navController,
-                    repo = searchRepo,
-                    onBack = { navController.navigate("AdminDashboard") },
-                    )
+                composable("ModerationView_{destination}", arguments = listOf(navArgument("destination") { type = NavType.StringType })) { entry ->
+                    val destination = entry.arguments?.getString("destination") ?: return@composable
+                    ModerationView(navController,
+                        repo = searchRepo,
+                        browseStartOption = destination,
+                    onBack = { navController.popBackStack() },
+                    onCardClick = { type, id ->
+                        navController.navigate("ConfirmationView_${Uri.encode(type)}-${Uri.encode(id)}")}
+                    ) }
+
+                composable("ConfirmationView_{type}-{id}", arguments = listOf(navArgument("type") { type = NavType.StringType }, navArgument("id") { type = NavType.StringType })) { entry ->
+                    val type = entry.arguments?.getString("type") ?: return@composable
+                    val id = entry.arguments?.getString("id") ?: return@composable
+                    ConfirmationView(navController, type, id, campsiteRepo, userRepo, onBack = { navController.popBackStack() })
                 }
+
                 composable("AdminNotificationLogs") { AdminNotificationView(
                     adminNotificationController = AdminNotificationController(notificationRepo)
                 ) { navController.popBackStack() }

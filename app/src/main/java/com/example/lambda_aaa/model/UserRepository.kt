@@ -70,6 +70,23 @@ class UserRepository {
         onResult(true, profiles, null)
     }
 
+    // get campsite details and also used in campsite information editing
+    fun getProfile(uid: String, onResult: (Boolean, UserProfile?, String?) -> Unit) {
+        usersRef.document(uid).get()
+            .addOnSuccessListener { snapshot ->
+                val profile = try {
+                    decode(snapshot)
+                } catch (e: RuntimeException) {
+                    onResult(false, null, e.message)
+                    return@addOnSuccessListener
+                }
+                onResult(true, profile, null)
+            }
+            .addOnFailureListener { e ->
+                onResult(false, null, e.message)
+            }
+    }
+
     /**
      * Looks up display names for a set of user ids.
      *
