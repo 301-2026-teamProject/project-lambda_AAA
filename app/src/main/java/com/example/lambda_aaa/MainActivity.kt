@@ -50,7 +50,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material3.Button
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -65,10 +64,7 @@ import com.example.lambda_aaa.view.EntrantProfileView
 import com.example.lambda_aaa.view.LotteryWaitlistView
 import com.google.firebase.installations.FirebaseInstallations
 import kotlinx.coroutines.tasks.await
-import androidx.compose.runtime.key
 import com.example.lambda_aaa.model.LotteryRepository
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.material.icons.filled.Email
 import com.example.lambda_aaa.controller.AdminNotificationController
 import com.example.lambda_aaa.controller.MessagingController
@@ -87,11 +83,8 @@ import com.example.lambda_aaa.model.UserProfilesRepository
 import com.example.lambda_aaa.view.AdminDashboardView
 import com.example.lambda_aaa.view.EntrantLotteryView
 import com.example.lambda_aaa.view.ModerationView
-<<<<<<< HEAD
 import com.example.lambda_aaa.view.OwnerLotteryView
-=======
 import com.example.lambda_aaa.model.UserRepository
->>>>>>> c1ebe0067f51369f0bfe3ba38d3cf734877f888b
 
 // ids for testing before identification is fixed
 private const val OWNER_ID = "1hQDbywHu0OqUQ0TGWwE"   // owner id
@@ -265,18 +258,12 @@ fun CampsiteReservationApp(
                     val controller = remember(cid, campsiteRepo) { CampsiteDetailController(cid, campsiteRepo) }
                     CampsiteDetailView(controller, onBack = { navController.popBackStack() })
                 }
-<<<<<<< HEAD
                 composable("EntrantLottery") { EntrantLotteryView() }
-                composable("EntrantTrips") { EntrantProfileView(navController, profileController, currentUser) }
-                composable("Profile") { EntrantProfileView(navController, profileController, currentUser) }
-=======
-                composable("EntrantLottery") { EntrantProfileView(navController, profileController) }
                 composable("EntrantTrips") { EntrantProfileView(navController, profileController) }
                 composable("Profile") { EntrantProfileView(navController, profileController) }
                 composable("EntrantNotifications") {
                     NotificationView(userId = currentUser.uid, onBack = { navController.popBackStack() })
                 }
->>>>>>> c1ebe0067f51369f0bfe3ba38d3cf734877f888b
                 composable("EntrantMessage") {
                     val messagingController = remember { MessagingController(currentUser.uid, Role.ENTRANT, messagingRepo) }
                     MessagingView(messagingController, onBack = {
@@ -300,18 +287,13 @@ fun CampsiteReservationApp(
                         }
                     )
                 }
-<<<<<<< HEAD
-                composable("OwnerCampsites") { EntrantProfileView(navController, profileController, currentUser) }
+                composable("OwnerCampsites") { EntrantProfileView(navController, profileController) }
                 composable("OwnerLottery") { OwnerLotteryView(
                     ownerId = currentUser.uid,
                     onOpenWaitlist = { lotteryId ->
                         navController.navigate("OwnerLotteryWaitlist/$lotteryId")
                     }
                 ) }
-=======
-                composable("OwnerCampsites") { EntrantProfileView(navController, profileController) }
-                composable("OwnerLottery") { EntrantProfileView(navController, profileController) }
->>>>>>> c1ebe0067f51369f0bfe3ba38d3cf734877f888b
                 composable(
                     route = waitlistRoute,
                         arguments = listOf(lotteryArg)) { entry ->
