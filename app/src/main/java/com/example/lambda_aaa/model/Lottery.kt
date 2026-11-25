@@ -56,7 +56,7 @@ class Lottery(
 
             return Lottery(
                 campsiteIDs = fields["campsiteIDs"] as? List<String>
-                    ?: throw IllegalArgumentException("Missing campsiteID"),
+                    ?: throw IllegalArgumentException("Missing campsiteIDs"),
                 name = fields["name"] as? String ?: "",
                 bookingPeriod = range("bookingPeriod"),
                 registrationPeriod = range("registrationPeriod"),

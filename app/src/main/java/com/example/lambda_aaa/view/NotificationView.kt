@@ -21,7 +21,9 @@ import com.example.lambda_aaa.R
 import com.example.lambda_aaa.controller.NotificationController
 import com.example.lambda_aaa.model.AppNotification
 import com.example.lambda_aaa.model.NotificationType
-import com.example.lambda_aaa.model.detail.NotificationDataSource
+import com.example.lambda_aaa.model.NotificationRepository
+import kotlinx.coroutines.CancellationException
+import java.text.DateFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,8 +38,13 @@ fun NotificationView(
     userId: String,
     notificationController: NotificationController = remember { NotificationController() },
     onBack: () -> Unit,
-    onWinnerClick: (String) -> Unit = {}
+    onWinnerClick: (String) -> Unit = {},
+    showSent: Boolean = false
 ) {
+    if (showSent) {
+        SentNotifications(userId, onBack)
+        return
+    }
     var notifications by remember { mutableStateOf<List<AppNotification>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
@@ -45,7 +52,7 @@ fun NotificationView(
         notificationController.loadNotifications(userId) { list ->
             notifications = list.filter {
                 // filter for all type of messages
-                it.type == NotificationType.WINNER || it.type == NotificationType.NOT_SELECTED || it.type == NotificationType.OWNER_MESSAGE || it.type == NotificationType.ENTRANT_MESSAGE
+                it.type == NotificationType.OWNER_BROADCAST || it.type == NotificationType.WINNER || it.type == NotificationType.NOT_SELECTED || it.type == NotificationType.OWNER_MESSAGE || it.type == NotificationType.ENTRANT_MESSAGE
             }.sortedByDescending { it.timestamp?.toDate() }
             isLoading = false
         }
@@ -119,6 +126,7 @@ private fun NotificationCard(
     var displayMessage = when (notification.type) {
         NotificationType.WINNER -> "You were selected! Choose an available date before booking."
         NotificationType.NOT_SELECTED -> "You were not selected."
+        NotificationType.OWNER_BROADCAST -> "${notification.lotteryName.ifBlank { notification.lotteryId }} · ${notification.message}"
         NotificationType.OWNER_MESSAGE, NotificationType.ENTRANT_MESSAGE -> notification.message
         else -> ""
     }
@@ -174,5 +182,75 @@ private fun NotificationCard(
                 }
             }
         }
+    }
+}
+
+internal fun groupSentNotifications(records: List<AppNotification>): List<List<AppNotification>> =
+    records.sortedByDescending { it.timestamp }
+        .groupBy { it.broadcastId.ifBlank { it.id } }.values.toList()
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SentNotifications(ownerId: String, onBack: () -> Unit) {
+    val repo = remember { NotificationRepository() }
+    var groups by remember(ownerId) { mutableStateOf<List<List<AppNotification>>>(emptyList()) }
+    var loading by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var attempt by remember { mutableIntStateOf(0) }
+    var selected by remember { mutableStateOf<List<AppNotification>?>(null) }
+
+    LaunchedEffect(ownerId, attempt) {
+        loading = true
+        error = null
+        try {
+            groups = groupSentNotifications(repo.sentBy(ownerId))
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (e: Exception) {
+            error = e.localizedMessage ?: "Could not load sent notifications."
+        } finally {
+            loading = false
+        }
+    }
+    Scaffold(topBar = {
+        CenterAlignedTopAppBar(title = { Text("Sent notifications") }, navigationIcon = {
+            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+        })
+    }) { padding ->
+        LazyColumn(modifier = Modifier.padding(padding).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            when {
+                loading -> item { CircularProgressIndicator() }
+                error != null -> item {
+                    Text(error.orEmpty())
+                    TextButton(onClick = { attempt++ }) { Text("Retry") }
+                }
+                groups.isEmpty() -> item { Text("No sent notifications yet.") }
+                else -> items(groups) { group ->
+                    val first = group.first()
+                    Card(onClick = { selected = group }, modifier = Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(12.dp)) {
+                            Text(first.lotteryName.ifBlank { first.lotteryId }, fontWeight = FontWeight.Bold)
+                            Text(first.message)
+                            val recipient = if (group.size == 1) first.sendeeName.ifBlank { first.recipientId }
+                                else "${group.size} recipients"
+                            val date = first.timestamp?.toDate()?.let { DateFormat.getDateTimeInstance().format(it) }
+                            Text("To: $recipient · ${date ?: "Time unavailable"}")
+                        }
+                    }
+                }
+            }
+        }
+    }
+    selected?.let { group ->
+        AlertDialog(onDismissRequest = { selected = null },
+            title = { Text(group.first().lotteryName.ifBlank { group.first().lotteryId }) },
+            text = {
+                LazyColumn {
+                    item { Text(group.first().message); Text("Recipients", fontWeight = FontWeight.Bold) }
+                    items(group) { Text(it.sendeeName.ifBlank { it.recipientId }) }
+                }
+            },
+            confirmButton = { TextButton(onClick = { selected = null }) { Text("Close") } })
     }
 }

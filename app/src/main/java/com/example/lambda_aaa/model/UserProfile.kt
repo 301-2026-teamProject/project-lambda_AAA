@@ -19,7 +19,7 @@ import com.google.firebase.firestore.ServerTimestamp
  * @property roles the roles that the user has that is recognized by the app
  * @property notificationsEnabled the identifier that determines if the user receives notifications
  * @property isOwner the identifier if the user is registered as the owner
- * @property creationDate the date when the user is first created
+ * @property creationDate the date when the user profile is first created
  */
 data class UserProfile(
     @DocumentId val uid: String = "",
@@ -37,7 +37,7 @@ data class UserProfile(
     /**
      * Toggle on and off the user's ability to receive notifications
      */
-    fun toggleNotifications() : Unit {
+    fun toggleNotifications() {
         notificationsEnabled = !notificationsEnabled
     }
 
@@ -45,7 +45,7 @@ data class UserProfile(
      * Update the user's name
      * @param newName the new name that will replace the old name
      */
-    fun updateName(newName: String) : Unit {
+    fun updateName(newName: String) {
         name = newName
     }
 
@@ -53,7 +53,7 @@ data class UserProfile(
      * Update the user's email
      * @param newEmail the new email that will replace the old email
      */
-    fun updateEmail(newEmail: String) : Unit {
+    fun updateEmail(newEmail: String) {
         email = newEmail
     }
 
@@ -61,7 +61,7 @@ data class UserProfile(
      * Update the user's phone number
      * @param newPhone the new phone number that will replace the old phone number
      */
-    fun updatePhone(newPhone: String) : Unit {
+    fun updatePhone(newPhone: String) {
         phone = newPhone
     }
 
@@ -69,7 +69,7 @@ data class UserProfile(
      * Update the user's profile picture URL
      * @param newPhoto the new URL that will replace the old URL
      */
-    fun updatePhoto(newPhoto: String) : Unit {
+    fun updatePhoto(newPhoto: String) {
         profilePhotoUrl = newPhoto
     }
 
@@ -77,7 +77,7 @@ data class UserProfile(
      * Update the user's device ID
      * @param newDeviceId the new device ID that will replace the old device ID
      */
-    fun updateDeviceId(newDeviceId: String) : Unit {
+    fun updateDeviceId(newDeviceId: String) {
         deviceId = newDeviceId
     }
 

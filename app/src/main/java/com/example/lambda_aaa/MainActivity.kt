@@ -68,10 +68,12 @@ import kotlinx.coroutines.tasks.await
 import androidx.compose.runtime.key
 import com.example.lambda_aaa.model.LotteryRepository
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.material.icons.filled.Email
 import com.example.lambda_aaa.controller.AdminNotificationController
 import com.example.lambda_aaa.controller.MessagingController
 import com.example.lambda_aaa.controller.SearchController
+import com.example.lambda_aaa.model.EntryRepository
 import com.example.lambda_aaa.model.MessagingRepository
 import com.example.lambda_aaa.view.AdminNotificationView
 import com.example.lambda_aaa.view.MessagingView
@@ -81,11 +83,15 @@ import com.example.lambda_aaa.view.HeaderColor
 import com.example.lambda_aaa.view.SubText
 import com.example.lambda_aaa.view.BorderColor
 import com.example.lambda_aaa.model.NotificationRepository
-import com.example.lambda_aaa.model.UserRepository
+import com.example.lambda_aaa.model.UserProfilesRepository
 import com.example.lambda_aaa.view.AdminDashboardView
 import com.example.lambda_aaa.view.EntrantLotteryView
 import com.example.lambda_aaa.view.ModerationView
+<<<<<<< HEAD
 import com.example.lambda_aaa.view.OwnerLotteryView
+=======
+import com.example.lambda_aaa.model.UserRepository
+>>>>>>> c1ebe0067f51369f0bfe3ba38d3cf734877f888b
 
 // ids for testing before identification is fixed
 private const val OWNER_ID = "1hQDbywHu0OqUQ0TGWwE"   // owner id
@@ -140,15 +146,22 @@ fun CampsiteReservationApp(
     DisposableEffect(campsiteRepo) { onDispose { campsiteRepo.close() } }
     val lotteryRepo = remember { LotteryRepository() }
     DisposableEffect(lotteryRepo) { onDispose { lotteryRepo.close() } }
+    val entryRepo = remember { EntryRepository() }
+    val userProfilesRepo = remember { UserProfilesRepository() }
     val userRepo = remember { UserRepository() }
     DisposableEffect(userRepo) { onDispose { userRepo.close() } }
     val searchRepo = remember { SearchController( campsiteRepo, userRepo ) }
-    val messagingRepo = remember { MessagingRepository(campsiteRepo, lotteryRepo) }
+    val messagingRepo = remember { MessagingRepository(
+        campsites = campsiteRepo,
+        lotteries = lotteryRepo,
+        entries = entryRepo,
+        users = userRepo,
+    ) }
     val notificationRepo = remember { NotificationRepository() }
 
     var installationId by remember {mutableStateOf("")}
     var identifiedUser by remember { mutableStateOf(false) }
-    var currentUser: UserProfile = remember {
+    var currentUser by remember {mutableStateOf(
         UserProfile(
             uid = ALEX_ID,
             name = "Alex Camper",
@@ -156,11 +169,10 @@ fun CampsiteReservationApp(
             phone = "780-555-0123",
             profilePhotoUrl = "https://picsum.photos/200",
             roles = arrayListOf(Role.ENTRANT, Role.ADMIN),
-            isOwner = false,
+            isOwner = true,
         )
-    } // A default user initialized for first time users
+    )} // A default user initialized for first time users
 
-    val profileController = ProfileController()
 
     LaunchedEffect(Unit) {
         // Adapted from Google for Developers Firebase Documentation, Fundamentals: "Manage Firebase
@@ -206,7 +218,8 @@ fun CampsiteReservationApp(
 
     if (identifiedUser) {
 
-        val selectedMenu = if (currentUser.roles.contains(Role.ADMIN)) AdminTabs else if (currentUser.roles.contains(Role.OWNER)) OwnerTabs else EntrantTabs
+        var selectedMenu = if (currentUser.roles.contains(Role.ADMIN)) AdminTabs else if (currentUser.roles.contains(Role.OWNER)) OwnerTabs else EntrantTabs
+        val profileController = ProfileController(currentUser)
         var selectedTab by remember { mutableStateOf(selectedMenu.first().id) }
         val waitlistRoute = "OwnerLotteryWaitlist/{lotteryId}"
         val lotteryArg = navArgument("lotteryId"){
@@ -239,6 +252,12 @@ fun CampsiteReservationApp(
                 composable("EntrantExplore") {
                     EntrantDashboardView(navController,
                         repo = searchRepo,
+                        isAdmin = currentUser.roles.contains(Role.ADMIN),
+                        onSwitchRole = {
+                            selectedMenu = AdminTabs
+                            selectedTab = selectedMenu.first().id
+                            navController.navigate(selectedTab)
+                        },
                         onCampsiteClick = { navController.navigate("campsite/${Uri.encode(it)}") })
                 }
                 composable("campsite/{cid}", arguments = listOf(navArgument("cid") { type = NavType.StringType })) { entry ->
@@ -246,9 +265,18 @@ fun CampsiteReservationApp(
                     val controller = remember(cid, campsiteRepo) { CampsiteDetailController(cid, campsiteRepo) }
                     CampsiteDetailView(controller, onBack = { navController.popBackStack() })
                 }
+<<<<<<< HEAD
                 composable("EntrantLottery") { EntrantLotteryView() }
                 composable("EntrantTrips") { EntrantProfileView(navController, profileController, currentUser) }
                 composable("Profile") { EntrantProfileView(navController, profileController, currentUser) }
+=======
+                composable("EntrantLottery") { EntrantProfileView(navController, profileController) }
+                composable("EntrantTrips") { EntrantProfileView(navController, profileController) }
+                composable("Profile") { EntrantProfileView(navController, profileController) }
+                composable("EntrantNotifications") {
+                    NotificationView(userId = currentUser.uid, onBack = { navController.popBackStack() })
+                }
+>>>>>>> c1ebe0067f51369f0bfe3ba38d3cf734877f888b
                 composable("EntrantMessage") {
                     val messagingController = remember { MessagingController(currentUser.uid, Role.ENTRANT, messagingRepo) }
                     MessagingView(messagingController, onBack = {
@@ -263,9 +291,16 @@ fun CampsiteReservationApp(
                         uid = currentUser.uid,
                         onOpenWaitlist = { selectedLotteryId ->
                             navController.navigate("OwnerLotteryWaitlist/$selectedLotteryId")
+                        },
+                        isAdmin = currentUser.roles.contains(Role.ADMIN),
+                        onSwitchRole = {
+                            selectedMenu = AdminTabs
+                            selectedTab = selectedMenu.first().id
+                            navController.navigate(selectedTab)
                         }
                     )
                 }
+<<<<<<< HEAD
                 composable("OwnerCampsites") { EntrantProfileView(navController, profileController, currentUser) }
                 composable("OwnerLottery") { OwnerLotteryView(
                     ownerId = currentUser.uid,
@@ -273,6 +308,10 @@ fun CampsiteReservationApp(
                         navController.navigate("OwnerLotteryWaitlist/$lotteryId")
                     }
                 ) }
+=======
+                composable("OwnerCampsites") { EntrantProfileView(navController, profileController) }
+                composable("OwnerLottery") { EntrantProfileView(navController, profileController) }
+>>>>>>> c1ebe0067f51369f0bfe3ba38d3cf734877f888b
                 composable(
                     route = waitlistRoute,
                         arguments = listOf(lotteryArg)) { entry ->
@@ -289,9 +328,15 @@ fun CampsiteReservationApp(
 
                 composable("AdminDashboard") { AdminDashboardView(navController,
                     repo = searchRepo,
+                    onSwitchRole = {
+                        selectedMenu = if (currentUser.roles.contains(Role.OWNER)) OwnerTabs else EntrantTabs
+                        selectedTab = selectedMenu.first().id
+                        navController.navigate(selectedTab)
+                    },
                     onOpenCampsites = { navController.navigate("ModerationView") },
-                    onOpenProfiles =  { navController.navigate("ModerationView") },
-                    onOpenImages =  { navController.navigate("ModerationView") },
+                    onOpenProfiles = { navController.navigate("ModerationView") },
+                    onOpenImages = { navController.navigate("ModerationView") },
+                    onOpenLogs = { navController.navigate("AdminNotificationLogs") }
                     )
                 }
                 composable("ModerationView") { ModerationView(navController,
@@ -383,44 +428,6 @@ private fun DrawBottomBar(
                             )
                         }
                     }
-                }
-            }
-        }
-    }
-}
-
-/** TEMPORARY: test messaging as the owner or as Alex without identification or navigation. */
-@Composable
-fun DebugApp() {
-    var uid by remember { mutableStateOf(OWNER_ID) }
-    var screen by remember { mutableStateOf("menu") }
-
-    val campsiteRepo = remember { CampsiteRepository() }
-    val lotteryRepo = remember { LotteryRepository() }
-    DisposableEffect(Unit) { onDispose { campsiteRepo.close(); lotteryRepo.close() } }
-    val messagingRepo = remember { MessagingRepository(campsiteRepo, lotteryRepo) }
-    val role = if (uid == OWNER_ID) Role.OWNER else Role.ENTRANT
-
-    Column(Modifier.fillMaxSize().statusBarsPadding()) {
-        Row(Modifier.padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = { uid = OWNER_ID; screen = "menu" }) { Text("As owner") }
-            Button(onClick = { uid = ALEX_ID; screen = "menu" }) { Text("As entrant") }
-        }
-        Text("Acting as: $uid ($role)", Modifier.padding(horizontal = 16.dp), fontSize = 12.sp)
-
-        // key() recreates the controllers whenever the identity or screen changes, so lists reload
-        key(uid, screen) {
-            when (screen) {
-                "messages" -> MessagingView(
-                    controller = remember { MessagingController(uid, role, messagingRepo) },
-                    onBack = { screen = "menu" }
-                )
-                "notifications" -> NotificationView(userId = uid, onBack = { screen = "menu" })
-                else -> Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = { screen = "messages" }) {
-                        Text(if (role == Role.OWNER) "Message entrants" else "Message owners")
-                    }
-                    Button(onClick = { screen = "notifications" }) { Text("Notifications") }
                 }
             }
         }

@@ -29,6 +29,7 @@ import com.example.lambda_aaa.controller.MessagingController
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
+import com.example.lambda_aaa.model.Role
 
 @Composable
 fun CampsiteOwnerView(
@@ -40,6 +41,9 @@ fun CampsiteOwnerView(
     onEditMessageShown: () -> Unit,
     messagingController: MessagingController,
     onClickMessage: () -> Unit,
+    onSentNotifications: () -> Unit,
+    isAdmin: Boolean,
+    onSwitchRole: () -> Unit,
 ) {
     LaunchedEffect(Unit) {
         ownerController.refresh()
@@ -61,6 +65,9 @@ fun CampsiteOwnerView(
         onClickCampsite = onClickCampsite,
         contactNumber = contactNumber,
         onClickMessage = onClickMessage,
+        onSentNotifications = onSentNotifications,
+        isAdmin = isAdmin,
+        onSwitchRole = onSwitchRole,
     )
 }
 
@@ -76,6 +83,9 @@ fun CampsiteOwnerContent(
     onClickCampsite: (String) -> Unit,
     contactNumber: Int,
     onClickMessage: () -> Unit,
+    onSentNotifications: () -> Unit,
+    isAdmin: Boolean,
+    onSwitchRole: () -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -98,7 +108,11 @@ fun CampsiteOwnerContent(
         ) {
 
             // TOP HEADER
-            TopBar()
+            TopBar(
+                onSentNotifications = onSentNotifications,
+                isAdmin = isAdmin,
+                onSwitchRole = onSwitchRole,
+            )
             HorizontalDivider(color = BorderColor, thickness = 1.dp)
 
             Column(
@@ -166,9 +180,9 @@ fun CampsiteOwnerContent(
                 )
 
                 AttentionCard(
-                    title = "Notification",
-                    description = "description",
-                    onClick = {} // onLotteryClick
+                    title = "Sent notifications",
+                    description = "View messages and recipients",
+                    onClick = onSentNotifications
                 )
 
                 AttentionCard(
@@ -195,7 +209,11 @@ fun CampsiteOwnerContent(
 }
 
 @Composable
-private fun TopBar() {
+private fun TopBar(
+    onSentNotifications: () -> Unit,
+    isAdmin: Boolean,
+    onSwitchRole: () -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -222,9 +240,28 @@ private fun TopBar() {
         }
         Spacer(modifier = Modifier.weight(1f))
 
+        if (isAdmin) {
+            Surface(
+                onClick = onSwitchRole,
+                shape = RoundedCornerShape(14.dp),
+                color = Color.White,
+                border = BorderStroke(1.dp, BorderColor)
+            ) {
+                Text(
+                    text = "Switch role",
+                    modifier = Modifier.padding(
+                        horizontal = 13.dp,
+                        vertical = 8.dp
+                    ),
+                    fontSize = 12.sp,
+                    color = HeaderColor
+                )
+            }
+        }
+
         // The notification button
         Surface(
-            //onClick = onNotificationsClick, // IMPLEMENT THIS NOTIFICATION BUTTON LATER
+            onClick = onSentNotifications,
             shape = RoundedCornerShape(14.dp),
             color = Color.White,
             border = BorderStroke(1.dp, BorderColor),
@@ -233,7 +270,7 @@ private fun TopBar() {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = Icons.Filled.NotificationsNone,
-                    contentDescription = "Notifications",
+                    contentDescription = "Sent notifications",
                     tint = HeaderColor,
                     modifier = Modifier.size(20.dp),
                 )
