@@ -1,6 +1,5 @@
 package com.example.lambda_aaa.view
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -53,7 +52,7 @@ fun ModerationView (
     repo: SearchController,
     browseStartOption: String = "Campsites",
     onBack: () -> Unit = {},
-    onCampsiteClick: (String) -> Unit = {},
+    onCardClick: (String, String) -> Unit,
 ) {
 
     val filteredCampsites = repo.filteredCampsites
@@ -177,7 +176,7 @@ fun ModerationView (
                                 AdminCampsiteCard(
                                     campsite = campsite, // just sends the entire object which might not be efficient, but it works
                                     ownerName = idMatch?.name,
-                                    onClick = { onCampsiteClick(campsite.cid) },
+                                    onClick = { onCardClick("Campsite", campsite.cid) },
                                 )
                             }
                         }
@@ -186,7 +185,7 @@ fun ModerationView (
                             listedProfiles.forEach { profile ->
                                 AdminProfileCard(
                                     profile = profile, // just sends the entire object which might not be efficient, but it works
-                                    onClick = { },
+                                    onClick = { onCardClick("Profile", profile.uid) },
                                 )
                             }
                         }
@@ -360,7 +359,7 @@ private fun TrailDrawSearchBar(
                     Box {
                         if (value.isEmpty()) {
                             Text(
-                                text = "Search Campsites",
+                                text = "Search Database",
                                 color = SubText,
                                 fontSize = 14.sp,
                             )
