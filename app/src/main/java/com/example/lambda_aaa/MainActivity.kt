@@ -164,7 +164,7 @@ fun CampsiteReservationApp(
             phone = "780-555-0123",
             profilePhotoUrl = "https://picsum.photos/200",
             roles = arrayListOf(Role.ENTRANT, Role.ADMIN),
-            isOwner = false,
+            isOwner = true,
         )
     )} // A default user initialized for first time users
 
@@ -263,6 +263,9 @@ fun CampsiteReservationApp(
                 composable("EntrantLottery") { EntrantProfileView(navController, profileController) }
                 composable("EntrantTrips") { EntrantProfileView(navController, profileController) }
                 composable("Profile") { EntrantProfileView(navController, profileController) }
+                composable("EntrantNotifications") {
+                    NotificationView(userId = currentUser.uid, onBack = { navController.popBackStack() })
+                }
                 composable("EntrantMessage") {
                     val messagingController = remember { MessagingController(currentUser.uid, Role.ENTRANT, messagingRepo) }
                     MessagingView(messagingController, onBack = {

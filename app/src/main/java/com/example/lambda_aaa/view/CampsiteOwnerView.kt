@@ -41,6 +41,7 @@ fun CampsiteOwnerView(
     onEditMessageShown: () -> Unit,
     messagingController: MessagingController,
     onClickMessage: () -> Unit,
+    onSentNotifications: () -> Unit,
     isAdmin: Boolean,
     onSwitchRole: () -> Unit,
 ) {
@@ -64,6 +65,7 @@ fun CampsiteOwnerView(
         onClickCampsite = onClickCampsite,
         contactNumber = contactNumber,
         onClickMessage = onClickMessage,
+        onSentNotifications = onSentNotifications,
         isAdmin = isAdmin,
         onSwitchRole = onSwitchRole,
     )
@@ -81,6 +83,7 @@ fun CampsiteOwnerContent(
     onClickCampsite: (String) -> Unit,
     contactNumber: Int,
     onClickMessage: () -> Unit,
+    onSentNotifications: () -> Unit,
     isAdmin: Boolean,
     onSwitchRole: () -> Unit
 ) {
@@ -106,6 +109,7 @@ fun CampsiteOwnerContent(
 
             // TOP HEADER
             TopBar(
+                onSentNotifications = onSentNotifications,
                 isAdmin = isAdmin,
                 onSwitchRole = onSwitchRole,
             )
@@ -176,9 +180,9 @@ fun CampsiteOwnerContent(
                 )
 
                 AttentionCard(
-                    title = "Notification",
-                    description = "description",
-                    onClick = {} // onLotteryClick
+                    title = "Sent notifications",
+                    description = "View messages and recipients",
+                    onClick = onSentNotifications
                 )
 
                 AttentionCard(
@@ -206,6 +210,7 @@ fun CampsiteOwnerContent(
 
 @Composable
 private fun TopBar(
+    onSentNotifications: () -> Unit,
     isAdmin: Boolean,
     onSwitchRole: () -> Unit,
 ) {
@@ -256,7 +261,7 @@ private fun TopBar(
 
         // The notification button
         Surface(
-            //onClick = onNotificationsClick, // IMPLEMENT THIS NOTIFICATION BUTTON LATER
+            onClick = onSentNotifications,
             shape = RoundedCornerShape(14.dp),
             color = Color.White,
             border = BorderStroke(1.dp, BorderColor),
@@ -265,7 +270,7 @@ private fun TopBar(
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = Icons.Filled.NotificationsNone,
-                    contentDescription = "Notifications",
+                    contentDescription = "Sent notifications",
                     tint = HeaderColor,
                     modifier = Modifier.size(20.dp),
                 )

@@ -103,6 +103,7 @@ fun EntrantDashboardView(
                 .padding(innerPadding),
         ) {
             TopBar(
+                onNotificationsClick = { navController.navigate("EntrantNotifications") },
                 isAdmin = isAdmin,
                 onSwitchRole = onSwitchRole,
             )
@@ -264,6 +265,7 @@ fun EntrantDashboardView(
  */
 @Composable
 private fun TopBar(
+    onNotificationsClick: () -> Unit,
     isAdmin: Boolean,
     onSwitchRole: () -> Unit,
 ) {
@@ -314,7 +316,7 @@ private fun TopBar(
 
         // The notification button
         Surface(
-            //onClick = onNotificationsClick, // IMPLEMENT THIS NOTIFICATION BUTTON LATER
+            onClick = onNotificationsClick,
             shape = RoundedCornerShape(14.dp),
             color = Color.White,
             border = BorderStroke(1.dp, BorderColor),
