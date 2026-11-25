@@ -85,7 +85,9 @@ import com.example.lambda_aaa.view.BorderColor
 import com.example.lambda_aaa.model.NotificationRepository
 import com.example.lambda_aaa.model.UserProfilesRepository
 import com.example.lambda_aaa.view.AdminDashboardView
+import com.example.lambda_aaa.view.EntrantLotteryView
 import com.example.lambda_aaa.view.ModerationView
+import com.example.lambda_aaa.view.OwnerLotteryView
 import com.example.lambda_aaa.model.UserRepository
 
 // ids for testing before identification is fixed
@@ -260,7 +262,7 @@ fun CampsiteReservationApp(
                     val controller = remember(cid, campsiteRepo) { CampsiteDetailController(cid, campsiteRepo) }
                     CampsiteDetailView(controller, onBack = { navController.popBackStack() })
                 }
-                composable("EntrantLottery") { EntrantProfileView(navController, profileController) }
+                composable("EntrantLottery") { EntrantLotteryView() }
                 composable("EntrantTrips") { EntrantProfileView(navController, profileController) }
                 composable("Profile") { EntrantProfileView(navController, profileController) }
                 composable("EntrantNotifications") {
@@ -290,7 +292,12 @@ fun CampsiteReservationApp(
                     )
                 }
                 composable("OwnerCampsites") { EntrantProfileView(navController, profileController) }
-                composable("OwnerLottery") { EntrantProfileView(navController, profileController) }
+                composable("OwnerLottery") { OwnerLotteryView(
+                    ownerId = currentUser.uid,
+                    onOpenWaitlist = { lotteryId ->
+                        navController.navigate("OwnerLotteryWaitlist/$lotteryId")
+                    }
+                ) }
                 composable(
                     route = waitlistRoute,
                         arguments = listOf(lotteryArg)) { entry ->

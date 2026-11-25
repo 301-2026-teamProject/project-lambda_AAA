@@ -66,6 +66,11 @@ class Lottery(
             )
         }
     }
+
+    fun isRegistrationOpen(today: LocalDate = LocalDate.now()): Boolean {
+        val period = registrationPeriod ?: return false
+        return !today.isBefore(period.start) && !today.isAfter(period.end)
+    }
 }
 
 // validates data entered in LotteryForm
