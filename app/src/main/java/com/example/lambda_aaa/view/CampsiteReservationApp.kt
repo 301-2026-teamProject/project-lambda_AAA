@@ -73,6 +73,7 @@ fun CampsiteReservationApp(
                 editMessage = editMessage,
                 onEditMessageShown = { editMessage = null },
                 messagingController = messagingController,
+                onSentNotifications = { navController.navigate("sentNotifications") },
                 onClickMessage = { navController.navigate("ownerMessages") },
                 isAdmin = isAdmin,
                 onSwitchRole = onSwitchRole,
@@ -134,8 +135,8 @@ fun CampsiteReservationApp(
             val controller = remember { MessagingController(uid, Role.OWNER, messagingRepo) }
             MessagingView(controller, onBack = { navController.popBackStack() })
         }
-        composable("notifications") {
-            NotificationView(userId = uid, onBack = { navController.popBackStack() })
+        composable("sentNotifications") {
+            NotificationView(userId = uid, showSent = true, onBack = { navController.popBackStack() })
         }
     }
 }

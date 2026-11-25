@@ -16,6 +16,9 @@ class NotificationControllerTest {
         override fun getNotifications(recipientId: String, onResult: (Boolean, List<AppNotification>, String?) -> Unit) {
             onResult(true, notifications.filter { it.recipientId == recipientId }, null)
         }
+        override fun getAllNotifications(onResult: (Boolean, List<AppNotification>, String?) -> Unit) {
+            onResult(true, notifications, null)
+        }
         override fun markAsRead(notificationId: String, onResult: (Boolean, String?) -> Unit) {
             notifications.find { it.id == notificationId }?.isRead = true
             onResult(true, null)
