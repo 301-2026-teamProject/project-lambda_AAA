@@ -86,6 +86,9 @@ import com.example.lambda_aaa.view.EntrantLotteryView
 import com.example.lambda_aaa.view.ModerationView
 import com.example.lambda_aaa.view.OwnerLotteryView
 import com.example.lambda_aaa.model.UserRepository
+import com.example.lambda_aaa.view.OwnerCampsiteView
+import com.example.lambda_aaa.view.OwnerCampsiteReservationsView
+import com.google.firebase.auth.auth
 
 // ids for testing before identification is fixed
 private const val OWNER_ID = "1hQDbywHu0OqUQ0TGWwE"   // owner id
@@ -288,7 +291,27 @@ fun CampsiteReservationApp(
                         }
                     )
                 }
-                composable("OwnerCampsites") { EntrantProfileView(navController, profileController) }
+                composable("OwnerCampsites") {
+                    OwnerCampsiteView(
+                        ownerId = currentUser.uid,
+                        onOpenCampsite = { campsiteId ->
+                            navController.navigate("OwnerCampsiteReservations/$campsiteId")
+                        }
+                    )
+                }
+
+                composable(
+                    route = "OwnerCampsiteReservations/{campsiteId}",
+                    arguments = listOf(navArgument("campsiteId") { type = NavType.StringType })
+                ) { entry ->
+                    Log.d("AuthCheck", "auth uid = ${Firebase.auth.currentUser?.uid}, app uid = ${currentUser.uid}")
+                    val campsiteId = entry.arguments?.getString("campsiteId") ?: return@composable
+                    OwnerCampsiteReservationsView(
+                        ownerId = currentUser.uid,
+                        campsiteId = campsiteId,
+                        onBack = { navController.popBackStack() }
+                    )
+                }
                 composable("OwnerLottery") { OwnerLotteryView(
                     ownerId = currentUser.uid,
                     onOpenWaitlist = { lotteryId ->
