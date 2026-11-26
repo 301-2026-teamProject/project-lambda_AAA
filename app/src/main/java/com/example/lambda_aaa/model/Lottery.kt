@@ -29,7 +29,7 @@ class Lottery(
     )
 
     companion object {
-        // converts FireStore json objects / fields into a lottery object
+        // converts FireStore JSON objects / fields into a lottery object
         fun fromMap(id: String, fields: Map<String, Any?>): Lottery {
             require(id.isNotBlank()) { "Missing lottery ID" }
             fun date(raw: Any?): LocalDate = when (raw) {
@@ -99,7 +99,7 @@ data class LotteryForm(
         if (!regStart.isBefore(regEnd)) return null
         if (!bookStart.isBefore(bookEnd)) return null
         if (!regEnd.isBefore(bookStart)) return null
-        if (winners >= capacity) return null
+        if (capacity in 1..winners) return null
 
         return Lottery(
             campsiteIDs = campsiteIDs,

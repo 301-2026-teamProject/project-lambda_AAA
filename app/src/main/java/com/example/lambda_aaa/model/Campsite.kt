@@ -10,6 +10,8 @@ data class DateRange(val start: LocalDate, val end: LocalDate) {
     init {
         require(end.isAfter(start)) { "End date must be after start date" }
     }
+    fun overlaps(other: DateRange): Boolean =
+        start.isBefore(other.end) && other.start.isBefore(end)
 }
 
 data class Campsite(
