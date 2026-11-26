@@ -67,6 +67,7 @@ dependencies {
     implementation("com.google.firebase:firebase-installations:20.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.9")
     implementation(platform("com.google.firebase:firebase-bom:35.1.0"))
+    implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
     constraints {
         implementation("androidx.concurrent:concurrent-futures:1.2.0") {
             because("Match the app runtime to the version required by AndroidX Test.")

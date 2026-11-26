@@ -86,6 +86,7 @@ import com.example.lambda_aaa.view.EntrantLotteryView
 import com.example.lambda_aaa.view.ModerationView
 import com.example.lambda_aaa.view.OwnerLotteryView
 import com.example.lambda_aaa.model.UserRepository
+import com.example.lambda_aaa.view.QrScreenView
 
 // ids for testing before identification is fixed
 private const val OWNER_ID = "1hQDbywHu0OqUQ0TGWwE"   // owner id
@@ -236,8 +237,8 @@ fun CampsiteReservationApp(
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = selectedMenu.first().id,
-                //startDestination = "OwnerLotteryWaitlist",
+                //startDestination = selectedMenu.first().id,
+                startDestination = "EntrantQrScanner",
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
@@ -272,6 +273,7 @@ fun CampsiteReservationApp(
                         selectedTab = selectedMenu.first().id
                     })
                 }
+                composable("EntrantQrScanner") { QrScreenView(navController) }
 
                 composable("OwnerHome") {
                     //replaced with currentUser.uid, and added onOpenWaitlist arg to pass
