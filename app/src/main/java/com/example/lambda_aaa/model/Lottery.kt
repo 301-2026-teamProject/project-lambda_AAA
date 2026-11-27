@@ -15,7 +15,7 @@ import java.util.UUID
  */
 
 class Lottery(
-    val campsiteIDs : List<String>,
+    var campsiteIDs : List<String>,
     val name: String,
     val ownerIds: List<String> = emptyList(),
     var bookingPeriod: DateRange? = null,

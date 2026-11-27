@@ -356,9 +356,6 @@ fun CampsiteReservationApp(
                         selectedTab = selectedMenu.first().id
                         navController.navigate(selectedTab)
                     },
-                    onOpenCampsites = { navController.navigate("ModerationView") },
-                    onOpenProfiles = { navController.navigate("ModerationView") },
-                    onOpenImages = { navController.navigate("ModerationView") },
                     onOpenLogs = { navController.navigate("AdminNotificationLogs") }
                     )
                 }
@@ -367,15 +364,18 @@ fun CampsiteReservationApp(
                     ModerationView(navController,
                         repo = searchRepo,
                         browseStartOption = destination,
-                    onBack = { navController.popBackStack() },
-                    onCardClick = { type, id ->
-                        navController.navigate("ConfirmationView_${Uri.encode(type)}-${Uri.encode(id)}")}
+                        selfID = currentUser.uid,
+                        onBack = { navController.popBackStack() },
+                        onCardClick = { type, id -> navController.navigate("ConfirmationView_${Uri.encode(type)}-${Uri.encode(id)}")}
                     ) }
 
                 composable("ConfirmationView_{type}-{id}", arguments = listOf(navArgument("type") { type = NavType.StringType }, navArgument("id") { type = NavType.StringType })) { entry ->
                     val type = entry.arguments?.getString("type") ?: return@composable
                     val id = entry.arguments?.getString("id") ?: return@composable
-                    ConfirmationView(navController, type, id, campsiteRepo, userRepo, onBack = { navController.popBackStack() })
+                    ConfirmationView(navController, type, id, campsiteRepo, userRepo, onBack = {
+                        searchRepo.refresh()
+                        navController.popBackStack()
+                    })
                 }
 
                 composable("AdminNotificationLogs") { AdminNotificationView(

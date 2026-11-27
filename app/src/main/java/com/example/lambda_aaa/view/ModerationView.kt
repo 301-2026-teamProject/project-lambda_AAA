@@ -51,6 +51,7 @@ fun ModerationView (
     navController: NavController,
     repo: SearchController,
     browseStartOption: String = "Campsites",
+    selfID: String = "",
     onBack: () -> Unit = {},
     onCardClick: (String, String) -> Unit,
 ) {
@@ -128,18 +129,10 @@ fun ModerationView (
                     )
 
                     FilterCard(
-                        text = "Flagged",
-                        selected = selectedFilter == "Flagged",
-                        onClick = {
-                            selectedFilter = "Flagged"
-                        }
-                    )
-
-                    FilterCard(
                         text = "Removed",
-                        selected = selectedFilter == "Removed",
+                        selected = selectedFilter == "Banned",
                         onClick = {
-                            selectedFilter = "Removed"
+                            selectedFilter = "Banned"
                         }
                     )
                 }
@@ -182,7 +175,11 @@ fun ModerationView (
                         }
                         "Profiles" -> {
                             listSizeDisplay = filteredProfiles.size
-                            listedProfiles.forEach { profile ->
+                            val finalProfiles = listedProfiles.filter { profile ->
+                                val matchSearch = (profile.uid != selfID) // Checks if the searchbar is empty, or if a profile has part of its text
+                                matchSearch
+                            }
+                            finalProfiles.forEach { profile ->
                                 AdminProfileCard(
                                     profile = profile, // just sends the entire object which might not be efficient, but it works
                                     onClick = { onCardClick("Profile", profile.uid) },

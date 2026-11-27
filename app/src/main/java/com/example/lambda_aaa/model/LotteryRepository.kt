@@ -42,6 +42,11 @@ class LotteryRepository {
             .addOnFailureListener { e -> onResult(false, e.message) }
     }
 
+    fun deleteLottery(lottery: Lottery, onResult: (Boolean, String?) -> Unit) {
+        lotteryRef.document(lottery.id).delete()
+            .addOnSuccessListener { onResult(true, null) }
+            .addOnFailureListener { e -> onResult(false, e.message)  }
+    }
     fun updateLottery(lottery: Lottery, lotteryID: String, onResult: (Boolean, String?) -> Unit) {
         val docRef = lotteryRef.document(lotteryID)
         Log.w("Listener", "ID: ${lottery.id}")
