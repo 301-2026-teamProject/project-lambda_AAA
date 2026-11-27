@@ -20,7 +20,7 @@ class FirestoreCampsiteDetailDataSource(
         campsites.getCampsite(cid, result)
 
     override fun getLotteries(campsite: Campsite, result: (Boolean, List<Lottery>, String?) -> Unit) {
-        db.collection("lotteries").whereEqualTo("campsiteID", campsite.cid).get()
+        db.collection("lotteries").whereArrayContains("campsiteIDs", campsite.cid).get()
             .addOnSuccessListener { snapshot ->
                 val lotteries = try {
                     snapshot.documents.map { decodeLottery(it.id, it.data.orEmpty(), campsite) }
@@ -72,7 +72,8 @@ class FirestoreCampsiteDetailDataSource(
 
     companion object {
         fun decodeLottery(id: String, fields: Map<String, Any?>, campsite: Campsite): Lottery {
-            require(id.isNotBlank() && fields["campsiteID"] == campsite.cid) { "Invalid lottery campsite." }
+            val ids = fields["campsiteIDs"] as? List<*> ?: listOfNotNull(fields["campsiteID"] as? String)
+            require(ids.contains(campsite.cid) || fields["campsiteID"] == campsite.cid) { "Invalid lottery campsite." }
             return Lottery.fromMap(id, fields)
         }
     }

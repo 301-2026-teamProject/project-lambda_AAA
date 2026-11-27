@@ -53,6 +53,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import com.example.lambda_aaa.controller.DrawController
+import com.example.lambda_aaa.model.Lottery
 import androidx.navigation.NavController
 import com.example.lambda_aaa.model.LotteryEntry
 import com.example.lambda_aaa.model.LotteryForm
@@ -91,6 +95,8 @@ fun LotteryWaitlistView(
     val entriesStatus = remember(lotteryId) { mutableStateListOf<String>() }
     var numEntries by remember(lotteryId) { mutableIntStateOf(0) }
     var numWinners by remember(lotteryId) { mutableIntStateOf(0) }
+    var currentLottery by remember { mutableStateOf<Lottery?>(null) }
+    val context = LocalContext.current
     val lotteryDB = remember { LotteryRepository() }
     DisposableEffect(lotteryDB) {
         onDispose { lotteryDB.close() }
@@ -100,6 +106,10 @@ fun LotteryWaitlistView(
         lotteryDB.getLottery(lotteryId) { success, lottery, msg ->
             if (success) {
                 numWinners = lottery?.numWinners ?: 0
+                currentLottery = lottery
+                if (lottery != null) {
+                    DrawController().auto(lottery) { _, _ -> }
+                }
             } else {
                 Log.e("Lottery Error", "Could not load lottery: $msg")
             }
@@ -283,7 +293,13 @@ fun LotteryWaitlistView(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Button(
-                                onClick = {},
+                                onClick = {
+                                    currentLottery?.let { lottery ->
+                                        DrawController().draw(lottery) { success, msg ->
+                                            Toast.makeText(context, msg ?: (if (success) "Draw completed." else "Draw failed."), Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color.Transparent,
                                     contentColor = Color.White

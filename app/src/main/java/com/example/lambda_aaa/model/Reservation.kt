@@ -3,8 +3,20 @@ package com.example.lambda_aaa.model
 import java.time.LocalDate
 import java.util.UUID
 
+/**
+ * Possible statuses of a reservation
+ */
 enum class ReservationStatus { ACTIVE, CANCELLED, REJECTED }
 
+/**
+ * Created when an entrant books a campsite
+ * @property campsiteId id of campsite
+ * @property lotteryId id of lottery
+ * @property entrantUid id of entrant
+ * @property ownerId id of owner
+ * @property period booking period of the reservation
+ * @property status status of reservation (Default = active)
+ */
 class Reservation(
     val campsiteId: String,
     val lotteryId: String,
@@ -57,6 +69,9 @@ class Reservation(
     }
 }
 
+/**
+ * Stores different type of reservations for each owner based on reservation status and booking date
+ */
 data class OwnerReservations(
     val active: List<Reservation>,
     val past: List<Reservation>,

@@ -33,6 +33,13 @@ import com.example.lambda_aaa.controller.LotteryJoinState
 import kotlinx.coroutines.delay
 import com.example.lambda_aaa.model.Campsite
 import com.example.lambda_aaa.model.Lottery
+import com.example.lambda_aaa.model.QrCodeGenerator
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.foundation.Image
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 
 @Composable
 fun CampsiteDetailView(
@@ -188,10 +195,61 @@ internal fun CampsiteDetailContent(
                         Text(stringResource(R.string.view_on_map))
                     }
                 }
+                var showQr by remember { mutableStateOf(false) }
+                val hasQr = !campsite.imageUrl.isNullOrBlank() && campsite.imageUrl!!.startsWith("data:image/")
                 onEdit?.let { edit ->
+                    Button(onClick = {
+                        showQr = true
+                        val existingUrl = campsite.imageUrl
+                        if (existingUrl.isNullOrBlank() || !existingUrl.startsWith("data:image/")) {
+                            val bitmap = QrCodeGenerator.generateBitmap("campsite://details/${campsite.cid}")
+                            QrCodeGenerator.upload(campsite.cid, bitmap) { _, _ -> }
+                        }
+                    }, modifier = Modifier.fillMaxWidth()) {
+                        Text(if (hasQr) "View QR Code" else "Generate QR Code")
+                    }
+                    Spacer(Modifier.height(8.dp))
                     Button(onClick = edit, modifier = Modifier.fillMaxWidth()) {
                         Text(stringResource(R.string.edit_campsite))
                     }
+                }
+                if (showQr && campsite != null) {
+                    val qrBitmap = remember(campsite.cid, campsite.imageUrl) {
+                        val existingUrl = campsite.imageUrl
+                        if (!existingUrl.isNullOrBlank() && existingUrl.startsWith("data:image/")) {
+                            QrCodeGenerator.base64ToBitmap(existingUrl)
+                        } else {
+                            null
+                        } ?: QrCodeGenerator.generateBitmap("campsite://details/${campsite.cid}")
+                    }
+                    AlertDialog(
+                        onDismissRequest = { showQr = false },
+                        title = { Text("Campsite QR Code") },
+                        text = {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Text("Scan this QR code to view campsite details.")
+                                Image(
+                                    bitmap = qrBitmap.asImageBitmap(),
+                                    contentDescription = "Campsite QR Code",
+                                    modifier = Modifier.size(200.dp)
+                                )
+                            }
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    QrCodeGenerator.save(context, qrBitmap, campsite.name)
+                                }
+                            ) {
+                                Text("Download JPG")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showQr = false }) {
+                                Text("Close")
+                            }
+                        }
+                    )
                 }
             }
         }
