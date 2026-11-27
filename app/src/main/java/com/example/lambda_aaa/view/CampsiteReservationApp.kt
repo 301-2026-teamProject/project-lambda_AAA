@@ -31,7 +31,8 @@ fun CampsiteReservationApp(
     uid: String,
     onOpenWaitlist: (String) -> Unit,
     isAdmin: Boolean,
-    onSwitchRole: () -> Unit,
+    roles: List<Role>,
+    onSwitchRole: (Role) -> Unit,
 ) {
     val navController = rememberNavController()
     val repo = remember { CampsiteRepository() }
@@ -79,6 +80,7 @@ fun CampsiteReservationApp(
                 onSentNotifications = { navController.navigate("sentNotifications") },
                 onClickMessage = { navController.navigate("ownerMessages") },
                 isAdmin = isAdmin,
+                roles = roles,
                 onSwitchRole = onSwitchRole,
             )
         }
