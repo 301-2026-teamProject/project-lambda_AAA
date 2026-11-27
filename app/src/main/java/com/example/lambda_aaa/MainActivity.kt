@@ -50,7 +50,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material3.Button
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -65,10 +64,7 @@ import com.example.lambda_aaa.view.EntrantProfileView
 import com.example.lambda_aaa.view.LotteryWaitlistView
 import com.google.firebase.installations.FirebaseInstallations
 import kotlinx.coroutines.tasks.await
-import androidx.compose.runtime.key
 import com.example.lambda_aaa.model.LotteryRepository
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.material.icons.filled.Email
 import com.example.lambda_aaa.controller.AdminNotificationController
 import com.example.lambda_aaa.controller.MessagingController
@@ -90,6 +86,10 @@ import com.example.lambda_aaa.view.EntrantLotteryView
 import com.example.lambda_aaa.view.ModerationView
 import com.example.lambda_aaa.view.OwnerLotteryView
 import com.example.lambda_aaa.model.UserRepository
+import com.example.lambda_aaa.view.OwnerCampsiteView
+import com.example.lambda_aaa.view.OwnerCampsiteReservationsView
+import com.google.firebase.auth.auth
+import java.security.acl.Owner
 
 // ids for testing before identification is fixed
 private const val OWNER_ID = "1hQDbywHu0OqUQ0TGWwE"   // owner id
@@ -251,8 +251,13 @@ fun CampsiteReservationApp(
                     EntrantDashboardView(navController,
                         repo = searchRepo,
                         isAdmin = currentUser.roles.contains(Role.ADMIN),
-                        onSwitchRole = {
-                            selectedMenu = AdminTabs
+                        roles = currentUser.roles,
+                        onSwitchRole = { role ->
+                            selectedMenu = when (role) {
+                                Role.ENTRANT -> EntrantTabs
+                                Role.OWNER -> OwnerTabs
+                                Role.ADMIN -> AdminTabs
+                            }
                             selectedTab = selectedMenu.first().id
                             navController.navigate(selectedTab)
                         },
@@ -285,14 +290,39 @@ fun CampsiteReservationApp(
                             navController.navigate("OwnerLotteryWaitlist/$selectedLotteryId")
                         },
                         isAdmin = currentUser.roles.contains(Role.ADMIN),
-                        onSwitchRole = {
-                            selectedMenu = AdminTabs
+                        roles = currentUser.roles,
+                        onSwitchRole = { role ->
+                            selectedMenu = when (role) {
+                                Role.ENTRANT -> EntrantTabs
+                                Role.OWNER -> OwnerTabs
+                                Role.ADMIN -> AdminTabs
+                            }
                             selectedTab = selectedMenu.first().id
                             navController.navigate(selectedTab)
+                        },
+                    )
+                }
+                composable("OwnerCampsites") {
+                    OwnerCampsiteView(
+                        ownerId = currentUser.uid,
+                        onOpenCampsite = { campsiteId ->
+                            navController.navigate("OwnerCampsiteReservations/$campsiteId")
                         }
                     )
                 }
-                composable("OwnerCampsites") { EntrantProfileView(navController, profileController) }
+
+                composable(
+                    route = "OwnerCampsiteReservations/{campsiteId}",
+                    arguments = listOf(navArgument("campsiteId") { type = NavType.StringType })
+                ) { entry ->
+                    Log.d("AuthCheck", "auth uid = ${Firebase.auth.currentUser?.uid}, app uid = ${currentUser.uid}")
+                    val campsiteId = entry.arguments?.getString("campsiteId") ?: return@composable
+                    OwnerCampsiteReservationsView(
+                        ownerId = currentUser.uid,
+                        campsiteId = campsiteId,
+                        onBack = { navController.popBackStack() }
+                    )
+                }
                 composable("OwnerLottery") { OwnerLotteryView(
                     ownerId = currentUser.uid,
                     onOpenWaitlist = { lotteryId ->
@@ -316,8 +346,13 @@ fun CampsiteReservationApp(
                 composable("AdminDashboard") { AdminDashboardView(navController,
                     repo = searchRepo,
                     onOpenCard = { navController.navigate("ModerationView_${Uri.encode(it)}") },
-                    onSwitchRole = {
-                        selectedMenu = if (currentUser.roles.contains(Role.OWNER)) OwnerTabs else EntrantTabs
+                    roles = currentUser.roles,
+                    onSwitchRole = { role ->
+                        selectedMenu = when (role) {
+                            Role.ENTRANT -> EntrantTabs
+                            Role.OWNER -> OwnerTabs
+                            Role.ADMIN -> AdminTabs
+                        }
                         selectedTab = selectedMenu.first().id
                         navController.navigate(selectedTab)
                     },

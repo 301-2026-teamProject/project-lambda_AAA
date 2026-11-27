@@ -10,6 +10,7 @@ import java.util.UUID
 class Lottery(
     val campsiteIDs : List<String>,
     val name: String,
+    val ownerIds: List<String> = emptyList(),
     var bookingPeriod: DateRange? = null,
     var registrationPeriod: DateRange? = null,
     var numWinners: Int = 0,
@@ -20,6 +21,7 @@ class Lottery(
         "id" to id,
         "campsiteIDs" to campsiteIDs,
         "name" to name,
+        "ownerIDs" to ownerIds,
         "bookingPeriodStart" to bookingPeriod?.start?.toString(),
         "bookingPeriodEnd" to bookingPeriod?.end?.toString(),
         "registrationPeriodStart" to registrationPeriod?.start?.toString(),
@@ -29,7 +31,7 @@ class Lottery(
     )
 
     companion object {
-        // converts FireStore json objects / fields into a lottery object
+        // converts FireStore JSON objects / fields into a lottery object
         fun fromMap(id: String, fields: Map<String, Any?>): Lottery {
             require(id.isNotBlank()) { "Missing lottery ID" }
             fun date(raw: Any?): LocalDate = when (raw) {
@@ -58,6 +60,7 @@ class Lottery(
                 campsiteIDs = fields["campsiteIDs"] as? List<String>
                     ?: throw IllegalArgumentException("Missing campsiteIDs"),
                 name = fields["name"] as? String ?: "",
+                ownerIds = (fields["ownerIDs"] as? List<*>)?.filterIsInstance<String>().orEmpty(),
                 bookingPeriod = range("bookingPeriod"),
                 registrationPeriod = range("registrationPeriod"),
                 numWinners = count("numWinners"),
@@ -77,6 +80,7 @@ class Lottery(
 // ensures periods start dates are before end dates
 // ensures none of the fields are null
 data class LotteryForm(
+    val collaboratorIds: Set<String> = emptySet(),
     val campsiteIDs: List<String> = emptyList(),
     val name: String = "",
     val regStart: LocalDate? = null,
@@ -89,6 +93,17 @@ data class LotteryForm(
     val numWinners: Int? get() = winnersText.toIntOrNull()
     val waitlistCapacity: Int? get() = capacityText.toIntOrNull()
 
+    fun toggleCampsite(cid: String) = copy(
+        campsiteIDs = if (cid in campsiteIDs) campsiteIDs - cid else campsiteIDs + cid
+    )
+
+    fun addCollaborator(uid: String) = copy(collaboratorIds = collaboratorIds + uid)
+
+    // Removing a collaborator also deselects their campsites
+    fun removeCollaborator(uid: String, theirCampsiteIds: Set<String>) = copy(
+        collaboratorIds = collaboratorIds - uid,
+        campsiteIDs = campsiteIDs - theirCampsiteIds
+    )
     fun toLotteryOrNull(): Lottery? {
         val winners = numWinners
         val capacity = waitlistCapacity
@@ -99,7 +114,7 @@ data class LotteryForm(
         if (!regStart.isBefore(regEnd)) return null
         if (!bookStart.isBefore(bookEnd)) return null
         if (!regEnd.isBefore(bookStart)) return null
-        if (winners >= capacity) return null
+        if (capacity in 1..winners) return null
 
         return Lottery(
             campsiteIDs = campsiteIDs,
