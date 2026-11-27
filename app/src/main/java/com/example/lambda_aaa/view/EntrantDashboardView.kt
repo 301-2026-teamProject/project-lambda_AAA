@@ -50,6 +50,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
@@ -60,6 +61,7 @@ import com.example.lambda_aaa.controller.SearchController
 import com.example.lambda_aaa.model.CampsiteRepository
 import com.example.lambda_aaa.helper.DateField
 import com.example.lambda_aaa.helper.formatDateRangeLabel
+import com.example.lambda_aaa.model.Role
 import java.time.LocalDate
 //import com.example.lambda_aaa.model.LotteryRepository
 
@@ -77,7 +79,8 @@ fun EntrantDashboardView(
     navController: NavController,
     repo: SearchController,
     isAdmin: Boolean,
-    onSwitchRole: () -> Unit,
+    roles: List<Role>,
+    onSwitchRole: (Role) -> Unit,
     onCampsiteClick: (String) -> Unit = {},
     ) {
 
@@ -103,6 +106,7 @@ fun EntrantDashboardView(
                 .padding(innerPadding),
         ) {
             TopBar(
+                roles = roles,
                 onNotificationsClick = { navController.navigate("EntrantNotifications") },
                 isAdmin = isAdmin,
                 onSwitchRole = onSwitchRole,
@@ -265,9 +269,10 @@ fun EntrantDashboardView(
  */
 @Composable
 private fun TopBar(
+    roles: List<Role>,
     onNotificationsClick: () -> Unit,
     isAdmin: Boolean,
-    onSwitchRole: () -> Unit,
+    onSwitchRole: (Role) -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -277,6 +282,8 @@ private fun TopBar(
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        var expanded by remember { mutableStateOf(false) }
+
         // This is just the thing that states your role
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
@@ -295,22 +302,30 @@ private fun TopBar(
         }
         Spacer(modifier = Modifier.weight(1f))
 
-        if (isAdmin) {
-            Surface(
-                onClick = onSwitchRole,
-                shape = RoundedCornerShape(14.dp),
-                color = Color.White,
-                border = BorderStroke(1.dp, BorderColor)
+        Box {
+            Button(onClick = { expanded = true }) {
+                Text("Switch Role")
+            }
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
             ) {
-                Text(
-                    text = "Switch role",
-                    modifier = Modifier.padding(
-                        horizontal = 13.dp,
-                        vertical = 8.dp
-                    ),
-                    fontSize = 12.sp,
-                    color = HeaderColor
-                )
+                roles.forEach { role ->
+                    DropdownMenuItem(
+                        text = { Text(
+                            when (role) {
+                                Role.ENTRANT -> "Entrant"
+                                Role.OWNER -> "Owner"
+                                Role.ADMIN -> "Admin"
+                            }
+                        ) },
+                        onClick = {
+                            onSwitchRole(role)
+                            expanded = false
+                        }
+                    )
+                }
             }
         }
 

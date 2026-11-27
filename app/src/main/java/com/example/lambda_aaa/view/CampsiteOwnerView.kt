@@ -43,7 +43,8 @@ fun CampsiteOwnerView(
     onClickMessage: () -> Unit,
     onSentNotifications: () -> Unit,
     isAdmin: Boolean,
-    onSwitchRole: () -> Unit,
+    roles: List<Role>,
+    onSwitchRole: (Role) -> Unit,
 ) {
     LaunchedEffect(Unit) {
         ownerController.refresh()
@@ -67,6 +68,7 @@ fun CampsiteOwnerView(
         onClickMessage = onClickMessage,
         onSentNotifications = onSentNotifications,
         isAdmin = isAdmin,
+        roles = roles,
         onSwitchRole = onSwitchRole,
     )
 }
@@ -85,7 +87,8 @@ fun CampsiteOwnerContent(
     onClickMessage: () -> Unit,
     onSentNotifications: () -> Unit,
     isAdmin: Boolean,
-    onSwitchRole: () -> Unit
+    roles: List<Role>,
+    onSwitchRole: (Role) -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -109,6 +112,7 @@ fun CampsiteOwnerContent(
 
             // TOP HEADER
             TopBar(
+                roles = roles,
                 onSentNotifications = onSentNotifications,
                 isAdmin = isAdmin,
                 onSwitchRole = onSwitchRole,
@@ -210,10 +214,13 @@ fun CampsiteOwnerContent(
 
 @Composable
 private fun TopBar(
+    roles: List<Role>,
     onSentNotifications: () -> Unit,
     isAdmin: Boolean,
-    onSwitchRole: () -> Unit,
+    onSwitchRole: (Role) -> Unit,
 ) {
+    var expanded by remember { mutableStateOf(false) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -240,22 +247,30 @@ private fun TopBar(
         }
         Spacer(modifier = Modifier.weight(1f))
 
-        if (isAdmin) {
-            Surface(
-                onClick = onSwitchRole,
-                shape = RoundedCornerShape(14.dp),
-                color = Color.White,
-                border = BorderStroke(1.dp, BorderColor)
+        Box {
+            Button(onClick = { expanded = true }) {
+                Text("Switch Role")
+            }
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
             ) {
-                Text(
-                    text = "Switch role",
-                    modifier = Modifier.padding(
-                        horizontal = 13.dp,
-                        vertical = 8.dp
-                    ),
-                    fontSize = 12.sp,
-                    color = HeaderColor
-                )
+                roles.forEach { role ->
+                    DropdownMenuItem(
+                        text = { Text(
+                            when (role) {
+                                Role.ENTRANT -> "Entrant"
+                                Role.OWNER -> "Owner"
+                                Role.ADMIN -> "Admin"
+                            }
+                        ) },
+                        onClick = {
+                            onSwitchRole(role)
+                            expanded = false
+                        }
+                    )
+                }
             }
         }
 

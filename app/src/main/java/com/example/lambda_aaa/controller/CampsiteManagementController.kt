@@ -5,6 +5,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.lambda_aaa.model.Campsite
 import com.example.lambda_aaa.model.CampsiteRepository
+import com.google.firebase.firestore.GeoPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import android.location.Geocoder
+import java.util.Locale
+import android.content.Context
+import java.io.IOException
+import kotlinx.coroutines.withContext
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 /**
  * loads the campsite by cid, and pushes the edited values
@@ -22,12 +33,20 @@ class CampsiteManagementController(
     private val uid: String,
     private val isNew: Boolean,
     private val repository: CampsiteRepository,
+    private val context: Context,
 ) {
     var campsite by mutableStateOf<Campsite?>(null)
         private set
     var isLoading by mutableStateOf(true)
         private set
     var errorMessage by mutableStateOf<String?>(null)
+        private set
+
+    var geoResult by mutableStateOf<Pair<String, GeoPoint?>>(Pair("", null))
+        private set
+    var isSearching by mutableStateOf(false)
+        private set
+    var geoSearchErrorMessage by mutableStateOf<String?>(null)
         private set
 
     init {
@@ -65,6 +84,7 @@ class CampsiteManagementController(
     fun save(
         name: String,
         address: String,
+        mapLocation: GeoPoint?,
         description: String,
         rulesAndPolicy: String,
         cancellationPolicy: String,
@@ -88,6 +108,7 @@ class CampsiteManagementController(
         // ratingAverage is deliberately not touched: it is computed from entrant ratings.
         c.name = name.trim()
         c.address = address.trim()
+        c.mapLocation = mapLocation
         c.description = description.trim()
         c.rulesAndPolicy = rulesAndPolicy.trim()
         c.cancellationPolicy = cancellationPolicy.trim()
@@ -118,6 +139,24 @@ class CampsiteManagementController(
                 }
             } else {
                 onSave(false, "Error: You are not the owner of that campsite.")
+            }
+        }
+    }
+
+    fun geoSearch(address: String) {
+        isSearching = true
+        geoSearchErrorMessage = null
+        @Suppress("DEPRECATION")
+        CoroutineScope(Dispatchers.IO).launch {
+            val hit = try {
+                Geocoder(context, Locale.getDefault())
+                    .getFromLocationName(address, 1)?.firstOrNull()
+            } catch (e: IOException) { null }
+            withContext(Dispatchers.Main) {
+                isSearching = false
+                if (hit == null) geoSearchErrorMessage = "No matching location found."
+                else geoResult = Pair(hit.getAddressLine(0) ?: address,
+                    GeoPoint(hit.latitude, hit.longitude))
             }
         }
     }

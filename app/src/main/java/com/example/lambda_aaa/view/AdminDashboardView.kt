@@ -35,12 +35,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.lambda_aaa.controller.SearchController
+import androidx.compose.material3.Button
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.material3.DropdownMenu
+import com.example.lambda_aaa.model.Role
+import androidx.compose.material3.DropdownMenuItem
 
 @Composable
 fun AdminDashboardView (
     navController: NavController,
     repo: SearchController,
-    onSwitchRole: () -> Unit = {},
+    roles: List<Role>,
+    onSwitchRole: (Role) -> Unit = {},
     onOpenCard: (String) -> Unit = {},
     onOpenCampsites: () -> Unit = {},
     onOpenProfiles: () -> Unit = {},
@@ -53,10 +62,10 @@ fun AdminDashboardView (
             .fillMaxSize()
             .background(Background)
     ) {
-
         // Top navigation bar
         AdminTopBar(
-            onSwitchRole = onSwitchRole
+            roles = roles,
+            onSwitchRole = { role -> onSwitchRole(role) }
         )
 
         // Main scrollable content
@@ -215,8 +224,11 @@ fun AdminDashboardView (
 
 @Composable
 private fun AdminTopBar(
-    onSwitchRole: () -> Unit
+    roles: List<Role>,
+    onSwitchRole: (Role) -> Unit
 ) {
+    var expanded by remember { mutableStateOf(false) }
+
     Column {
         Row(
             modifier = Modifier
@@ -245,21 +257,31 @@ private fun AdminTopBar(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            Surface(
-                onClick = onSwitchRole,
-                shape = RoundedCornerShape(14.dp),
-                color = Color.White,
-                border = BorderStroke(1.dp, BorderColor)
-            ) {
-                Text(
-                    text = "Switch role",
-                    modifier = Modifier.padding(
-                        horizontal = 13.dp,
-                        vertical = 8.dp
-                    ),
-                    fontSize = 12.sp,
-                    color = HeaderColor
-                )
+            Box {
+                Button(onClick = { expanded = true }) {
+                    Text("Switch Role")
+                }
+
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    roles.forEach { role ->
+                        DropdownMenuItem(
+                            text = { Text(
+                                when (role) {
+                                    Role.ENTRANT -> "Entrant"
+                                    Role.OWNER -> "Owner"
+                                    Role.ADMIN -> "Admin"
+                                }
+                            ) },
+                            onClick = {
+                                onSwitchRole(role)
+                                expanded = false
+                            }
+                        )
+                    }
+                }
             }
         }
 
