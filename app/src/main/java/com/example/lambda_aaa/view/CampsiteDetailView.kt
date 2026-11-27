@@ -40,7 +40,8 @@ fun CampsiteDetailView(
     onBack: () -> Unit,
     onEdit: (() -> Unit)? = null,
     onLotteryUpdate: ((Lottery) -> Unit)? = null,
-    onOpenWaitlist: ((String) -> Unit)? = null
+    onOpenWaitlist: ((String) -> Unit)? = null,
+    onRate: (String) -> Unit
 ) {
     LaunchedEffect(campsiteDetailController, onEdit == null) {
         campsiteDetailController.fetchCampsiteAndLottery()
@@ -72,7 +73,8 @@ fun CampsiteDetailView(
         onLeave = campsiteDetailController::leaveLottery,
         onRetryEntry = campsiteDetailController::refreshEntry,
         onLotteryUpdate = onLotteryUpdate,
-        onOpenWaitlist = onOpenWaitlist
+        onOpenWaitlist = onOpenWaitlist,
+        onRate = onRate
     )
 }
 
@@ -98,7 +100,8 @@ internal fun CampsiteDetailContent(
     onLeave: (String) -> Unit = {},
     onRetryEntry: (String) -> Unit = {},
     onLotteryUpdate: ((Lottery) -> Unit)? = {},
-    onOpenWaitlist: ((String) -> Unit)? = null
+    onOpenWaitlist: ((String) -> Unit)? = null,
+    onRate: (String) -> Unit
 ) {
     val context = LocalContext.current
     Scaffold(
@@ -162,6 +165,28 @@ internal fun CampsiteDetailContent(
                 DetailSection(stringResource(R.string.description), campsite.description)
                 DetailSection(stringResource(R.string.rules_and_policy), campsite.rulesAndPolicy)
                 DetailSection(stringResource(R.string.cancellation_policy), campsite.cancellationPolicy)
+
+                // Button to go to EntrantRatingView
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = AddGreen,
+                        border = BorderStroke(1.dp, BorderColor),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Button(
+                            onClick = { onRate(campsite.cid) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent,
+                                contentColor = Color.White
+                            )
+                        ) { Text("Rate Campsite") }
+                    }
+                }
+
                 CampsiteLotteriesSection(
                     lotteries, lotteriesLoading, lotteriesFailed, onRetryLotteries,
                     showJoinActions, joinStates, identityLoading, identityFailed,

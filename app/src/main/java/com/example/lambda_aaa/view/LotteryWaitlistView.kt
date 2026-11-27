@@ -12,6 +12,7 @@ import java.util.UUID
 import com.example.lambda_aaa.model.NotificationRepository
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -85,6 +86,7 @@ fun LotteryWaitlistView(
     var numEntries by remember(lotteryId) { mutableIntStateOf(0) }
     var numWinners by remember(lotteryId) { mutableIntStateOf(0) }
     val lotteryDB = remember { LotteryRepository() }
+
     DisposableEffect(lotteryDB) {
         onDispose { lotteryDB.close() }
     }
@@ -184,7 +186,9 @@ fun LotteryWaitlistView(
                             imageVector = Icons.AutoMirrored.Filled.KeyboardBackspace,
                             contentDescription = "Backspace",
                             tint = HeaderColor,
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(20.dp).clickable {
+                                lotteryWaitlistNavController.popBackStack()
+                            },
                         )
                     }
                 }

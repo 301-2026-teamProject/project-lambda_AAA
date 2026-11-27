@@ -86,8 +86,10 @@ import com.example.lambda_aaa.view.EntrantLotteryView
 import com.example.lambda_aaa.view.ModerationView
 import com.example.lambda_aaa.view.OwnerLotteryView
 import com.example.lambda_aaa.model.UserRepository
+import com.example.lambda_aaa.view.EntrantRatingView
 import com.example.lambda_aaa.view.OwnerCampsiteView
 import com.example.lambda_aaa.view.OwnerCampsiteReservationsView
+import com.example.lambda_aaa.view.QrScreenView
 import com.google.firebase.auth.auth
 
 // ids for testing before identification is fixed
@@ -260,7 +262,10 @@ fun CampsiteReservationApp(
                 composable("campsite/{cid}", arguments = listOf(navArgument("cid") { type = NavType.StringType })) { entry ->
                     val cid = entry.arguments?.getString("cid") ?: return@composable
                     val controller = remember(cid, campsiteRepo) { CampsiteDetailController(cid, campsiteRepo) }
-                    CampsiteDetailView(controller, onBack = { navController.popBackStack() })
+                    CampsiteDetailView(
+                        controller,
+                        onBack = { navController.popBackStack() },
+                        onRate = { campsiteId -> navController.navigate("EntrantReviewCampsite/$campsiteId")})
                 }
                 composable("EntrantLottery") { EntrantLotteryView() }
                 composable("EntrantTrips") { EntrantProfileView(navController, profileController) }
@@ -276,6 +281,16 @@ fun CampsiteReservationApp(
                     })
                 }
                 composable("EntrantQrScanner") { QrScreenView(navController) }
+                composable(
+                    route = "EntrantReviewCampsite/{campsiteId}",
+                    arguments = listOf(navArgument("campsiteId") {type = NavType.StringType })
+                ) { entry ->
+                    val campsiteId = entry.arguments?.getString("campsiteId")
+
+                    if (campsiteId != null) {
+                        EntrantRatingView(onCancel = { navController.popBackStack() }, campsiteId)
+                    }
+                }
 
                 composable("OwnerHome") {
                     //replaced with currentUser.uid, and added onOpenWaitlist arg to pass
