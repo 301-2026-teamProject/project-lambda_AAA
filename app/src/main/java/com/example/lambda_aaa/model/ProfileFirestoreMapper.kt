@@ -25,7 +25,7 @@ internal object ProfileFirestoreMapper {
             profilePhotoUrl = fields["profilePhotoUrl"] as? String ?: "",
             roles = (fields["roles"] as? List<*>)?.map { Role.valueOf(it as String) }?.let { ArrayList(it) }?: arrayListOf(),
             notificationsEnabled = fields["notificationsEnabled"] as? Boolean ?: false,
-            isOwner = fields["isOwner"] as? Boolean ?: false,
+            isOwner = fields["isOwner"] as? Boolean ?: fields["owner"] as? Boolean ?: false,
             creationDate = fields["creationDate"] as? Timestamp,
         )
         return p

@@ -24,6 +24,9 @@ class Reservation(
     fun overlaps(other: DateRange): Boolean =
         period.start.isBefore(other.end) && other.start.isBefore(period.end)
 
+    fun canBeRejected(today: LocalDate = LocalDate.now()): Boolean =
+        status == ReservationStatus.ACTIVE && period.start.isAfter(today)
+
     fun toMap(): Map<String, Any?> = mapOf(
         "id" to id,
         "campsiteID" to campsiteId,
@@ -60,6 +63,7 @@ data class OwnerReservations(
     val cancelled: List<Reservation>,
     val rejected: List<Reservation>
 ) {
+    val all: List<Reservation> get() = active + past + cancelled + rejected
     companion object {
         fun from(all: List<Reservation>, today: LocalDate = LocalDate.now()) = OwnerReservations(
             active = all.filter { it.isActive(today) }.sortedBy { it.period.start },

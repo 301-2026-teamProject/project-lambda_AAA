@@ -71,4 +71,19 @@ class ReservationRepository(db: FirebaseFirestore = Firebase.firestore) {
         documents.mapNotNull { doc ->
             runCatching { Reservation.fromMap(doc.id, doc.data.orEmpty()) }.getOrNull()
         }
+
+    fun getCampsiteReservations(
+        ownerId: String,
+        campsiteId: String,
+        result: (Boolean, OwnerReservations?, String?) -> Unit
+    ) {
+        reservationRef
+            .whereEqualTo("ownerID", ownerId)
+            .whereEqualTo("campsiteID", campsiteId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                result(true, OwnerReservations.from(snapshot.decode()), null)
+            }
+            .addOnFailureListener { result(false, null, it.message) }
+    }
 }
