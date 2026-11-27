@@ -1,3 +1,7 @@
+/**
+ * UI code for the Rating screen shown in the GUI storyboard in the wiki on GitHub.
+ */
+
 package com.example.lambda_aaa.view
 
 import android.util.Log
@@ -15,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -28,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -38,7 +44,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.lambda_aaa.model.CampsiteRepository
+import com.example.lambda_aaa.model.Rating
 
+/**
+ * Implements the Rating screen for Entrants to rate campsites found in the dashboard.
+ *
+ * @param onCancel the lambda callback to handle interaction when user decides to cancel
+ * rating the campsite
+ * @param campsiteId the unique ID of the campsite being reviewed
+ */
 @Composable
 fun EntrantRatingView (
     onCancel: () -> Unit,
@@ -46,7 +60,8 @@ fun EntrantRatingView (
 ) {
     val campsiteDB = remember { CampsiteRepository() }
     var campsiteName by remember { mutableStateOf("") }
-    var userReview by remember { mutableStateOf("")}
+    var userReview by remember { mutableStateOf("") }
+    var campScore by remember { mutableIntStateOf(1) }
 
     DisposableEffect(campsiteDB) {
         onDispose { campsiteDB.close() }
@@ -57,7 +72,7 @@ fun EntrantRatingView (
             if (success) {
                 campsiteName = campsite?.name ?: ""
             } else {
-                Log.e("Campsite Review Error", "Unable to find campsite to review: $msg")
+                Log.e("Campsite Rating Error", "Unable to find campsite to review: $msg")
             }
         }
 
@@ -127,7 +142,10 @@ fun EntrantRatingView (
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    StarScore(modifier = Modifier)
+                    StarScore(
+                        modifier = Modifier,
+                        onNewScore = {newScore -> campScore = newScore},
+                        score = campScore)
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -160,7 +178,17 @@ fun EntrantRatingView (
                         Spacer(modifier = Modifier.width(20.dp))
 
                         TextButton(
-                            onClick = {},
+                            onClick = {
+
+                                val newRating = Rating(stars = campScore, feedback = userReview)
+                                campsiteDB.addCampsiteRating(newRating, campsiteId) {success, msg ->
+                                    if (success) {
+                                        onCancel()
+                                    } else {
+                                        Log.e("Campsite Rating Error", "Unable to add rating: $msg")
+                                    }
+                                }
+                            },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFF246B45), contentColor = Color.White),
                             shape = RectangleShape,
@@ -180,18 +208,62 @@ fun EntrantRatingView (
     }
 }
 
+/**
+ * Implements the star rating feature for Rating screen.
+ *
+ * @param modifier the modifier to control UI placement of the stars
+ * @param onNewScore the lambda function that controls how campScore is updated outside the function
+ * @param score the number used to "turn on" stars depending on the score the user wants to give
+ */
 @Composable
-fun StarScore(modifier: Modifier) {
+fun StarScore(modifier: Modifier, onNewScore: (Int) -> Unit, score: Int) {
+
     Row(modifier = Modifier) {
-        for (i in 0..<5) {
-            IconButton(onClick = {}, modifier.size(50.dp)) {
-                Icon(
-                    imageVector = Icons.Outlined.StarOutline,
-                    contentDescription = "Empty Star",
-                    modifier.size(36.dp),
-                    tint = Color(0xFFFFC107)
-                )
-            }
+
+        IconButton(onClick = {onNewScore(1)}, modifier.size(50.dp)) {
+            Icon(
+                imageVector = if (score >= 1) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                contentDescription = "Star 1",
+                modifier.size(36.dp),
+                tint = Color(0xFFFFC107)
+            )
         }
+
+        IconButton(onClick = {onNewScore(2)}, modifier.size(50.dp)) {
+            Icon(
+                imageVector = if (score >= 2) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                contentDescription = "Star 2",
+                modifier.size(36.dp),
+                tint = Color(0xFFFFC107)
+            )
+        }
+
+        IconButton(onClick = {onNewScore(3)}, modifier.size(50.dp)) {
+            Icon(
+                imageVector = if (score >= 3) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                contentDescription = "Star 3",
+                modifier.size(36.dp),
+                tint = Color(0xFFFFC107)
+            )
+        }
+
+        IconButton(onClick = {onNewScore(4)}, modifier.size(50.dp)) {
+            Icon(
+                imageVector = if (score >= 4) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                contentDescription = "Star 4",
+                modifier.size(36.dp),
+                tint = Color(0xFFFFC107)
+            )
+        }
+
+        IconButton(onClick = {onNewScore(5)}, modifier.size(50.dp)) {
+            Icon(
+                imageVector = if (score == 5) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                contentDescription = "Star 5",
+                modifier.size(36.dp),
+                tint = Color(0xFFFFC107)
+            )
+        }
+
     }
 }

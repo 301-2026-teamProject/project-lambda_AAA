@@ -286,7 +286,9 @@ fun CampsiteReservationApp(
                         selectedTab = selectedMenu.first().id
                     })
                 }
+
                 composable("EntrantQrScanner") { QrScreenView(navController) }
+
                 composable(
                     route = "EntrantReviewCampsite/{campsiteId}",
                     arguments = listOf(navArgument("campsiteId") {type = NavType.StringType })
