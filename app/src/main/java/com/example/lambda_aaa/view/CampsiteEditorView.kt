@@ -1,7 +1,6 @@
 package com.example.lambda_aaa.view
 
-import android.R
-import androidx.compose.foundation.horizontalScroll
+import java.math.BigDecimal
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -22,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.runtime.saveable.rememberSaveable
 import com.google.firebase.firestore.GeoPoint
+import java.math.RoundingMode
 import kotlin.math.roundToInt
 
 /**
@@ -165,7 +165,9 @@ fun CampsiteEditorContent(
                             val geoPoint = geoResult.second
                             geoPoint?.let {
                                 Text(
-                                    text = "Current Result: (${geoPoint.latitude.roundToInt()}, ${geoPoint.longitude.roundToInt()})",
+                                    text = "Current Result: (${BigDecimal(geoPoint.latitude).setScale(5,
+                                        RoundingMode.HALF_UP)}, ${BigDecimal(geoPoint.longitude).setScale(5,
+                                        RoundingMode.HALF_UP)})",
                                     color = SubText,
                                 )
                             }
