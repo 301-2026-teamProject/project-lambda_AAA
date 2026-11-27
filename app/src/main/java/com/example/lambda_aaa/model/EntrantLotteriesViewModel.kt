@@ -4,12 +4,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+
+/**
+ * Saves UI state for EntrantLotteriesScreen and viewModel
+ */
 data class EntrantLotteriesUiState(
     val isLoading: Boolean = true,
     val lotteries: List<LotteryItem> = emptyList(),
     val error: String? = null
 )
 
+/**
+ * Displays available lotteries for their respective campsites
+ * @property campsiteRepo repo of campsites
+ * @property lotteryRepo repo of lotteries
+ */
 class EntrantLotteriesViewModel(
     private val campsiteRepo: CampsiteRepository = CampsiteRepository(),
     private val lotteryRepo: LotteryRepository = LotteryRepository()

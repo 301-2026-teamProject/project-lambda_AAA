@@ -22,6 +22,7 @@ import com.example.lambda_aaa.model.Lottery
 import com.example.lambda_aaa.model.MessagingRepository
 import com.example.lambda_aaa.model.Role
 import com.example.lambda_aaa.model.UserRepository
+import androidx.compose.ui.platform.LocalContext
 
 /**
  * Main app logic */
@@ -30,7 +31,8 @@ fun CampsiteReservationApp(
     uid: String,
     onOpenWaitlist: (String) -> Unit,
     isAdmin: Boolean,
-    onSwitchRole: () -> Unit,
+    roles: List<Role>,
+    onSwitchRole: (Role) -> Unit,
 ) {
     val navController = rememberNavController()
     val repo = remember { CampsiteRepository() }
@@ -62,6 +64,8 @@ fun CampsiteReservationApp(
         navController.popBackStack("ownerHome", inclusive = false)
     }
 
+    val context = LocalContext.current
+
     NavHost(navController, startDestination = "ownerHome") {
         composable("ownerHome") {
             val messagingController = remember { MessagingController(uid, Role.OWNER, messagingRepo) }
@@ -76,12 +80,13 @@ fun CampsiteReservationApp(
                 onSentNotifications = { navController.navigate("sentNotifications") },
                 onClickMessage = { navController.navigate("ownerMessages") },
                 isAdmin = isAdmin,
+                roles = roles,
                 onSwitchRole = onSwitchRole,
             )
         }
         composable("registerScreen") {
             val controller = remember {
-                CampsiteManagementController(repo.newCampsiteId(), uid, true, repo)
+                CampsiteManagementController(repo.newCampsiteId(), uid, true, repo, context)
             }
             CampsiteEditorView(
                 isNew = true,
@@ -112,7 +117,7 @@ fun CampsiteReservationApp(
             arguments = listOf(navArgument("cid") { type = NavType.StringType })
         ) { entry ->
             val cid = entry.arguments?.getString("cid") ?: return@composable
-            val controller = remember(cid) { CampsiteManagementController(cid, uid, false, repo) }
+            val controller = remember(cid) { CampsiteManagementController(cid, uid, false, repo, context) }
             CampsiteEditorView(
                 isNew = false,
                 onDone = { ok, msg -> goHome(ok, msg) },

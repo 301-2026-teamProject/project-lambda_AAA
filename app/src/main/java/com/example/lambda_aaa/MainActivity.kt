@@ -91,6 +91,7 @@ import com.example.lambda_aaa.view.OwnerCampsiteView
 import com.example.lambda_aaa.view.OwnerCampsiteReservationsView
 import com.example.lambda_aaa.view.QrScreenView
 import com.google.firebase.auth.auth
+import java.security.acl.Owner
 
 // ids for testing before identification is fixed
 private const val OWNER_ID = "1hQDbywHu0OqUQ0TGWwE"   // owner id
@@ -252,8 +253,13 @@ fun CampsiteReservationApp(
                     EntrantDashboardView(navController,
                         repo = searchRepo,
                         isAdmin = currentUser.roles.contains(Role.ADMIN),
-                        onSwitchRole = {
-                            selectedMenu = AdminTabs
+                        roles = currentUser.roles,
+                        onSwitchRole = { role ->
+                            selectedMenu = when (role) {
+                                Role.ENTRANT -> EntrantTabs
+                                Role.OWNER -> OwnerTabs
+                                Role.ADMIN -> AdminTabs
+                            }
                             selectedTab = selectedMenu.first().id
                             navController.navigate(selectedTab)
                         },
@@ -300,11 +306,16 @@ fun CampsiteReservationApp(
                             navController.navigate("OwnerLotteryWaitlist/$selectedLotteryId")
                         },
                         isAdmin = currentUser.roles.contains(Role.ADMIN),
-                        onSwitchRole = {
-                            selectedMenu = AdminTabs
+                        roles = currentUser.roles,
+                        onSwitchRole = { role ->
+                            selectedMenu = when (role) {
+                                Role.ENTRANT -> EntrantTabs
+                                Role.OWNER -> OwnerTabs
+                                Role.ADMIN -> AdminTabs
+                            }
                             selectedTab = selectedMenu.first().id
                             navController.navigate(selectedTab)
-                        }
+                        },
                     )
                 }
                 composable("OwnerCampsites") {
@@ -351,8 +362,13 @@ fun CampsiteReservationApp(
                 composable("AdminDashboard") { AdminDashboardView(navController,
                     repo = searchRepo,
                     onOpenCard = { navController.navigate("ModerationView_${Uri.encode(it)}") },
-                    onSwitchRole = {
-                        selectedMenu = if (currentUser.roles.contains(Role.OWNER)) OwnerTabs else EntrantTabs
+                    roles = currentUser.roles,
+                    onSwitchRole = { role ->
+                        selectedMenu = when (role) {
+                            Role.ENTRANT -> EntrantTabs
+                            Role.OWNER -> OwnerTabs
+                            Role.ADMIN -> AdminTabs
+                        }
                         selectedTab = selectedMenu.first().id
                         navController.navigate(selectedTab)
                     },

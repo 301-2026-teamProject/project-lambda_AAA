@@ -45,11 +45,12 @@ import com.example.lambda_aaa.model.CreateLotteryViewModel
 import com.example.lambda_aaa.controller.MultiSelectDropdown
 import androidx.compose.runtime.LaunchedEffect
 
-// CreateLotteryScreen is a screen to create lottery associated with a campsite
-// EditLotteryScreen is a screen to edit an existing lottery
-// DateField is an outlined text field for booking and registration periods with Android's date picker dialog
-// NumberField is an outlined text field that ensures inputs are numbers
-// toLocalDate and toEpochMilli functions convert to their respective formats
+/**
+ * Owners create lottery screen view
+ * @param ownerId owners id string
+ * @param campsites list of owner's own campsites
+ * @param onClose returns to lotteries screen
+ */
 @Composable
 fun CreateLotteryScreen(
     ownerId: String,
@@ -318,6 +319,12 @@ fun EditLotteryScreen(
     }
 }
 
+/**
+ * Handles logic for numeric fields such as numWinners and waitlistCapacity
+ * @param label string for the name of the field
+ * @param value current value stored in the field
+ * @param onValueChange changes field when value changes
+ */
 @Composable
 fun NumberField(
     label: String,

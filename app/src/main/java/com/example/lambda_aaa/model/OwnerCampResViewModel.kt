@@ -4,17 +4,30 @@ import androidx.lifecycle.ViewModel
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+
+/**
+ * Different views in reservations screen
+ */
 enum class ReservationView(val label: String) {
     ACTIVE("Active"),
     PAST("Past"),
     CANCELLED("Cancelled")
 }
 
+/**
+ * Stores reservation and entrant name together
+ */
 data class ReservationItem(
     val reservation: Reservation,
     val entrantName: String
 )
 
+/**
+ * Handles UI state for campsite's reservation cards
+ * @property selectedView holds current view of the reservations page, set to active by default
+ * @property rejectingIds reservations being rejected
+ * @property visible decides which list is visible depending on current reservation view
+ */
 data class CampsiteReservationsUiState(
     val isLoading: Boolean = true,
     val selectedView: ReservationView = ReservationView.ACTIVE,
@@ -37,6 +50,12 @@ data class CampsiteReservationsUiState(
         }
 }
 
+/**
+ * Handles logic and state for OwnerCampResScreen
+ * @property reservationRepo repo of reservations
+ * @property userRepo repo of users
+ * @property uiState state of CampsiteReservationUistate
+ */
 class OwnerCampsiteReservationsViewModel(
     private val reservationRepo: ReservationRepository = ReservationRepository(),
     private val userRepo: UserRepository = UserRepository()

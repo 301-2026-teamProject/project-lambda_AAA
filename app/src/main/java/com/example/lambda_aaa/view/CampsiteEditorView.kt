@@ -1,5 +1,6 @@
 package com.example.lambda_aaa.view
 
+import java.math.BigDecimal
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -19,6 +20,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.runtime.saveable.rememberSaveable
+import com.google.firebase.firestore.GeoPoint
+import java.math.RoundingMode
+import kotlin.math.roundToInt
 
 /**
  * View: only displays state from the controller and forwards the Save click.
@@ -55,11 +59,16 @@ fun CampsiteEditorView(
         isNew = isNew,
         campsite = controller.campsite,
         isLoading = controller.isLoading,
+        isSearching = controller.isSearching,
         errorMessage = controller.errorMessage,
-        save = { name, address, desc, rule, cancel, tags, maxOcc, onSave ->
+        geoSearchErrorMessage = controller.geoSearchErrorMessage,
+        geoResult = controller.geoResult,
+        geoSearch = { address -> controller.geoSearch(address) },
+        save = { name, address, mapLocation, desc, rule, cancel, tags, maxOcc, onSave ->
             controller.save(
                 name = name,
                 address = address,
+                mapLocation = mapLocation,
                 description = desc,
                 rulesAndPolicy = rule,
                 cancellationPolicy = cancel,
@@ -79,8 +88,12 @@ fun CampsiteEditorContent(
     isNew: Boolean,
     campsite: Campsite?,
     isLoading: Boolean,
+    isSearching: Boolean,
     errorMessage: String?,
-    save: (String, String, String, String, String, List<String>, String, (Boolean, String) -> Unit) -> Unit,
+    geoSearchErrorMessage: String?,
+    geoResult: Pair<String, GeoPoint?>,
+    geoSearch: (String) -> Unit,
+    save: (String, String, GeoPoint?, String, String, String, List<String>, String, (Boolean, String) -> Unit) -> Unit,
     onSave: (Boolean, String) -> Unit,
     onBack: () -> Unit
 ) {
@@ -134,6 +147,33 @@ fun CampsiteEditorContent(
                         value = address, onValueChange = { address = it },
                         label = { Text("Address") }, modifier = Modifier.fillMaxWidth(),
                     )
+                    Button(
+                        onClick = {
+                            geoSearch(address)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text("Search") }
+                    when {
+                        address.isBlank() -> Text("Enter an address and click Search", color = SubText)
+                        isSearching -> CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = SubText
+                        )
+                        geoResult.second == null -> Text(geoSearchErrorMessage ?: "No result yet. Click Search", color = MaterialTheme.colorScheme.error)
+                        else -> {
+                            val geoPoint = geoResult.second
+                            geoPoint?.let {
+                                Text(
+                                    text = "Current Result: (${BigDecimal(geoPoint.latitude).setScale(5,
+                                        RoundingMode.HALF_UP)}, ${BigDecimal(geoPoint.longitude).setScale(5,
+                                        RoundingMode.HALF_UP)})",
+                                    color = SubText,
+                                )
+                            }
+                        }
+                    }
+
                     OutlinedTextField(
                         value = description, onValueChange = { description = it },
                         label = { Text("Description") }, minLines = 3,
@@ -172,7 +212,7 @@ fun CampsiteEditorContent(
 
                     Button(
                         onClick = {
-                            save(name, address, description, rules, cancellation, tags, maxOccupancy, onSave)
+                            save(name, address, geoResult.second, description, rules, cancellation, tags, maxOccupancy, onSave)
                         },
                         modifier = Modifier.fillMaxWidth(),
                     ) { Text("Save") }
@@ -180,18 +220,4 @@ fun CampsiteEditorContent(
             }
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun CampsiteEditorViewPreview() {
-    CampsiteEditorContent(
-        isNew = false,
-        campsite = Campsite(name = "University of Alberta"),
-        isLoading = false,
-        errorMessage = "Something happened?",
-        save = { _,_,_,_,_,_,_,_ ->},
-        onBack = {},
-        onSave = { _,_ ->}
-    )
 }
