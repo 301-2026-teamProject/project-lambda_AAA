@@ -8,7 +8,7 @@ import java.util.UUID
 // all fields except campsite id and name are nullable as lottery should not exist without a campsite
 
 class Lottery(
-    val campsiteIDs : List<String>,
+    var campsiteIDs : List<String>,
     val name: String,
     val ownerIds: List<String> = emptyList(),
     var bookingPeriod: DateRange? = null,

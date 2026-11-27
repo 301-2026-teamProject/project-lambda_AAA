@@ -33,8 +33,6 @@ class SearchController(
 
         fetchProfiles()
         filteredProfiles = profiles
-
-        //fetchLotteries()
     }
 
     fun fetchCampsites() {
@@ -68,19 +66,6 @@ class SearchController(
         return profiles.size
     }
 
-    /*
-    fun fetchLotteries() {
-        /* also get lottery of this campsite */
-        lotteryRepository.getAllLotteries { success, lotteries, msg ->
-            if (success) {
-                this.lotteries = lotteries
-            } else {
-                errorMessage = "Failed to load campsites: $msg"
-            }
-            isLoading = false
-        }
-    }
-    */
     fun filterCampsite(
         searchQuery: String = "",
         selectedLocation: String?,

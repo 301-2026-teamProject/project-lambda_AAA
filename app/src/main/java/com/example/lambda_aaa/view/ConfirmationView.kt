@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -44,7 +45,11 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.lambda_aaa.R
+import com.example.lambda_aaa.controller.CampsiteManagementController
+import com.example.lambda_aaa.controller.ProfileController
+import com.example.lambda_aaa.model.Campsite
 import com.example.lambda_aaa.model.CampsiteRepository
+import com.example.lambda_aaa.model.UserProfile
 import com.example.lambda_aaa.model.UserRepository
 
 @Composable
@@ -59,18 +64,23 @@ fun ConfirmationView(
 
     var inputName by remember { mutableStateOf( "No Name Found") }
     var adminReason by remember { mutableStateOf( "$inputType violates promotional-content policy.") }
+    var inputCampsite: Campsite? = null
+    var inputUser: UserProfile? = null
+    val localContext = LocalContext.current
 
     when (inputType) {
         "Campsite" -> {
-            val displayObject = campsiteRepo.getCampsite(inputID) { boolCheck, campsite, _ ->
+            campsiteRepo.getCampsite(inputID) { boolCheck, campsite, _ ->
                 if (boolCheck) {
+                    inputCampsite = campsite
                     inputName = campsite!!.name
                 }
             }
         }
         "Profile" -> {
-            val displayObject = userRepo.getProfile(inputID) { boolCheck, profile, _ ->
+            userRepo.getProfile(inputID) { boolCheck, profile, _ ->
                 if (boolCheck) {
+                    inputUser = profile
                     inputName = profile!!.name
                 }
             }
@@ -267,10 +277,55 @@ fun ConfirmationView(
                     )
                 }
 
+                if (inputType == "Profile") {
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Surface(
+                        onClick = { },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(41.dp),
+                        shape = RoundedCornerShape(13.dp),
+                        color = Color.White,
+                        border = BorderStroke(1.dp, BorderColor)
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center
+                        ) {
+
+                            Text(
+                                text = "Ban Profile",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = HeaderColor
+                            )
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Surface(
-                    onClick = { },
+                    onClick = {
+                        when (inputType) {
+                            "Campsite" -> {
+                                val campsiteController = CampsiteManagementController(cid = inputCampsite!!.cid, uid = inputCampsite!!.ownerId, isNew = false, repository = campsiteRepo, context = localContext)
+                                campsiteController.deleteCampsite(inputCampsite!!) { message -> }
+                                onBack()
+                            }
+                            "Profile" -> {
+                                val userController = ProfileController(inputUser!!)
+                                userController.deleteProfile(localContext)
+                                onBack()
+                            }
+                            else -> {
+                                onBack()
+                            }
+                        }
+
+
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(41.dp),
@@ -283,7 +338,7 @@ fun ConfirmationView(
                     ) {
 
                         Text(
-                            text = "Remove $inputType",
+                            text = "Delete $inputType",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
                             color = HeaderColor

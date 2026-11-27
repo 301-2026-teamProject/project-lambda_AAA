@@ -51,9 +51,6 @@ fun AdminDashboardView (
     roles: List<Role>,
     onSwitchRole: (Role) -> Unit = {},
     onOpenCard: (String) -> Unit = {},
-    onOpenCampsites: () -> Unit = {},
-    onOpenProfiles: () -> Unit = {},
-    onOpenImages: () -> Unit = {},
     onOpenLogs: () -> Unit = {},
 ) {
 

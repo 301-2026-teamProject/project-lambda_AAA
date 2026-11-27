@@ -180,6 +180,12 @@ class EntryRepository {
             }
     }
 
+    fun deleteEntry(entry: LotteryEntry, onResult: (Boolean, String?) -> Unit) {
+        entriesRef.document(entry.id).delete()
+            .addOnSuccessListener { onResult(true, null) }
+            .addOnFailureListener { e -> onResult(false, e.message)  }
+    }
+
     /**
      * Updates the status of a list of lottery entries at the same time
      * Collaborators: LotteryEntry, Firestore

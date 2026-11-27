@@ -12,6 +12,12 @@ import kotlinx.coroutines.launch
 import android.location.Geocoder
 import java.util.Locale
 import android.content.Context
+import android.util.Log
+import androidx.compose.runtime.mutableStateListOf
+import com.example.lambda_aaa.model.EntryRepository
+import com.example.lambda_aaa.model.Lottery
+import com.example.lambda_aaa.model.LotteryEntry
+import com.example.lambda_aaa.model.LotteryRepository
 import java.io.IOException
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
@@ -159,5 +165,52 @@ class CampsiteManagementController(
                     GeoPoint(hit.latitude, hit.longitude))
             }
         }
+    }
+
+    /** Calls each Repository to remove a Campsite, its link to any Lotteries, and the Lottery Entries to those Lotteries (if removed)
+     *
+     * @param campsite campsite name
+     * @param onFail message to be returned if any step fails
+     */
+    fun deleteCampsite(
+        campsite: Campsite,
+        onFail: (String) -> Unit = {},
+    ) {
+        val lotteryRepo = LotteryRepository()
+        val entryRepo = EntryRepository()
+
+        var lotteryList: List<Lottery> = emptyList()
+        lotteryRepo.getAllLotteries { check, lotteries, result ->
+            if (check) {
+                lotteryList = lotteries
+            } else {
+                onFail(result!!)
+            }
+        }
+
+        // If we want to remove a campsite, we also have to remove all the related info
+        for (lottery in lotteryList) { // We get rid of all references to the campsite in the lotteries
+            if (lottery.campsiteIDs.contains(campsite.cid)) { // If any of the lotteries contains the campsite ID...
+                lottery.campsiteIDs = lottery.campsiteIDs.filterNot {it == campsite.cid} // ... then we remove it
+                lotteryRepo.updateLottery(lottery, lottery.id) { check, result -> if (!check) onFail(result!!) } // Updates lottery with removed campsite
+            }
+            if (lottery.campsiteIDs.isEmpty()) { // If lottery is empty we kill it
+                var entries: List<LotteryEntry> = emptyList() // But first we have to remove all lottery entries
+                entryRepo.getEntriesLottery(lottery.id) { check, listEntry, result ->
+                    if (check) {
+                        entries = listEntry // Gets all Lottery Entries that match the currently indexed lottery ID
+                    } else {
+                        onFail(result!!)
+                    }
+                }
+                for (entry in entries) {
+                    entryRepo.deleteEntry(entry) { check, result -> if (!check) onFail(result!!) } // Removes all entries
+                }
+                lotteryRepo.deleteLottery(lottery) { check, result -> if (!check) onFail(result!!) } // Then deletes the lottery
+            }
+        }
+        lotteryRepo.close()
+        repository.deleteCampsite(campsite) { check, result -> if (!check) onFail(result!!) }
+
     }
 }
