@@ -5,6 +5,11 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.firestore
 
+/**
+ * Repository of reservations
+ * @property db connection to Firestore
+ * @property reservationRef Firestore's reservations collection
+ */
 class ReservationRepository(db: FirebaseFirestore = Firebase.firestore) {
 
     private val reservationRef = db.collection("reservations")

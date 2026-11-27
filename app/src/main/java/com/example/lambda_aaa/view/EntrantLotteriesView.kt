@@ -28,7 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import com.example.lambda_aaa.model.LotteryItem
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -37,6 +36,9 @@ import androidx.compose.ui.text.style.TextAlign
 import java.time.format.DateTimeFormatter
 import com.example.lambda_aaa.model.DateRange
 
+/**
+ * Screen for entrants lottery
+ */
 @Composable
 fun EntrantLotteryView(viewModel: EntrantLotteriesViewModel = viewModel()) {
     val state = viewModel.uiState
@@ -81,6 +83,10 @@ fun EntrantLotteryView(viewModel: EntrantLotteriesViewModel = viewModel()) {
     }
 }
 
+/**
+ * Displays lottery details when lottery is clicked on
+ * @param item stores lottery and its associated campsite names
+ */
 @Composable
 fun LotteryDetailsScreen(item: LotteryItem, onClose: () -> Unit) {
     val lottery = item.lottery
@@ -120,6 +126,9 @@ fun LotteryDetailsScreen(item: LotteryItem, onClose: () -> Unit) {
     }
 }
 
+/**
+ * Helper function that displays each line in LotteryDetailScreen
+ */
 @Composable
 private fun DetailRow(label: String, value: String) {
     Column {

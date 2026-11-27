@@ -29,6 +29,13 @@ import com.example.lambda_aaa.model.ReservationStatus
 import com.example.lambda_aaa.ui.theme.LightGreen
 import java.lang.System.console
 
+/**
+ * Screen for each of the owner's campsites reservations. Displays each reservation as a card
+ * @param ownerId id of owner
+ * @param campsiteId id of campsite
+ * @param onBack handles going back
+ * @param viewModel stores state and logic in the OwnerCampsiteReservationViewModel class
+ */
 @Composable
 fun OwnerCampsiteReservationsView(
     ownerId: String,
@@ -96,6 +103,9 @@ fun OwnerCampsiteReservationsView(
 
 private val SelectorBackground = Color(0xFFE1ECE2)  // darker, greener version of 0xFFF8FAF7
 
+/**
+ * Allows owner to select snd display different reservation views (active, past, canceled)
+ */
 @Composable
 private fun ViewSelector(
     selected: ReservationView,
@@ -138,6 +148,12 @@ private fun ViewSelector(
 private val reservationDateFormat = DateTimeFormatter.ofPattern("MMM d, yyyy")
 
 private val RejectRed = Color(0xFFB3261E)
+
+/**
+ * UI for each reservation card
+ * @param item stores reservation and entrant name
+ * @param onReject handles rejects on active reservation
+ */
 @Composable
 fun ReservationCard(
     item: ReservationItem,
@@ -191,7 +207,10 @@ fun ReservationCard(
 }
 
 
-
+/**
+ * UI for status badge on top left of each reservation card
+ * Different color and text for each reservation status type
+ */
 @Composable
 private fun StatusBadge(reservation: Reservation) {
     val (label, color) = when {

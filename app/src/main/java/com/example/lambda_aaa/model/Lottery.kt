@@ -3,9 +3,16 @@ package com.example.lambda_aaa.model
 import java.time.LocalDate
 import java.util.UUID
 
-// Lottery class is associated to a single (for now) campsite object through its campsiteID
-// bookingPeriod and registrationPeriod are of type DateRange? which ensures start date is before end date
-// all fields except campsite id and name are nullable as lottery should not exist without a campsite
+/**
+ * Lotteries can be created by owners and joined by entrants. Requires at least one associated campsite
+ * @property campsiteIDs list of campsite id strings
+ * @property name name of the lottery
+ * @property ownerIds list of owner ids
+ * @property bookingPeriod period during which campsite can be booked
+ * @property registrationPeriod period during which lottery can be joined
+ * @property numWinners number of lottery winners
+ * @property waitlistCapacity optional upper limit to number of entires into the lottery
+ */
 
 class Lottery(
     val campsiteIDs : List<String>,
@@ -13,7 +20,7 @@ class Lottery(
     val ownerIds: List<String> = emptyList(),
     var bookingPeriod: DateRange? = null,
     var registrationPeriod: DateRange? = null,
-    var numWinners: Int = 0,
+    var numWinners: Int,
     var waitlistCapacity: Int = 0,
     val id: String = UUID.randomUUID().toString()
 ) {
@@ -76,9 +83,12 @@ class Lottery(
     }
 }
 
-// validates data entered in LotteryForm
-// ensures periods start dates are before end dates
-// ensures none of the fields are null
+/**
+ * LotteryForm stores and validates data during createLotteryScreen
+ * @property collaboratorIds ids of owners whose campsites may be used
+ * @property campsiteIDs list of campsite ids
+ * @property name name of campsite
+ */
 data class LotteryForm(
     val collaboratorIds: Set<String> = emptySet(),
     val campsiteIDs: List<String> = emptyList(),

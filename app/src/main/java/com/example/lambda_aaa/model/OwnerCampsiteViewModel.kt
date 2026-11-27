@@ -10,6 +10,11 @@ data class OwnerCampsitesUiState(
     val error: String? = null
 )
 
+/**
+ * Handles logic and state for OwnerCampsitesView
+ * @property campsiteRepo repo of campsites
+ * @property uiState current state of OwnerCampsiteUistate
+ */
 class OwnerCampsitesViewModel(
     private val campsiteRepo: CampsiteRepository = CampsiteRepository()
 ) : ViewModel() {
