@@ -7,7 +7,10 @@ import androidx.compose.runtime.setValue
 import android.util.Log
 
 
-// create lottery screen uses the viewModel to save state of form
+/**
+ * LotteryViewModel saves state and logic during create and edit functions of lottery
+ * @property repository lottery repository
+ */
 class LotteryViewModel(
     private val repository: LotteryRepository = LotteryRepository()
 ): ViewModel() {
@@ -20,6 +23,13 @@ class LotteryViewModel(
     }
 }
 
+/**
+ * Additional class to assist with multi campsite lotteries with other owners
+ * @property userRepo repo of users
+ * @property campsiteRepo repo of campsites
+ * @property collaboratorCampsites all campsites including collaborator's
+ * @property otherOwners list of owners (UserProfile objects) who are collaborators
+ */
 class CreateLotteryViewModel(
     private val userRepo: UserRepository = UserRepository(),
     private val campsiteRepo: CampsiteRepository = CampsiteRepository()

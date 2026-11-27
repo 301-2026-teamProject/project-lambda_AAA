@@ -5,10 +5,13 @@ import com.google.firebase.firestore.firestore
 import androidx.compose.runtime.mutableStateListOf
 import android.util.Log
 
-//LotteryRepository stores all lotteries
-// On start obtains all lotteries from FireStore
-// Provides methods to update whole lottery / lotteries or individual fields
-// Provides getter methods for lottery specified through a lottery ID
+/**
+ * Retrieves lotteries from Firestore on startup
+ * @property _lotteries stores all decoded Firestore lotteries
+ * @property campsiteDb Firestore connection
+ * @property lotteryRef Firestore lotteries collection
+ * @property lotteryRef decodes Firestore lotteries and adds to _lotteries, handles failures
+ */
 class LotteryRepository {
 
     private val _lotteries = mutableStateListOf<Lottery>()
@@ -88,37 +91,5 @@ class LotteryRepository {
             .addOnFailureListener { e ->
                 onResult(false, emptyList(), e.message)
             }
-    }
-
-    fun updateNumWinners(lottery: Lottery, num: Int) {
-        lottery.numWinners = num
-        lotteryRef.document(lottery.id).update("numWinners", num)
-            .addOnFailureListener { Log.e("LotteryRepo", "Update failed", it) }
-    }
-
-    fun updateBookingPeriod(lottery: Lottery, period: DateRange) {
-        lottery.bookingPeriod = period
-        lotteryRef.document(lottery.id).update(
-            mapOf(
-                "bookingPeriodStart" to period.start.toString(),
-                "bookingPeriodEnd" to period.end.toString()
-            )
-        ).addOnFailureListener { Log.e("LotteryRepo", "Update failed", it) }
-    }
-
-    fun updateRegistrationPeriod(lottery: Lottery, period: DateRange) {
-        lottery.registrationPeriod = period
-        lotteryRef.document(lottery.id).update(
-            mapOf(
-                "registrationPeriodStart" to period.start.toString(),
-                "registrationPeriodEnd" to period.end.toString()
-            )
-        ).addOnFailureListener { Log.e("LotteryRepo", "Update failed", it) }
-    }
-
-    fun updateWaitlistCapacity(lottery: Lottery, num: Int) {
-        lottery.waitlistCapacity = num
-        lotteryRef.document(lottery.id).update("waitlistCapacity", num)
-            .addOnFailureListener { Log.e("LotteryRepo", "Update failed", it) }
     }
 }

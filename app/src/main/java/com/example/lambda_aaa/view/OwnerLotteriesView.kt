@@ -18,6 +18,12 @@ import com.example.lambda_aaa.model.OwnerLotteriesViewModel
 import com.example.lambda_aaa.model.LotteryItem
 import androidx.compose.material.icons.filled.Edit
 
+/**
+ * Lottery screen for owners
+ * @param ownerId string of owner's id
+ * @param onOpenWaitlist calls LotteryWaitlistView
+ * @param viewModel holds logic and state for the view
+ */
 @Composable
 fun OwnerLotteryView(
     ownerId: String,
@@ -100,6 +106,12 @@ fun OwnerLotteryView(
     }
 }
 
+/**
+ * Stores each of the owner's lottery as a card
+ * @param item lottery object with its associated campsites
+ * @param onClick goes to waitlist view
+ * @param onEdit goes to edit lottery screen
+ */
 @Composable
 fun LotteryCard(
     item: LotteryItem,

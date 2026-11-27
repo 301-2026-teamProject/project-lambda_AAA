@@ -26,6 +26,15 @@ import androidx.compose.material3.Checkbox
 // CampsiteDropdown creates a dropdown menu of the provided campsite list
 // CapacityCheck displays a box that changes color depending on the relation between numWinners and
 // waitlistCapacity
+
+/**
+ * A dropdown menu that can be used for any object type
+ * @param label Name of the dropdown menu
+ * @param options List of object type
+ * @param selected currently selected option
+ * @param itemLabel converts selected object to string and displays it in dropdown
+ * @param onToggle toggled between checked and unchecked
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T> MultiSelectDropdown(
@@ -64,6 +73,9 @@ fun <T> MultiSelectDropdown(
     }
 }
 
+/**
+ * Checks if numWinners <= waitlistCapacity
+ */
 @Composable
 fun CapacityCheck(numWinners: Int?, waitlistCapacity: Int?) {
     if (numWinners == null || waitlistCapacity == null) return  // hidden until both are filled in

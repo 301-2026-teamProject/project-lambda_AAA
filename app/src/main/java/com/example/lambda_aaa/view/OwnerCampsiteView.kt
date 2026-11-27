@@ -22,6 +22,12 @@ import com.example.lambda_aaa.ui.theme.LightGreen
 import com.example.lambda_aaa.ui.theme.DarkForestGreen
 import com.example.lambda_aaa.model.Campsite
 
+/**
+ * Screen for owner to view their campsites
+ * @param ownerId owner id string
+ * @param onOpenCampsite handles logic when campsite card is clicked
+ * @param viewModel holds logic and data for the view
+ */
 @Composable
 fun OwnerCampsiteView(
     ownerId: String,
@@ -64,6 +70,11 @@ fun OwnerCampsiteView(
     }
 }
 
+/**
+ * Displays each campsite as a clickable card
+ * @param campsite campsite object
+ * @param onClick handles logic when the card is clicked
+ */
 @Composable
 fun CampsiteViewCard(campsite: Campsite, onClick: () -> Unit) {
     Card(
@@ -98,6 +109,10 @@ fun CampsiteViewCard(campsite: Campsite, onClick: () -> Unit) {
     }
 }
 
+/**
+ * Displays campsite's rating in the card
+ * @param rating campsite's rating
+ */
 @Composable
 private fun RatingBadge(rating: Double) {
     Row(
