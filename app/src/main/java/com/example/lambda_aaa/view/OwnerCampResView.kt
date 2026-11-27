@@ -37,6 +37,7 @@ fun OwnerCampsiteReservationsView(
     viewModel: OwnerCampsiteReservationsViewModel = viewModel()
 ) {
     val state = viewModel.uiState
+    var toReject by remember { mutableStateOf<ReservationItem?>(null) }
 
     LaunchedEffect(ownerId, campsiteId) { viewModel.load(ownerId, campsiteId) }
 
@@ -61,6 +62,11 @@ fun OwnerCampsiteReservationsView(
 
         Spacer(Modifier.height(16.dp))
 
+        state.actionError?.let {
+            Text(it, color = MaterialTheme.colorScheme.error)
+            Spacer(Modifier.height(8.dp))
+        }
+
         when {
             state.isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = ForestGreen)
@@ -75,12 +81,18 @@ fun OwnerCampsiteReservationsView(
             )
             else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(state.visible, key = { it.reservation.id }) { item ->
-                    ReservationCard(item)
+                    ReservationCard(
+                        item = item,
+                        isRejecting = item.reservation.id in state.rejectingIds,
+                        onReject = if (item.reservation.canBeRejected()) {
+                            { toReject = item }
+                        } else null
+                    )
+                }
                 }
             }
         }
     }
-}
 
 private val SelectorBackground = Color(0xFFE1ECE2)  // darker, greener version of 0xFFF8FAF7
 
@@ -125,8 +137,13 @@ private fun ViewSelector(
 
 private val reservationDateFormat = DateTimeFormatter.ofPattern("MMM d, yyyy")
 
+private val RejectRed = Color(0xFFB3261E)
 @Composable
-fun ReservationCard(item: ReservationItem) {
+fun ReservationCard(
+    item: ReservationItem,
+    onReject: (() -> Unit)? = null,
+    isRejecting: Boolean = false
+) {
     val reservation = item.reservation
 
     Card(
@@ -136,7 +153,21 @@ fun ReservationCard(item: ReservationItem) {
         border = BorderStroke(1.dp, LightGreen.copy(alpha = 0.5f))
     ) {
         Column(Modifier.padding(16.dp)) {
-            StatusBadge(reservation)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                StatusBadge(reservation)
+                Spacer(Modifier.weight(1f))
+                if (onReject != null) {
+                    OutlinedButton(
+                        onClick = onReject,
+                        enabled = !isRejecting,
+                        border = BorderStroke(1.dp, RejectRed),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = RejectRed),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                    ) {
+                        Text(if (isRejecting) "Rejecting..." else "Reject")
+                    }
+                }
+            }
 
             Spacer(Modifier.height(8.dp))
 
@@ -159,10 +190,12 @@ fun ReservationCard(item: ReservationItem) {
     }
 }
 
+
+
 @Composable
 private fun StatusBadge(reservation: Reservation) {
     val (label, color) = when {
-        reservation.status == ReservationStatus.REJECTED -> "Rejected" to Color(0xFFB3261E)
+        reservation.status == ReservationStatus.REJECTED -> "Rejected" to RejectRed
         reservation.status == ReservationStatus.CANCELLED -> "Cancelled" to Color(0xFF1E3A5F)
         reservation.isPast() -> "Past" to Color(0xFF6B7280)
         else -> "Active" to ForestGreen
