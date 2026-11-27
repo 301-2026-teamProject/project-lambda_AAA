@@ -29,7 +29,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.lambda_aaa.controller.CampsiteDropdown
 import com.example.lambda_aaa.model.Campsite
 import com.example.lambda_aaa.model.LotteryForm
 import com.example.lambda_aaa.controller.CapacityCheck
@@ -42,6 +41,9 @@ import androidx.compose.ui.platform.testTag
 import com.example.lambda_aaa.model.Lottery
 import com.example.lambda_aaa.model.LotteryViewModel
 import com.example.lambda_aaa.helper.DateField
+import com.example.lambda_aaa.model.CreateLotteryViewModel
+import com.example.lambda_aaa.controller.MultiSelectDropdown
+import androidx.compose.runtime.LaunchedEffect
 
 // CreateLotteryScreen is a screen to create lottery associated with a campsite
 // EditLotteryScreen is a screen to edit an existing lottery
@@ -50,14 +52,25 @@ import com.example.lambda_aaa.helper.DateField
 // toLocalDate and toEpochMilli functions convert to their respective formats
 @Composable
 fun CreateLotteryScreen(
-    campsites: List<Campsite>,
+    ownerId: String,
+    campsites: List<Campsite>,   // the creator's own campsites
     onClose: () -> Unit,
-    viewModel: LotteryViewModel = viewModel()
+    viewModel: LotteryViewModel = viewModel(),
+    createViewModel: CreateLotteryViewModel = viewModel()
 ) {
     var form by remember { mutableStateOf(LotteryForm()) }
     val lottery = form.toLotteryOrNull()
     var isSaving by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(ownerId) { createViewModel.loadOwners(ownerId) }
+
+    val otherOwners = createViewModel.otherOwners
+    val ownerNames = otherOwners.associate { it.uid to it.name }
+
+    // Own campsites + campsites of every selected collaborator
+    val availableCampsites = campsites + form.collaboratorIds.flatMap {
+        createViewModel.collaboratorCampsites[it].orEmpty()
+    }
 
     errorMessage?.let {
         Text(it, color = MaterialTheme.colorScheme.error)
@@ -92,14 +105,44 @@ fun CreateLotteryScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            val selectedCampsites = campsites.filter { it.cid in form.campsiteIDs }
-            CampsiteDropdown(campsites, selectedCampsites) { picked ->
-                val ids = form.campsiteIDs
-                form = form.copy(
-                    campsiteIDs = if (picked.cid in ids) ids - picked.cid else ids + picked.cid
-                    )
+            MultiSelectDropdown(
+                label = "Collaborators",
+                options = otherOwners,
+                selected = otherOwners.filter { it.uid in form.collaboratorIds },
+                itemLabel = { it.name },
+                onToggle = { owner ->
+                    form = if (owner.uid in form.collaboratorIds) {
+                        val theirIds = createViewModel.collaboratorCampsites[owner.uid].orEmpty()
+                            .map { it.cid }
+                            .toSet()
+                        form.removeCollaborator(owner.uid, theirIds)
+                    } else {
+                        createViewModel.loadCampsitesFor(owner.uid)
+                        form.addCollaborator(owner.uid)
+                    }
+                }
+            )
 
+            if (createViewModel.loadingOwnerIds.isNotEmpty()) {
+                Text(
+                    "Loading collaborators' campsites…",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
+            createViewModel.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+
+            MultiSelectDropdown(
+                label = "Campsites",
+                options = availableCampsites,
+                selected = availableCampsites.filter { it.cid in form.campsiteIDs },
+                itemLabel = { campsite ->
+                    // Label collaborators' campsites with their owner, in case two share a name
+                    if (campsite.ownerId == ownerId) campsite.name
+                    else "${campsite.name} (${ownerNames[campsite.ownerId] ?: "collaborator"})"
+                },
+                onToggle = { campsite -> form = form.toggleCampsite(campsite.cid) }
+            )
             OutlinedTextField(
                 value = form.name,
                 onValueChange = { form = form.copy(name = it) },
@@ -177,7 +220,7 @@ fun EditLotteryScreen(
     onClose: () -> Unit,
     viewModel: LotteryViewModel = viewModel()
 ) {
-    var form by remember { mutableStateOf(LotteryForm(campsiteIDs = lottery.campsiteIDs, name = lottery.name, lottery.registrationPeriod!!.start, lottery.registrationPeriod!!.end, lottery.bookingPeriod!!.start, lottery.bookingPeriod!!.end, lottery.numWinners.toString(), lottery.waitlistCapacity.toString())) }
+    var form by remember { mutableStateOf(LotteryForm(campsiteIDs = lottery.campsiteIDs, name = lottery.name, regStart =  lottery.registrationPeriod!!.start, regEnd =  lottery.registrationPeriod!!.end, bookStart =  lottery.bookingPeriod!!.start, bookEnd =  lottery.bookingPeriod!!.end, winnersText =  lottery.numWinners.toString(), capacityText =  lottery.waitlistCapacity.toString())) }
     val updatedLottery = form.toLotteryOrNull() // Basically the format of a lottery
     var isSaving by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }

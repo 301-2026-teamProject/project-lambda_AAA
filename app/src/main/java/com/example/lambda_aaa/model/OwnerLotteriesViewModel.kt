@@ -37,6 +37,29 @@ class OwnerLotteriesViewModel(
                     uiState = uiState.copy(isLoading = false, error = lotteriesMsg ?: "Couldn't load lotteries")
                     return@getAllLotteries
                 }
+                val mine = all.filter { lottery ->
+                    ownerId in lottery.ownerIds ||
+                            lottery.campsiteIDs.any { it in campsiteById }   // older lotteries without ownerIDs
+                }
+
+                // Names for campsites that aren't yours (collaborators')
+                val missingIds = mine.flatMap { it.campsiteIDs }.distinct().filterNot { it in campsiteById }
+
+                campsiteRepo.getCampsites(missingIds) { extra ->
+                    val lookup = campsiteById + extra
+                    val items = mine
+                        .map { lottery ->
+                            LotteryItem(
+                                lottery = lottery,
+                                campsiteNames = lottery.campsiteIDs
+                                    .mapNotNull { lookup[it]?.name }
+                                    .joinToString(", ")
+                            )
+                        }
+                        .sortedBy { it.lottery.name.lowercase() }
+
+                    uiState = OwnerLotteriesUiState(isLoading = false, lotteries = items, ownedCampsites = owned)
+                }
 
                 val items = all
                     .filter { lottery ->
@@ -60,5 +83,6 @@ class OwnerLotteriesViewModel(
                 )
             }
         }
+
     }
 }

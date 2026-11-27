@@ -35,6 +35,7 @@ fun OwnerLotteryView(
         showCreate -> {
             BackHandler { showCreate = false }
             CreateLotteryScreen(
+                ownerId = ownerId,
                 campsites = state.ownedCampsites,
                 onClose = {
                     showCreate = false

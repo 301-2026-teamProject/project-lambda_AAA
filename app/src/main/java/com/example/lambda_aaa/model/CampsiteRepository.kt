@@ -148,4 +148,22 @@ class CampsiteRepository {
         }
         onResult(true, campsites, null)
     }
+
+    fun getCampsites(
+    ids: Collection<String>,
+    done: (Map<String, Campsite>) -> Unit
+    ) {
+        if (ids.isEmpty()) {
+            done(emptyMap())
+            return
+        }
+        val found = mutableMapOf<String, Campsite>()
+        var remaining = ids.size
+        ids.forEach { cid ->
+            getCampsite(cid) { ok, campsite, _ ->
+                if (ok && campsite != null) found[cid] = campsite
+                if (--remaining == 0) done(found)
+            }
+        }
+    }
 }

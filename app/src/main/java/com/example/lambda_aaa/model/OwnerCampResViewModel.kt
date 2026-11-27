@@ -20,7 +20,9 @@ data class CampsiteReservationsUiState(
     val selectedView: ReservationView = ReservationView.ACTIVE,
     val grouped: OwnerReservations? = null,
     val names: Map<String, String> = emptyMap(),
-    val error: String? = null
+    val error: String? = null,
+    val rejectingIds: Set<String> = emptySet(),  // reservations currently being rejected
+    val actionError: String? = null
 ) {
     // The cards for whichever view is selected
     val visible: List<ReservationItem>
@@ -69,5 +71,31 @@ class OwnerCampsiteReservationsViewModel(
 
     fun selectView(view: ReservationView) {
         uiState = uiState.copy(selectedView = view)
+    }
+
+    fun reject(reservation: Reservation) {
+        if (reservation.id in uiState.rejectingIds) return  // ignore double taps
+
+        uiState = uiState.copy(
+            rejectingIds = uiState.rejectingIds + reservation.id,
+            actionError = null
+        )
+
+        reservationRepo.reject(reservation.id) { ok, message ->
+            val stillRejecting = uiState.rejectingIds - reservation.id
+
+            uiState = if (ok) {
+                reservation.status = ReservationStatus.REJECTED
+                uiState.copy(
+                    grouped = uiState.grouped?.let { OwnerReservations.from(it.all) },
+                    rejectingIds = stillRejecting
+                )
+            } else {
+                uiState.copy(
+                    rejectingIds = stillRejecting,
+                    actionError = message ?: "Couldn't reject reservation"
+                )
+            }
+        }
     }
 }

@@ -28,32 +28,36 @@ import androidx.compose.material3.Checkbox
 // waitlistCapacity
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CampsiteDropdown(
-    campsites: List<Campsite>,
-    selected: List<Campsite>,
-    onToggle: (Campsite) -> Unit
+fun <T> MultiSelectDropdown(
+    label: String,
+    options: List<T>,
+    selected: List<T>,
+    itemLabel: (T) -> String,
+    onToggle: (T) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
         OutlinedTextField(
-            value = selected.joinToString(", ") { it.name },
+            value = selected.joinToString(", ") { itemLabel(it) },
             onValueChange = {},
             readOnly = true,
-            label = { Text("Campsite") },
+            label = { Text(label) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-            modifier = Modifier
+            modifier = modifier
                 .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                 .fillMaxWidth()
         )
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            campsites.forEach { campsite ->
+            if (options.isEmpty()) {
+                DropdownMenuItem(text = { Text("None available") }, onClick = {}, enabled = false)
+            }
+            options.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(campsite.name) },
-                    leadingIcon = {
-                        Checkbox(checked = campsite in selected, onCheckedChange = null)
-                    },
-                    onClick = { onToggle(campsite) }
+                    text = { Text(itemLabel(option)) },
+                    leadingIcon = { Checkbox(checked = option in selected, onCheckedChange = null) },
+                    onClick = { onToggle(option) }
                 )
             }
         }
