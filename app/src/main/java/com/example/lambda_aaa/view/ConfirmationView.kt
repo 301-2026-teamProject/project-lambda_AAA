@@ -59,6 +59,7 @@ fun ConfirmationView(
     inputID: String,
     campsiteRepo: CampsiteRepository,
     userRepo: UserRepository,
+    onClickAdminRating: (String) -> Unit,
     onBack: () -> Unit = {},
     ) {
 
@@ -296,6 +297,30 @@ fun ConfirmationView(
 
                             Text(
                                 text = "Ban Profile",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = HeaderColor
+                            )
+                        }
+                    }
+                } else {
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Surface(
+                        onClick = { onClickAdminRating(inputID) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(41.dp),
+                        shape = RoundedCornerShape(13.dp),
+                        color = Color.White,
+                        border = BorderStroke(1.dp, BorderColor)
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center
+                        ) {
+
+                            Text(
+                                text = "View Related Ratings/Reviews",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = HeaderColor

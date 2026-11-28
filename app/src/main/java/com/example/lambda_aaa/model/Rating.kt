@@ -15,6 +15,7 @@ import com.google.firebase.firestore.ServerTimestamp
  * @property creationDate the time when the rating was made
  */
 class Rating(
+    val name: String = "",
     @DocumentId val rid: String = "",
     var stars: Int = 1,
     var feedback: String = "",

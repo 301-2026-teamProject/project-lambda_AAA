@@ -212,6 +212,8 @@ class CampsiteDetailController(
      * Joins the waitlist for a specific lottery
      * Checks eligibility and existing membership
      * Collaborators: CampsiteDetailDataSource, Lottery, LotteryJoinPhase, EntryRepository
+     *
+     * @param id lottery id
      */
     fun joinLottery(id: String) {
         val uid = entrantId ?: return

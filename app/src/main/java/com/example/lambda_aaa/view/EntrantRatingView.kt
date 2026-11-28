@@ -55,6 +55,7 @@ import com.example.lambda_aaa.model.Rating
  */
 @Composable
 fun EntrantRatingView (
+    name: String,
     onCancel: () -> Unit,
     campsiteId: String
 ) {
@@ -180,7 +181,7 @@ fun EntrantRatingView (
                         TextButton(
                             onClick = {
 
-                                val newRating = Rating(stars = campScore, feedback = userReview)
+                                val newRating = Rating(name = name, stars = campScore, feedback = userReview)
                                 campsiteDB.addCampsiteRating(newRating, campsiteId) {success, msg ->
                                     if (success) {
                                         onCancel()

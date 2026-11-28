@@ -10,7 +10,11 @@ import com.example.lambda_aaa.model.detail.NotificationDataSource
 /**
  * Controller for admin; load every notification in database
  *
- * @property notificationDataSource manage repository and database interaction
+ * @property logs store logs for notifications
+ * @property notificationDataSource manage repository and database interaction * @property ratings ratings related to the campsite of given cid
+ * @property isLoading true while contacts are loading
+ * @property errorMessage error text if loading failed; null otherwise
+ * @property failed true if notification failed to be sent, false otherwise
  */
 class AdminNotificationController(
     private val notificationDataSource: NotificationDataSource = NotificationRepository()
