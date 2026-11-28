@@ -1,5 +1,6 @@
 package com.example.lambda_aaa.model
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
@@ -165,5 +166,25 @@ class CampsiteRepository {
                 if (--remaining == 0) done(found)
             }
         }
+    }
+
+    /**
+     * Adds a rating of a campsite to the Firestore subcollection
+     *
+     * @param rating the rating that was given to the campsite
+     * @param campsiteId the unique ID identifying the campsite that was reviewed
+     * @param onResult the lambda handling the result of the database interaction
+     */
+    fun addCampsiteRating(
+        rating: Rating,
+        campsiteId: String,
+        onResult: (Boolean, String?) -> Unit
+    ) {
+        campsitesRef.document(campsiteId)
+            .collection("ratings")
+            .add(rating)
+            .addOnSuccessListener { onResult(true, null) }
+            .addOnFailureListener { e -> onResult(false, e.message ) }
+
     }
 }

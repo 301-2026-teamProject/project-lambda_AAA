@@ -108,7 +108,8 @@ fun CampsiteReservationApp(
                 onLotteryUpdate = { lottery ->
                     selectedLottery = lottery
                     navController.navigate("lotteryEdit/$cid") },
-                onOpenWaitlist = onOpenWaitlist
+                onOpenWaitlist = onOpenWaitlist,
+                onRate = { campsiteId -> navController.navigate("EntrantReviewCampsite/$campsiteId")}
             )
         }
         composable(
