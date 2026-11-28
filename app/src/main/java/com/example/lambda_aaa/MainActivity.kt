@@ -67,6 +67,7 @@ import kotlinx.coroutines.tasks.await
 import com.example.lambda_aaa.model.LotteryRepository
 import androidx.compose.material.icons.filled.Email
 import com.example.lambda_aaa.controller.AdminNotificationController
+import com.example.lambda_aaa.controller.AdminRatingController
 import com.example.lambda_aaa.controller.MessagingController
 import com.example.lambda_aaa.controller.SearchController
 import com.example.lambda_aaa.model.EntryRepository
@@ -91,7 +92,7 @@ import com.example.lambda_aaa.view.OwnerCampsiteView
 import com.example.lambda_aaa.view.OwnerCampsiteReservationsView
 import com.example.lambda_aaa.view.QrScreenView
 import com.google.firebase.auth.auth
-import java.security.acl.Owner
+import com.example.lambda_aaa.view.AdminRatingView
 
 // ids for testing before identification is fixed
 private const val OWNER_ID = "1hQDbywHu0OqUQ0TGWwE"   // owner id
@@ -217,6 +218,7 @@ fun CampsiteReservationApp(
     }
 
     if (identifiedUser) {
+        Log.d("Check my uid", "Your uid is: ${currentUser.uid}")
 
         var selectedMenu = if (currentUser.roles.contains(Role.ADMIN)) AdminTabs else if (currentUser.roles.contains(Role.OWNER)) OwnerTabs else EntrantTabs
         val profileController = ProfileController(currentUser)
@@ -271,8 +273,9 @@ fun CampsiteReservationApp(
                     CampsiteDetailView(
                         controller,
                         onBack = { navController.popBackStack() },
-                        onRate = { campsiteId -> navController.navigate("EntrantReviewCampsite/$campsiteId")})
-                }
+                        onRate = { campsiteId -> navController.navigate("EntrantReviewCampsite/$campsiteId")},
+                        onClickAdminRating = { navController.navigate("EntrantRatingView_${Uri.encode(cid)}") },
+                    ) }
                 composable("EntrantLottery") { EntrantLotteryView() }
                 composable("EntrantTrips") { EntrantProfileView(navController, profileController) }
                 composable("Profile") { EntrantProfileView(navController, profileController) }
@@ -296,7 +299,7 @@ fun CampsiteReservationApp(
                     val campsiteId = entry.arguments?.getString("campsiteId")
 
                     if (campsiteId != null) {
-                        EntrantRatingView(onCancel = { navController.popBackStack() }, campsiteId)
+                        EntrantRatingView(name = currentUser.name, onCancel = { navController.popBackStack() }, campsiteId)
                     }
                 }
 
@@ -304,6 +307,7 @@ fun CampsiteReservationApp(
                     //replaced with currentUser.uid, and added onOpenWaitlist arg to pass
                     com.example.lambda_aaa.view.CampsiteReservationApp(
                         uid = currentUser.uid,
+                        name = currentUser.name,
                         onOpenWaitlist = { selectedLotteryId ->
                             navController.navigate("OwnerLotteryWaitlist/$selectedLotteryId")
                         },
@@ -390,15 +394,37 @@ fun CampsiteReservationApp(
                 composable("ConfirmationView_{type}-{id}", arguments = listOf(navArgument("type") { type = NavType.StringType }, navArgument("id") { type = NavType.StringType })) { entry ->
                     val type = entry.arguments?.getString("type") ?: return@composable
                     val id = entry.arguments?.getString("id") ?: return@composable
-                    ConfirmationView(navController, type, id, campsiteRepo, userRepo, onBack = {
-                        searchRepo.refresh()
-                        navController.popBackStack()
+                    ConfirmationView(navController, type, id, campsiteRepo, userRepo,
+                        onClickAdminRating = { navController.navigate("AdminRatingView_${Uri.encode(id)}") },
+                        onBack = {
+                            searchRepo.refresh()
+                            navController.popBackStack()
                     })
                 }
 
                 composable("AdminNotificationLogs") { AdminNotificationView(
                     adminNotificationController = AdminNotificationController(notificationRepo)
                 ) { navController.popBackStack() }
+                }
+
+                composable("AdminRatingView_{id}", arguments = listOf(navArgument("id") { type = NavType.StringType })) { entry ->
+                    val cid = entry.arguments?.getString("id") ?: return@composable
+                    AdminRatingView(
+                        controller = AdminRatingController(cid = cid, repository = campsiteRepo),
+                        admin = true,
+                    ) {
+                        navController.popBackStack()
+                    }
+                }
+
+                composable("EntrantRatingView_{id}", arguments = listOf(navArgument("id") { type = NavType.StringType })) { entry ->
+                    val cid = entry.arguments?.getString("id") ?: return@composable
+                    AdminRatingView(
+                        controller = AdminRatingController(cid = cid, repository = campsiteRepo),
+                        admin = false,
+                    ) {
+                        navController.popBackStack()
+                    }
                 }
             }
         }

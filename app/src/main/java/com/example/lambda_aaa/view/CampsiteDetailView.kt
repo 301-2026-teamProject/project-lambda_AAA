@@ -40,6 +40,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun CampsiteDetailView(
@@ -48,7 +49,8 @@ fun CampsiteDetailView(
     onEdit: (() -> Unit)? = null,
     onLotteryUpdate: ((Lottery) -> Unit)? = null,
     onOpenWaitlist: ((String) -> Unit)? = null,
-    onRate: (String) -> Unit
+    onRate: (String) -> Unit,
+    onClickAdminRating: (String) -> Unit,
 ) {
     LaunchedEffect(campsiteDetailController, onEdit == null) {
         campsiteDetailController.fetchCampsiteAndLottery()
@@ -81,7 +83,8 @@ fun CampsiteDetailView(
         onRetryEntry = campsiteDetailController::refreshEntry,
         onLotteryUpdate = onLotteryUpdate,
         onOpenWaitlist = onOpenWaitlist,
-        onRate = onRate
+        onRate = onRate,
+        onClickAdminRating = onClickAdminRating,
     )
 }
 
@@ -108,7 +111,8 @@ internal fun CampsiteDetailContent(
     onRetryEntry: (String) -> Unit = {},
     onLotteryUpdate: ((Lottery) -> Unit)? = {},
     onOpenWaitlist: ((String) -> Unit)? = null,
-    onRate: (String) -> Unit
+    onRate: (String) -> Unit,
+    onClickAdminRating: (String) -> Unit,
 ) {
     val context = LocalContext.current
     Scaffold(
@@ -173,6 +177,27 @@ internal fun CampsiteDetailContent(
                 DetailSection(stringResource(R.string.rules_and_policy), campsite.rulesAndPolicy)
                 DetailSection(stringResource(R.string.cancellation_policy), campsite.cancellationPolicy)
 
+                Surface(
+                    onClick = { onClickAdminRating(campsite.cid) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(41.dp),
+                    shape = RoundedCornerShape(13.dp),
+                    color = Color.White,
+                    border = BorderStroke(1.dp, BorderColor)
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center
+                    ) {
+
+                        Text(
+                            text = "View Related Ratings/Reviews",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = HeaderColor
+                        )
+                    }
+                }
                 // Button to go to EntrantRatingView
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -220,6 +245,7 @@ internal fun CampsiteDetailContent(
                         Text(stringResource(R.string.view_on_map))
                     }
                 }
+
                 var showQr by remember { mutableStateOf(false) }
                 val hasQr = !campsite.imageUrl.isNullOrBlank() && campsite.imageUrl!!.startsWith("data:image/")
                 onEdit?.let { edit ->

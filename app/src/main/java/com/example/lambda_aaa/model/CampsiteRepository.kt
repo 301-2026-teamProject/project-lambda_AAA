@@ -1,6 +1,6 @@
 package com.example.lambda_aaa.model
 
-import android.util.Log
+import com.google.firebase.firestore.toObjects
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
@@ -151,8 +151,8 @@ class CampsiteRepository {
     }
 
     fun getCampsites(
-    ids: Collection<String>,
-    done: (Map<String, Campsite>) -> Unit
+        ids: Collection<String>,
+        done: (Map<String, Campsite>) -> Unit
     ) {
         if (ids.isEmpty()) {
             done(emptyMap())
@@ -186,5 +186,31 @@ class CampsiteRepository {
             .addOnSuccessListener { onResult(true, null) }
             .addOnFailureListener { e -> onResult(false, e.message ) }
 
+    }
+
+    fun getCampsiteRatings(
+        campsiteId: String,
+        onResult: (Boolean, List<Rating>, String?) -> Unit
+    ) {
+        campsitesRef.document(campsiteId)
+            .collection("ratings")
+            .get()
+            .addOnSuccessListener { ratingListSnapshot ->
+                val ratingList = ratingListSnapshot.toObjects<Rating>()
+                onResult(true, ratingList, null) }
+            .addOnFailureListener { e -> onResult(false, listOf(), e.message) }
+    }
+
+    fun removeCampsiteRatings(
+        cid: String,
+        rid: String,
+        onResult: (Boolean, String?) -> Unit,
+    ) {
+        campsitesRef.document(cid)
+            .collection("ratings")
+            .document(rid)
+            .delete()
+            .addOnSuccessListener { onResult(true, null) }
+            .addOnFailureListener { e -> onResult(false, e.message) }
     }
 }

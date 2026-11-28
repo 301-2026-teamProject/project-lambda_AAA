@@ -1,5 +1,6 @@
 package com.example.lambda_aaa.view
 
+import android.net.Uri
 import com.example.lambda_aaa.model.LotteryRepository
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
@@ -23,12 +24,14 @@ import com.example.lambda_aaa.model.MessagingRepository
 import com.example.lambda_aaa.model.Role
 import com.example.lambda_aaa.model.UserRepository
 import androidx.compose.ui.platform.LocalContext
+import com.example.lambda_aaa.controller.AdminRatingController
 
 /**
  * Main app logic */
 @Composable
 fun CampsiteReservationApp(
     uid: String,
+    name: String,
     onOpenWaitlist: (String) -> Unit,
     isAdmin: Boolean,
     roles: List<Role>,
@@ -109,7 +112,8 @@ fun CampsiteReservationApp(
                     selectedLottery = lottery
                     navController.navigate("lotteryEdit/$cid") },
                 onOpenWaitlist = onOpenWaitlist,
-                onRate = { campsiteId -> navController.navigate("EntrantReviewCampsite/$campsiteId")}
+                onRate = { campsiteId -> navController.navigate("EntrantReviewCampsite/$campsiteId")},
+                onClickAdminRating = { navController.navigate("EntrantRatingView_${Uri.encode(cid)}") },
             )
         }
         composable(
@@ -143,6 +147,27 @@ fun CampsiteReservationApp(
         }
         composable("sentNotifications") {
             NotificationView(userId = uid, showSent = true, onBack = { navController.popBackStack() })
+        }
+
+        composable(
+            route = "EntrantReviewCampsite/{campsiteId}",
+            arguments = listOf(navArgument("campsiteId") {type = NavType.StringType })
+        ) { entry ->
+            val campsiteId = entry.arguments?.getString("campsiteId")
+
+            if (campsiteId != null) {
+                EntrantRatingView(name = name, onCancel = { navController.popBackStack() }, campsiteId)
+            }
+        }
+
+        composable("EntrantRatingView_{id}", arguments = listOf(navArgument("id") { type = NavType.StringType })) { entry ->
+            val cid = entry.arguments?.getString("id") ?: return@composable
+            AdminRatingView(
+                controller = AdminRatingController(cid = cid, repository = repo),
+                admin = false,
+            ) {
+                navController.popBackStack()
+            }
         }
     }
 }
