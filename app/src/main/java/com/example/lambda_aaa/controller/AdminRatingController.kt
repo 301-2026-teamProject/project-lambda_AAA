@@ -45,6 +45,12 @@ class AdminRatingController(
         }
     }
 
+    /**
+     * Communicates with database and remove rating given rid
+     *
+     * @param rid rating id
+     * @param onResult what to do after result is produced
+     */
     fun removeRating(
         rid: String,
         onResult: (Boolean, String?) -> Unit,
