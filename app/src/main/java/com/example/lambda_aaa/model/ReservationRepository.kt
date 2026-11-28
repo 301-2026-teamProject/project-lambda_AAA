@@ -14,6 +14,31 @@ class ReservationRepository(db: FirebaseFirestore = Firebase.firestore) {
 
     private val reservationRef = db.collection("reservations")
 
+    /** Availability for a campsite in this lottery; winner authorization belongs to the booking flow. */
+    fun getAvailableDates(
+        campsite: Campsite,
+        lottery: Lottery,
+        result: (Boolean, List<DateRange>, String?) -> Unit
+    ) {
+        if (campsite.cid.isBlank() || campsite.cid !in lottery.campsiteIDs) {
+            result(false, emptyList(), "This campsite is not part of the lottery.")
+            return
+        }
+        if (lottery.bookingPeriod == null) {
+            result(false, emptyList(), "The lottery has no booking period.")
+            return
+        }
+        getBookedDates(campsite.cid) { ok, booked, message ->
+            if (!ok) {
+                result(false, emptyList(), message)
+            } else {
+                result(true, availableReservationPeriods(
+                    campsite.availablePeriod, lottery.bookingPeriod, booked
+                ), null)
+            }
+        }
+    }
+
     fun create(reservation: Reservation, onResult: (Boolean, String?) -> Unit) {
         // Refuse if an active reservation already overlaps these dates
         getBookedDates(reservation.campsiteId) { ok, booked, message ->
